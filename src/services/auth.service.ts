@@ -1,12 +1,10 @@
 import { api } from './api.service';
 
 interface LoginResponse {
+  id: number;
+  username: string;
+  email: string;
   token: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
 }
 
 interface RegisterData {
@@ -22,19 +20,17 @@ export const authService = {
       const response = await api.post('/authentication/sign-in', { email, password });
       console.log('AuthService: API response:', response.data);
       
-      // Transform API response to match our LoginResponse interface
-      const apiData = response.data;
-      const transformedResponse: LoginResponse = {
-        token: apiData.token,
-        user: {
-          id: apiData.id.toString(), // Convert to string as expected by interface
-          username: apiData.username,
-          email: apiData.email
-        }
+      // El backend ya responde con el formato correcto:
+      // { "id": 1, "username": "diego", "email": "diego@coffeetech.com", "token": "eyJh..." }
+      const loginResponse: LoginResponse = {
+        id: response.data.id,
+        username: response.data.username,
+        email: response.data.email,
+        token: response.data.token
       };
       
-      console.log('AuthService: Transformed response:', transformedResponse);
-      return transformedResponse;
+      console.log('AuthService: Login response:', loginResponse);
+      return loginResponse;
     } catch (error: any) {
       console.error('AuthService: Login error:', error.response?.data);
       throw new Error(error.response?.data?.message || 'Login failed');
@@ -46,18 +42,15 @@ export const authService = {
       const response = await api.post('/authentication/sign-up', userData);
       console.log('AuthService: Register API response:', response.data);
       
-      // Transform API response to match our LoginResponse interface
-      const apiData = response.data;
-      const transformedResponse: LoginResponse = {
-        token: apiData.token,
-        user: {
-          id: apiData.id.toString(),
-          username: apiData.username,
-          email: apiData.email
-        }
+      // Asumir que el register también devuelve el mismo formato
+      const registerResponse: LoginResponse = {
+        id: response.data.id,
+        username: response.data.username,
+        email: response.data.email,
+        token: response.data.token
       };
       
-      return transformedResponse;
+      return registerResponse;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }

@@ -13,6 +13,14 @@
     justify-content: center;
     color: white;
     font-weight: bold;
+    overflow: hidden;
+    img,
+    .logo__img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
   }
   
   &__brand {

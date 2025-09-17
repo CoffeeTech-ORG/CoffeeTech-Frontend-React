@@ -1,5 +1,4 @@
 import { api } from './api.service';
-import { API_ENDPOINTS } from './api.endpoints';
 
 export interface Farm {
   id: string;
@@ -21,6 +20,21 @@ export interface WeatherData {
   date: string;
 }
 
+export interface Section {
+  id: string;
+  name: string;
+  farmId: string;
+  growthStage: 'plantula' | 'vegetativo' | 'floracion' | 'fructificacion' | 'maduracion' | 'cosecha';
+  size: number; // in hectares or area unit
+  healthPercentage: number;
+  status: 'healthy' | 'warning' | 'critical';
+  lastUpdate: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+
 export const farmsService = {
   async getFarms(): Promise<Farm[]> {
     try {
@@ -37,6 +51,15 @@ export const farmsService = {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch user farms');
+    }
+  },
+
+  async getFarmSections(farmId: string): Promise<Section[]> {
+    try {
+      const response = await api.get(`/farms/${farmId}/sections`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch farm sections');
     }
   },
 

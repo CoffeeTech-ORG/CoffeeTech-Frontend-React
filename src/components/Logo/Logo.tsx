@@ -1,5 +1,6 @@
 import React from 'react';
 import './Logo.scss';
+import logoImg from '../../assets/app_icon/logo.png';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large';
@@ -12,14 +13,8 @@ export const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true }) 
   return (
     <div className={`logo ${sizeClass}`}>
       <div className="logo__icon">
-        <span className="logo__text">☕</span>
+        <img src={logoImg} alt="CoffeeTech logo" className="logo__img" />
       </div>
-      {showText && (
-        <span className="logo__brand">
-          <span className="logo__brand-main">Coffee</span>
-          <span className="logo__brand-sub">Tech</span>
-        </span>
-      )}
     </div>
   );
 };

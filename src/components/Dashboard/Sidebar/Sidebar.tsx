@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
   return (
     <div className="sidebar">
       <div className="sidebar__header">
-        <Logo size="small" />
+        <Logo size="large" />
       </div>
       
       <Menu
