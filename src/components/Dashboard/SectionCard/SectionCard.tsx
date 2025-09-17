@@ -46,7 +46,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
 
   const getGrowthStageName = (stage: Section['growthStage']) => {
     const nameMap = {
-      plantula: 'Plantula',
+      plantula: 'Plántula',
       vegetativo: 'Vegetativo',
       floracion: 'Floración',
       fructificacion: 'Fructificación',
