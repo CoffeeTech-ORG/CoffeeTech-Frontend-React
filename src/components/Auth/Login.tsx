@@ -28,9 +28,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
   const handleSubmit = async (values: LoginFormData) => {
     setLoading(true);
     try {
-      console.log('Starting login process...');
       await loginWithCredentials(values.email, values.password);
-      console.log('Login successful, user should be set');
       message.success('Login successful!');
       
       // Redirigir al dashboard o a la página anterior

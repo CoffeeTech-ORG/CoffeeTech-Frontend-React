@@ -31,9 +31,19 @@ export const SectionCard: React.FC<SectionCardProps> = ({
     }
   };
 
-  const getGrowthStageIcon = (stage: Section['growthStage']) => {
+  const getGrowthStageIcon = (type: string) => {
+    // Map display names back to internal keys for icon lookup
+    const displayNameToKey: Record<string, string> = {
+      'Plántula': 'plantula',
+      'Vegetativo': 'vegetativo',
+      'Floración': 'floracion',
+      'Fructificación': 'fructificacion',
+      'Maduración': 'maduracion',
+      'Cosecha': 'cosecha'
+    };
+
     // Map growth stages to icons
-    const iconMap = {
+    const iconMap: Record<string, string> = {
       plantula: '🌱',
       vegetativo: '🌿',
       floracion: '🌸',
@@ -41,11 +51,20 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       maduracion: '🟡',
       cosecha: '☕'
     };
-    return iconMap[stage] || '🌿';
+
+    const key = displayNameToKey[type] || type.toLowerCase();
+    return iconMap[key] || '🌿';
   };
 
-  const getGrowthStageName = (stage: Section['growthStage']) => {
-    const nameMap = {
+  const getGrowthStageName = (type: string) => {
+    // If it's already a display name, return it
+    const displayNames = ['Plántula', 'Vegetativo', 'Floración', 'Fructificación', 'Maduración', 'Cosecha'];
+    if (displayNames.includes(type)) {
+      return type;
+    }
+
+    // Otherwise, map from internal key to display name
+    const nameMap: Record<string, string> = {
       plantula: 'Plántula',
       vegetativo: 'Vegetativo',
       floracion: 'Floración',
@@ -53,7 +72,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       maduracion: 'Maduración',
       cosecha: 'Cosecha'
     };
-    return nameMap[stage] || 'Unknown';
+    return nameMap[type] || type;
   };
 
   return (
@@ -91,8 +110,8 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       
       <div className="section-card__info">
         <div className="growth-stage">
-          <span className="growth-stage__icon">{getGrowthStageIcon(section.growthStage)}</span>
-          <span className="growth-stage__name">{getGrowthStageName(section.growthStage)}</span>
+          <span className="growth-stage__icon">{getGrowthStageIcon(section.type)}</span>
+          <span className="growth-stage__name">{getGrowthStageName(section.type)}</span>
         </div>
         <div className="size-info">
           <Leaf size={14} />

@@ -72,14 +72,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Función para login con credenciales (llama al backend)
   const loginWithCredentials = async (email: string, password: string) => {
     try {
-      console.log('AuthContext: Starting login...');
       const response = await authService.login(email, password);
-      console.log('AuthContext: Login response received:', response);
-      
+
       // Usar la función login para guardar los datos
       login(response); // La respuesta ya tiene el formato correcto
-      
-      console.log('AuthContext: User set, isAuthenticated should now be true');
     } catch (error) {
       console.error('AuthContext: Login failed:', error);
       throw error;

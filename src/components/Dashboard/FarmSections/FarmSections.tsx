@@ -3,6 +3,7 @@ import { Button, Spin, message } from 'antd';
 import { ArrowLeft, Plus, User, Bell } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
+import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
 import { farmsService, Farm, Section } from '../../../services/farms.service';
 import { useAuth } from '../../../contexts/AuthContext';
 import './FarmSections.scss';
@@ -16,6 +17,8 @@ interface FarmSectionsProps {
 export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
+  const [addingSectionLoading, setAddingSectionLoading] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -37,17 +40,31 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
 
   const handleSectionDetails = (sectionId: string) => {
     message.info(`View section details for ${sectionId}`);
-    // TODO: Implement section details view
   };
 
   const handleSectionSettings = (sectionId: string) => {
     message.info(`Section settings for ${sectionId}`);
-    // TODO: Implement section settings
   };
 
   const handleAddSection = () => {
-    message.info('Add new section functionality will be implemented');
-    // TODO: Implement add section modal/form
+    setIsAddSectionModalOpen(true);
+  };
+
+  const handleCloseAddSectionModal = () => {
+    setIsAddSectionModalOpen(false);
+  };
+
+  const handleSubmitAddSection = async (data: AddSectionData) => {
+    try {
+      setAddingSectionLoading(true);
+      await farmsService.createSection(farm.id, data);
+      await loadFarmSections(); // Reload sections to show the new one
+    } catch (error) {
+      console.error('Error creating section:', error);
+      throw error; // Re-throw to let the modal handle the error message
+    } finally {
+      setAddingSectionLoading(false);
+    }
   };
 
   const handleAddFarm = () => {
@@ -201,6 +218,14 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
           </div>
         </main>
       </div>
+
+      <AddSectionModal
+        isOpen={isAddSectionModalOpen}
+        onClose={handleCloseAddSectionModal}
+        onSubmit={handleSubmitAddSection}
+        loading={addingSectionLoading}
+        farmId={farm.id}
+      />
     </div>
   );
 };

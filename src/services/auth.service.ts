@@ -16,10 +16,7 @@ interface RegisterData {
 export const authService = {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      console.log('AuthService: Making login request...');
       const response = await api.post('/authentication/sign-in', { email, password });
-      console.log('AuthService: API response:', response.data);
-      
       // El backend ya responde con el formato correcto:
       // { "id": 1, "username": "diego", "email": "diego@coffeetech.com", "token": "eyJh..." }
       const loginResponse: LoginResponse = {
@@ -29,7 +26,6 @@ export const authService = {
         token: response.data.token
       };
       
-      console.log('AuthService: Login response:', loginResponse);
       return loginResponse;
     } catch (error: any) {
       console.error('AuthService: Login error:', error.response?.data);
@@ -40,7 +36,6 @@ export const authService = {
   async register(userData: RegisterData): Promise<LoginResponse> {
     try {
       const response = await api.post('/authentication/sign-up', userData);
-      console.log('AuthService: Register API response:', response.data);
       
       // Asumir que el register también devuelve el mismo formato
       const registerResponse: LoginResponse = {
