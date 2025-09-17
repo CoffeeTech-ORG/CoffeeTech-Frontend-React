@@ -1,0 +1,67 @@
+@import '../../styles/variables.scss';
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  
+  &__icon {
+    background: $text-primary;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+  }
+  
+  &__brand {
+    font-weight: 600;
+    color: $text-primary;
+    
+    &-main {
+      color: $text-primary;
+    }
+    
+    &-sub {
+      color: $primary-color;
+    }
+  }
+  
+  // Size variants
+  &--small {
+    .logo__icon {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+    }
+    
+    .logo__brand {
+      font-size: 16px;
+    }
+  }
+  
+  &--medium {
+    .logo__icon {
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+    }
+    
+    .logo__brand {
+      font-size: 20px;
+    }
+  }
+  
+  &--large {
+    .logo__icon {
+      width: 80px;
+      height: 80px;
+      font-size: 40px;
+    }
+    
+    .logo__brand {
+      font-size: 28px;
+    }
+  }
+}

@@ -1,0 +1,126 @@
+@import '../../../styles/variables.scss';
+
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background: $text-primary;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md;
+  
+  &__header {
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: $spacing-md;
+    
+    .logo {
+      .logo__icon {
+        background: $background-white;
+        color: $text-primary;
+      }
+      
+      .logo__brand {
+        color: $background-white;
+        
+        &-sub {
+          color: $primary-color;
+        }
+      }
+    }
+  }
+  
+  &__menu {
+    flex: 1;
+    background: transparent;
+    border: none;
+    
+    .ant-menu-item {
+      background: transparent;
+      border-radius: $border-radius-sm;
+      margin-bottom: 4px;
+      padding-left: 16px !important;
+      height: 48px;
+      line-height: 48px;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      &.ant-menu-item-selected {
+        background: $primary-color;
+        color: white;
+        
+        &::after {
+          display: none;
+        }
+      }
+      
+      .ant-menu-title-content {
+        color: rgba(255, 255, 255, 0.8);
+        margin-left: $spacing-sm;
+        font-weight: 500;
+      }
+      
+      &.ant-menu-item-selected .ant-menu-title-content {
+        color: white;
+      }
+      
+      .anticon {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      &.ant-menu-item-selected .anticon {
+        color: white;
+      }
+    }
+  }
+  
+  &__add-farm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-xs;
+    width: 100%;
+    padding: $spacing-sm;
+    background: transparent;
+    border: 2px solid $primary-color;
+    border-radius: $border-radius-md;
+    color: $primary-color;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: $primary-color;
+      color: white;
+    }
+    
+    span {
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 60px;
+    
+    .logo__brand,
+    .ant-menu-title-content,
+    .sidebar__add-farm span {
+      display: none;
+    }
+    
+    .sidebar__add-farm {
+      padding: $spacing-sm $spacing-xs;
+    }
+  }
+}

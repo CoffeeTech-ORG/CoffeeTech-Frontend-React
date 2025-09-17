@@ -1,0 +1,37 @@
+@import "ng-zorro-antd/ng-zorro-antd.min.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+}
+
+.page-header {
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.content-container {
+  padding: 24px;
+  background: #fff;
+  min-height: 280px;
+}
+
+.table-operations {
+  margin-bottom: 16px;
+  
+  .ant-input-affix-wrapper {
+    width: 300px;
+  }
+}
+
+.table-striped-rows tr:nth-child(2n) td {
+  background-color: #fafafa;
+}
