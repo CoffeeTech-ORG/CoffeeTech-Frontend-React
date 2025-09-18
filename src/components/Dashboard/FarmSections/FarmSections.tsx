@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, User, Bell } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
-import { farmsService, Farm, Section } from '../../../services/farms.service';
+import { useFarms, Farm, Section } from '../../../hooks/useFarms';
 import { useAuth } from '../../../contexts/AuthContext';
 import './FarmSections.scss';
 import '../Dashboard.scss';
@@ -12,14 +12,16 @@ import '../Dashboard.scss';
 interface FarmSectionsProps {
   farm: Farm;
   onBack: () => void;
+  onSectionSelect?: (section: Section) => void;
 }
 
-export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
+export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSectionSelect }) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
   const [addingSectionLoading, setAddingSectionLoading] = useState(false);
   const { user, logout } = useAuth();
+  const { getFarmSections, createSection } = useFarms();
 
   useEffect(() => {
     loadFarmSections();
@@ -28,7 +30,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
   const loadFarmSections = async () => {
     try {
       setLoading(true);
-      const sectionsData = await farmsService.getFarmSections(farm.id);
+      const sectionsData = await getFarmSections(farm.id);
       setSections(sectionsData);
     } catch (error) {
       console.error('Error loading farm sections:', error);
@@ -39,7 +41,12 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
   };
 
   const handleSectionDetails = (sectionId: string) => {
-    message.info(`View section details for ${sectionId}`);
+    const found = sections.find(s => String(s.id) === String(sectionId)) ?? null;
+    if (found && onSectionSelect) {
+      onSectionSelect(found);
+    } else {
+      message.info(`View section details for ${sectionId}`);
+    }
   };
 
   const handleSectionSettings = (sectionId: string) => {
@@ -57,7 +64,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
   const handleSubmitAddSection = async (data: AddSectionData) => {
     try {
       setAddingSectionLoading(true);
-      await farmsService.createSection(farm.id, data);
+      await createSection(farm.id, data);
       await loadFarmSections(); // Reload sections to show the new one
     } catch (error) {
       console.error('Error creating section:', error);
@@ -208,6 +215,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack }) => {
                     <SectionCard
                       key={section.id}
                       section={section}
+                      onClick={handleSectionDetails}
                       onViewDetails={handleSectionDetails}
                       onSettings={handleSectionSettings}
                     />

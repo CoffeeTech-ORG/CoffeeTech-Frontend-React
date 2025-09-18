@@ -3,8 +3,9 @@ import { Sidebar } from './Sidebar/Sidebar';
 import { WeatherWidget } from './WeatherWidget/WeatherWidget';
 import { FarmCard } from './FarmCard/FarmCard';
 import { FarmSections } from './FarmSections/FarmSections';
+import SectionDetailView from '../SectionDetailView';
 import { useAuth } from '../../contexts/AuthContext';
-import { farmsService, Farm, WeatherData } from '../../services/farms.service';
+import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
 import { Button, Spin, message } from 'antd';
 import { User, Bell } from 'lucide-react';
 import './Dashboard.scss';
@@ -15,8 +16,10 @@ export const Dashboard: React.FC = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'farm-sections'>('dashboard');
+  const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'farm-sections' | 'section-detail'>('dashboard');
   const { user, logout } = useAuth();
+  const { getFarms, getWeatherData } = useFarms();
 
   useEffect(() => {
     loadDashboardData();
@@ -25,8 +28,8 @@ export const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       const [farmsData, weatherData] = await Promise.all([
-        farmsService.getFarms(),
-        farmsService.getWeatherData()
+        getFarms(),
+        getWeatherData()
       ]);
       setFarms(farmsData);
       setWeather(weatherData);
@@ -56,7 +59,18 @@ export const Dashboard: React.FC = () => {
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
     setSelectedFarm(null);
+    setSelectedSection(null);
     setActiveTab('dashboard');
+  };
+
+  const handleSectionSelect = (section: Section) => {
+    setSelectedSection(section);
+    setCurrentView('section-detail');
+  };
+
+  const handleBackToFarmSections = () => {
+    setCurrentView('farm-sections');
+    setSelectedSection(null);
   };
 
   const renderContent = () => {
@@ -99,8 +113,8 @@ export const Dashboard: React.FC = () => {
       case 'settings':
         return (
           <div className="dashboard-content">
-            <h2 className="section-title">Settings</h2>
-            <p>Settings functionality will be implemented here.</p>
+            <h2 className="section-title">Inventory Management</h2>
+            <p>Inventory functionality will be implemented here.</p>
           </div>
         );
       
@@ -125,9 +139,20 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  // Show section detail view
+  if (currentView === 'section-detail' && selectedSection) {
+    return <SectionDetailView section={selectedSection} onBack={handleBackToFarmSections} />;
+  }
+
   // Show farm sections view
   if (currentView === 'farm-sections' && selectedFarm) {
-    return <FarmSections farm={selectedFarm} onBack={handleBackToDashboard} />;
+    return (
+      <FarmSections 
+        farm={selectedFarm} 
+        onBack={handleBackToDashboard}
+        onSectionSelect={handleSectionSelect}
+      />
+    );
   }
 
   return (

@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
     {
       key: 'settings',
       icon: <Settings size={20} />,
-      label: 'Settings',
+      label: 'Inventary',
     },
     {
       key: 'help',

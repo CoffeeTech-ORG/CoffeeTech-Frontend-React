@@ -1,0 +1,150 @@
+.section-data {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  
+  .section-data__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e8e8e8;
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .section-icon {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+      }
+      
+      .section-info {
+        h3 {
+          margin: 0;
+          color: #333;
+          font-size: 24px;
+          font-weight: 600;
+        }
+        
+        .section-type {
+          color: #666;
+          font-size: 14px;
+          margin: 4px 0 0 0;
+        }
+      }
+    }
+    
+    .header-right {
+      display: flex;
+      gap: 12px;
+      
+      .refresh-btn {
+        background: #20B2AA;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+        
+        &:hover {
+          background: #1b8f89;
+        }
+        
+        &:disabled {
+          background: #d9d9d9;
+          cursor: not-allowed;
+        }
+      }
+      
+      .close-btn {
+        background: #ff4d4f;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+        
+        &:hover {
+          background: #cf1322;
+        }
+      }
+    }
+  }
+  
+  .loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 16px;
+  }
+  
+  .error-state {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 20px;
+    
+    .error-message {
+      color: #ff4d4f;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+  }
+  
+  .section-content {
+    display: grid;
+    gap: 24px;
+    
+    .content-section {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 20px;
+      
+      h4 {
+        margin: 0 0 16px 0;
+        color: #333;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      
+      &.assignments-section {
+        .no-device {
+          color: #faad14;
+          font-style: italic;
+        }
+        
+        .device-info {
+          color: #666;
+          font-weight: 500;
+        }
+        
+        .assignment-selector {
+          select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            
+            &:focus {
+              border-color: #40a9ff;
+              outline: none;
+              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+}

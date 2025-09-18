@@ -1,8 +1,8 @@
 .section-card {
-  background: linear-gradient(135deg, #20b2aa 0%, #32413f 100%);
+  background: #fff;
   border-radius: 12px;
   padding: 20px;
-  color: white;
+  color: #262626;
   min-height: 180px;
   display: flex;
   flex-direction: column;
@@ -31,7 +31,7 @@
       margin: 0;
       font-size: 18px;
       font-weight: 600;
-      color: white;
+      color: #262626;
     }
   }
 
@@ -49,7 +49,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.15);
+      background: #262626;
       padding: 6px 12px;
       border-radius: 20px;
       font-size: 14px;
@@ -61,6 +61,7 @@
 
       &__name {
         font-weight: 500;
+        color: #fff;
       }
     }
 
@@ -100,7 +101,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #8c8c8c;
     cursor: pointer;
     transition: all 0.2s ease;
     backdrop-filter: blur(10px);
