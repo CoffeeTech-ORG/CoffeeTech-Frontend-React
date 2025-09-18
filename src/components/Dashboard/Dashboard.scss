@@ -49,6 +49,19 @@
     }
   }
   
+  // Estilo para el botón back compartido
+  .back-btn {
+    align-self: flex-start;
+    color: #666;
+    font-weight: 500;
+    padding: 4px 8px;
+
+    &:hover {
+      color: #1890ff;
+      background: rgba(24, 144, 255, 0.1);
+    }
+  }
+  
   &__content {
     flex: 1;
     padding: $spacing-lg;

@@ -1,16 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface User {
   id: number;
   username: string;
   email: string;
+  role: Role;
 }
 
 interface LoginResponse {
   id: number;
   username: string;
   email: string;
+  role: Role;
   token: string;
 }
 
@@ -57,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: data.id,
         username: data.username,
         email: data.email,
+        role: data.role,
       },
       token: data.token,
     };

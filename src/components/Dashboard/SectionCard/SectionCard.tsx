@@ -7,12 +7,14 @@ interface SectionCardProps {
   section: Section;
   onViewDetails?: (sectionId: string) => void;
   onSettings?: (sectionId: string) => void;
+  onClick?: (sectionId: string) => void;
 }
 
 export const SectionCard: React.FC<SectionCardProps> = ({ 
   section, 
   onViewDetails, 
-  onSettings 
+  onSettings,
+  onClick
 }) => {
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
@@ -76,7 +78,11 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   };
 
   return (
-    <div className="section-card">
+    <div 
+      className="section-card"
+      onClick={() => onClick?.(section.id)}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
       <div className="section-card__header">
         <div className="section-card__title">
           {getHealthIcon(section.status)}
@@ -86,21 +92,30 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         <div className="section-card__actions">
           <button 
             className="action-btn"
-            onClick={() => onViewDetails?.(section.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails?.(section.id);
+            }}
             title="View Location"
           >
             <MapPin size={16} />
           </button>
           <button 
             className="action-btn"
-            onClick={() => onViewDetails?.(section.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails?.(section.id);
+            }}
             title="View Details"
           >
             <Info size={16} />
           </button>
           <button 
             className="action-btn"
-            onClick={() => onSettings?.(section.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSettings?.(section.id);
+            }}
             title="Settings"
           >
             <Settings size={16} />

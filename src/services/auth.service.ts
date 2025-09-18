@@ -1,9 +1,15 @@
 import { api } from './api.service';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface LoginResponse {
   id: number;
   username: string;
   email: string;
+  role: Role;
   token: string;
 }
 
@@ -23,6 +29,7 @@ export const authService = {
         id: response.data.id,
         username: response.data.username,
         email: response.data.email,
+        role: response.data.role,
         token: response.data.token
       };
       
@@ -42,6 +49,7 @@ export const authService = {
         id: response.data.id,
         username: response.data.username,
         email: response.data.email,
+        role: response.data.role,
         token: response.data.token
       };
       
