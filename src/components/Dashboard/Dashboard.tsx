@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar/Sidebar';
 import { WeatherWidget } from './WeatherWidget/WeatherWidget';
 import { FarmCard } from './FarmCard/FarmCard';
+import { FarmSections } from './FarmSections/FarmSections';
 import { useAuth } from '../../contexts/AuthContext';
 import { farmsService, Farm, WeatherData } from '../../services/farms.service';
 import { Button, Spin, message } from 'antd';
@@ -13,6 +14,8 @@ export const Dashboard: React.FC = () => {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'farm-sections'>('dashboard');
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -39,11 +42,21 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleViewDetails = (farmId: string) => {
-    message.info(`View details for farm ${farmId}`);
+    const farm = farms.find(f => f.id === farmId);
+    if (farm) {
+      setSelectedFarm(farm);
+      setCurrentView('farm-sections');
+    }
   };
 
   const handleSettings = (farmId: string) => {
     message.info(`Settings for farm ${farmId}`);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedFarm(null);
+    setActiveTab('dashboard');
   };
 
   const renderContent = () => {
@@ -110,6 +123,11 @@ export const Dashboard: React.FC = () => {
         <Spin size="large" />
       </div>
     );
+  }
+
+  // Show farm sections view
+  if (currentView === 'farm-sections' && selectedFarm) {
+    return <FarmSections farm={selectedFarm} onBack={handleBackToDashboard} />;
   }
 
   return (

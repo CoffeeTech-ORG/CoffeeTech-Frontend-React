@@ -2,16 +2,25 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { authService } from '../services/auth.service';
 
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
 }
 
+interface LoginResponse {
+  id: number;
+  username: string;
+  email: string;
+  token: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (data: LoginResponse) => void;
+  loginWithCredentials: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
 }
@@ -38,35 +47,35 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Validate token and get user info
-      authService.validateToken(token)
-        .then(userData => {
-          setUser(userData);
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
+  // Función para guardar auth data en localStorage y state
+  const login = (data: LoginResponse) => {
+    const authData = {
+      user: {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+      },
+      token: data.token,
+    };
+    
+    // Guardar en localStorage
+    localStorage.setItem('auth', JSON.stringify(authData));
+    
+    // Actualizar state
+    setUser(authData.user);
+    setToken(authData.token);
+  };
 
-  const login = async (email: string, password: string) => {
+  // Función para login con credenciales (llama al backend)
+  const loginWithCredentials = async (email: string, password: string) => {
     try {
-      console.log('AuthContext: Starting login...');
       const response = await authService.login(email, password);
-      console.log('AuthContext: Login response received:', response);
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
-      console.log('AuthContext: User set, isAuthenticated should now be true');
+
+      // Usar la función login para guardar los datos
+      login(response); // La respuesta ya tiene el formato correcto
     } catch (error) {
       console.error('AuthContext: Login failed:', error);
       throw error;
@@ -76,23 +85,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterData) => {
     try {
       const response = await authService.register(userData);
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
+      
+      // Usar la función login para guardar los datos
+      login(response); // La respuesta ya tiene el formato correcto
     } catch (error) {
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    // Limpiar localStorage
+    localStorage.removeItem('auth');
+    localStorage.removeItem('token'); // Por si acaso queda el token viejo
+    
+    // Limpiar state
     setUser(null);
+    setToken(null);
   };
+
+  // Restaurar sesión al cargar la aplicación
+  useEffect(() => {
+    const authData = localStorage.getItem('auth');
+    if (authData) {
+      try {
+        const parsedAuth = JSON.parse(authData);
+        if (parsedAuth.user && parsedAuth.token) {
+          setUser(parsedAuth.user);
+          setToken(parsedAuth.token);
+        }
+      } catch (error) {
+        console.error('Error parsing auth data:', error);
+        localStorage.removeItem('auth');
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    token,
+    isAuthenticated: !!user && !!token,
     isLoading,
     login,
+    loginWithCredentials,
     register,
     logout,
   };

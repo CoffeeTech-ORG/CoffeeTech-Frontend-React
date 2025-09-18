@@ -21,20 +21,19 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSubmit = async (values: LoginFormData) => {
     setLoading(true);
     try {
-      console.log('Starting login process...');
-      await login(values.email, values.password);
-      console.log('Login successful, user should be set');
+      await loginWithCredentials(values.email, values.password);
       message.success('Login successful!');
       
-      // Let the AuthContext handle the navigation by updating isAuthenticated
-      // The App.tsx routes will automatically redirect when isAuthenticated becomes true
+      // Redirigir al dashboard o a la página anterior
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     } catch (error) {
       message.error('Login failed. Please check your credentials.');
       console.error('Login error:', error);

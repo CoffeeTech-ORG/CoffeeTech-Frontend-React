@@ -12,9 +12,17 @@ export const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Intentar obtener el token de localStorage
+    const authData = localStorage.getItem('auth');
+    if (authData) {
+      try {
+        const parsedAuth = JSON.parse(authData);
+        if (parsedAuth.token) {
+          config.headers.Authorization = `Bearer ${parsedAuth.token}`;
+        }
+      } catch (error) {
+        console.error('Error parsing auth data:', error);
+      }
     }
     return config;
   },
@@ -28,7 +36,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      // Limpiar datos de autenticación
+      localStorage.removeItem('auth');
+      localStorage.removeItem('token'); // Por si queda algún token viejo
       window.location.href = '/login';
     }
     return Promise.reject(error);
