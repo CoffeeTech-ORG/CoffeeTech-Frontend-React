@@ -54,11 +54,11 @@
     align-self: flex-start;
     color: #666;
     font-weight: 500;
-    padding: 4px 8px;
+    padding: 4px 0px;
 
     &:hover {
-      color: #1890ff;
-      background: rgba(24, 144, 255, 0.1);
+      color: #1890ff !important;
+      background: rgba(24, 144, 255, 0.1) !important;
     }
   }
   

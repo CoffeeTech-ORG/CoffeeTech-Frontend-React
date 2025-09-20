@@ -10,18 +10,17 @@ import './Dashboard/Dashboard.scss';
 interface SectionDetailViewProps {
   section: Section;
   onBack: () => void;
+  onNavigateToSection?: (key: string) => void;
 }
 
-export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, onBack }) => {
+export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, onBack, onNavigateToSection }) => {
   const { user, token, logout } = useAuth();
-
-  const handleAddFarm = () => {
-    message.info('Add Farm functionality will be implemented');
-  };
 
   const handleMenuClick = (key: string) => {
     if (key === 'dashboard') {
       onBack();
+    } else if (onNavigateToSection) {
+      onNavigateToSection(key);
     } else {
       message.info(`Navigate to ${key}`);
     }
@@ -32,7 +31,6 @@ export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, o
       <Sidebar
         activeKey="dashboard"
         onMenuClick={handleMenuClick}
-        onAddFarm={handleAddFarm}
       />
       
       <div className="dashboard__main">
@@ -60,7 +58,7 @@ export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, o
         
         <main className="dashboard__content">
           <div className="section-detail">
-            <div className="section-detail__header">
+            <div className="section-detail__header" style={{ marginBottom: '12px' }}>
               <Button
                 type="text"
                 icon={<ArrowLeft size={20} />}

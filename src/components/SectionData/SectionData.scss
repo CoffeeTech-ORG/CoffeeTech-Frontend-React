@@ -43,6 +43,7 @@
     .header-right {
       display: flex;
       gap: 12px;
+      justify-content: center;
       
       .refresh-btn {
         background: #20B2AA;
@@ -147,4 +148,19 @@
       }
     }
   }
+}
+
+@media (max-width: 1024px) {
+    .section-data {
+      padding: 12px !important;
+        .section-data__header {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+        }
+    }
+    .section-content .content-section {
+        background: none !important;
+        padding: 0px !important;
+    }
 }

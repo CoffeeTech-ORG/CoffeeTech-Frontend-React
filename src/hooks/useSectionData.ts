@@ -25,9 +25,9 @@ export function useSectionData(initialToken: string | null, sectionId: string | 
   const [dataRecord, setDataRecord] = useState<DataRecord | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   // token state is intentionally not stored locally beyond setting it on the client
-  const setToken = (t: string | null) => {
+  const setToken = useCallback((t: string | null) => {
     setAuthToken(t);
-  };
+  }, []);
 
   // apply initial token to client when hook mounts or when initialToken changes
   useEffect(() => {
@@ -164,10 +164,11 @@ export function useSectionData(initialToken: string | null, sectionId: string | 
     }
   };
 
-  // initial fetch and re-fetch when sectionId (fetchAll) changes
+  // initial fetch and re-fetch when sectionId changes
   // Note: consumers can still call refresh() manually; we auto-run on mount and when sectionId changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { 
+    fetchAll(); 
+  }, [sectionId]); // Solo depende de sectionId, no de fetchAll
 
   return {
     loading,

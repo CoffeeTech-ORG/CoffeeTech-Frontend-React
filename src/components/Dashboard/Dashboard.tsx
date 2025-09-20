@@ -4,6 +4,7 @@ import { WeatherWidget } from './WeatherWidget/WeatherWidget';
 import { FarmCard } from './FarmCard/FarmCard';
 import { FarmSections } from './FarmSections/FarmSections';
 import SectionDetailView from '../SectionDetailView';
+import { SensorInventory } from '../SensorInventory/SensorInventory';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
 import { Button, Spin, message } from 'antd';
@@ -40,9 +41,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleAddFarm = () => {
-    message.info('Add Farm functionality will be implemented');
-  };
 
   const handleViewDetails = (farmId: string) => {
     const farm = farms.find(f => f.id === farmId);
@@ -71,6 +69,13 @@ export const Dashboard: React.FC = () => {
   const handleBackToFarmSections = () => {
     setCurrentView('farm-sections');
     setSelectedSection(null);
+  };
+
+  const handleNavigateFromSubView = (key: string) => {
+    setCurrentView('dashboard');
+    setSelectedFarm(null);
+    setSelectedSection(null);
+    setActiveTab(key);
   };
 
   const renderContent = () => {
@@ -111,21 +116,8 @@ export const Dashboard: React.FC = () => {
         );
       
       case 'settings':
-        return (
-          <div className="dashboard-content">
-            <h2 className="section-title">Inventory Management</h2>
-            <p>Inventory functionality will be implemented here.</p>
-          </div>
-        );
-      
-      case 'help':
-        return (
-          <div className="dashboard-content">
-            <h2 className="section-title">Help</h2>
-            <p>Help and documentation will be available here.</p>
-          </div>
-        );
-      
+        return <SensorInventory />;
+
       default:
         return null;
     }
@@ -141,7 +133,13 @@ export const Dashboard: React.FC = () => {
 
   // Show section detail view
   if (currentView === 'section-detail' && selectedSection) {
-    return <SectionDetailView section={selectedSection} onBack={handleBackToFarmSections} />;
+    return (
+      <SectionDetailView 
+        section={selectedSection} 
+        onBack={handleBackToFarmSections} 
+        onNavigateToSection={handleNavigateFromSubView}
+      />
+    );
   }
 
   // Show farm sections view
@@ -151,6 +149,7 @@ export const Dashboard: React.FC = () => {
         farm={selectedFarm} 
         onBack={handleBackToDashboard}
         onSectionSelect={handleSectionSelect}
+        onNavigateToSection={handleNavigateFromSubView}
       />
     );
   }
@@ -160,7 +159,6 @@ export const Dashboard: React.FC = () => {
       <Sidebar
         activeKey={activeTab}
         onMenuClick={setActiveTab}
-        onAddFarm={handleAddFarm}
       />
       
       <div className="dashboard__main">

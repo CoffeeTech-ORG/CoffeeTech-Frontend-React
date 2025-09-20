@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
+import { setAuthToken } from '../services/api.client';
 
 interface Role {
   id: number;
@@ -72,6 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Guardar en localStorage
     localStorage.setItem('auth', JSON.stringify(authData));
     
+    // Configurar token en axios
+    setAuthToken(data.token);
+    
     // Actualizar state
     setUser(authData.user);
     setToken(authData.token);
@@ -106,6 +110,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('auth');
     localStorage.removeItem('token'); // Por si acaso queda el token viejo
     
+    // Limpiar token de axios
+    setAuthToken(null);
+    
     // Limpiar state
     setUser(null);
     setToken(null);
@@ -120,6 +127,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (parsedAuth.user && parsedAuth.token) {
           setUser(parsedAuth.user);
           setToken(parsedAuth.token);
+          // Configurar token en axios al restaurar sesión
+          setAuthToken(parsedAuth.token);
         }
       } catch (error) {
         console.error('Error parsing auth data:', error);

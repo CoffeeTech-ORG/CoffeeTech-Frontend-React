@@ -37,10 +37,37 @@ export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) 
 
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
-  const res = await fetch(input, { ...init, headers });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
+  try {
+    const res = await fetch(input, { ...init, headers });
+    
+    if (!res.ok) {
+      let errorMessage = `HTTP ${res.status}`;
+      try {
+        const errorData = await res.text();
+        if (errorData) {
+          errorMessage += `: ${errorData}`;
+        }
+      } catch (e) {
+        // If we can't parse error, use status
+        errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+    
+    // Handle empty responses (e.g., DELETE operations)
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return res.json();
+    } else {
+      return null; // For operations that don't return JSON
+    }
+  } catch (error) {
+    console.error('API Request failed:', {
+      url: input,
+      method: init.method || 'GET',
+      headers,
+      error
+    });
+    throw error;
   }
-  return res.json();
 }

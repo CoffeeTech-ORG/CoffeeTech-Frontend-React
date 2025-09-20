@@ -26,8 +26,10 @@ export const SectionData: React.FC<SectionDataProps> = ({ authToken, section, on
   } = useSectionData(authToken, section.id);
 
   React.useEffect(() => {
-    setToken(authToken);
-  }, [authToken, setToken]);
+    if (authToken) {
+      setToken(authToken);
+    }
+  }, [authToken]);
 
   const getSectionIcon = (type: string) => {
     const typeMap: Record<string, string> = {

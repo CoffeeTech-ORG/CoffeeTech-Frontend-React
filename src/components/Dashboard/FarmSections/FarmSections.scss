@@ -1,5 +1,5 @@
 .farm-sections {
-  padding: 20px;
+  // padding: 20px;
   background: #f5f5f5;
 
   &__header {
@@ -19,7 +19,7 @@
         align-self: flex-start;
         color: #666;
         font-weight: 500;
-        padding: 4px 8px;
+        // padding: 4px 8px;
 
         &:hover {
           color: #1890ff;
@@ -217,7 +217,7 @@
 
 @media (max-width: 1024px) {
   .farm-sections {
-    padding: 16px;
+    // padding: 16px;
 
     &__header {
       flex-direction: column;
@@ -255,7 +255,7 @@
 
 @media (max-width: 640px) {
   .farm-sections {
-    padding: 12px;
+    // padding: 12px;
 
     &__summary .summary-card {
       padding: 16px;

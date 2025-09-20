@@ -13,9 +13,10 @@ interface FarmSectionsProps {
   farm: Farm;
   onBack: () => void;
   onSectionSelect?: (section: Section) => void;
+  onNavigateToSection?: (key: string) => void;
 }
 
-export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSectionSelect }) => {
+export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSectionSelect, onNavigateToSection }) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
@@ -74,13 +75,12 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     }
   };
 
-  const handleAddFarm = () => {
-    message.info('Add Farm functionality will be implemented');
-  };
 
   const handleMenuClick = (key: string) => {
     if (key === 'dashboard') {
       onBack();
+    } else if (onNavigateToSection) {
+      onNavigateToSection(key);
     } else {
       message.info(`Navigate to ${key}`);
     }
@@ -105,7 +105,6 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       <Sidebar
         activeKey="dashboard"
         onMenuClick={handleMenuClick}
-        onAddFarm={handleAddFarm}
       />
       
       <div className="dashboard__main">

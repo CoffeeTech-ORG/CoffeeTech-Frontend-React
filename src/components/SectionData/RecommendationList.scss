@@ -78,6 +78,7 @@
       
       &.expanded {
         .expand-indicator {
+          line-height: 1.5px;
           background: #20B2AA;
           color: white;
           border-color: #20B2AA;
@@ -86,6 +87,7 @@
       
       &.collapsed {
         .expand-indicator {
+          line-height: 1.5px;
           background: #fff;
           color: #666;
         }
