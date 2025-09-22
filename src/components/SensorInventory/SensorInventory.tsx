@@ -4,7 +4,6 @@ import { SensorFilters } from '../../types/sensor.types';
 import { SensorCard } from './SensorCard/SensorCard';
 import { SensorStatsCard } from './SensorStatsCard/SensorStatsCard';
 import { SensorFiltersPanel } from './SensorFiltersPanel/SensorFiltersPanel';
-import { AddSensorModal } from './AddSensorModal/AddSensorModal';
 import './SensorInventory.scss';
 
 export const SensorInventory: React.FC = () => {
@@ -80,12 +79,6 @@ export const SensorInventory: React.FC = () => {
           >
             🔄 Refresh
           </button>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="add-sensor-btn"
-          >
-            + Add Sensor
-          </button>
         </div>
       </div>
 
@@ -133,14 +126,6 @@ export const SensorInventory: React.FC = () => {
                 ? "Get started by adding your first sensor" 
                 : "Try adjusting your filters"}
             </p>
-            {sensors.length === 0 && (
-              <button 
-                onClick={() => setIsAddModalOpen(true)}
-                className="add-first-sensor-btn"
-              >
-                Add Your First Sensor
-              </button>
-            )}
           </div>
         ) : (
           <div className={`sensors-grid ${viewMode}`}>
@@ -156,13 +141,6 @@ export const SensorInventory: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Add Sensor Modal */}
-      <AddSensorModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={addSensor}
-      />
     </div>
   );
 };

@@ -41,11 +41,10 @@ export const SensorCard: React.FC<SensorCardProps> = ({
     switch (type) {
       case 'COMBINED': return '📊';
       case 'TEMPERATURE': return '🌡️';
-      case 'HUMIDITY': return '💧';
+      case 'PRECIPITATION': return '💧';
       case 'SOIL_MOISTURE': return '🌱';
-      case 'LIGHT': return '☀️';
-      case 'PH': return '🧪';
-      case 'CONDUCTIVITY': return '⚡';
+      case 'NPK': return '☀️';
+      case 'HUMIDITY': return '🧪';
       default: return '📡';
     }
   };
@@ -93,13 +92,6 @@ export const SensorCard: React.FC<SensorCardProps> = ({
         </div>
         <div className="sensor-actions">
           <button
-            className="action-btn edit-btn"
-            onClick={() => console.log('Edit sensor:', sensor.id)}
-            title="Edit sensor"
-          >
-            ✏️
-          </button>
-          <button
             className="action-btn delete-btn"
             onClick={handleDelete}
             disabled={isDeleting}
@@ -111,11 +103,6 @@ export const SensorCard: React.FC<SensorCardProps> = ({
       </div>
 
       <div className="sensor-card-body">
-        <div className="sensor-location">
-          <span className="location-icon">📍</span>
-          <span className="location-text">{sensor.location}</span>
-        </div>
-
         <div className="sensor-status-row">
           <div className="status-info">
             <span 
@@ -141,7 +128,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
         <div className="sensor-last-seen">
           <span className="last-seen-label">Last seen:</span>
           <span className="last-seen-time">{formatLastSeen(sensor.lastSeen)}</span>
-        </div>
+        </div>  
       </div>
 
       {viewMode === 'grid' && (

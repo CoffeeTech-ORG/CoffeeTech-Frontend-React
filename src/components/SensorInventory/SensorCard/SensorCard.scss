@@ -125,7 +125,7 @@
       }
 
       &.delete-btn:hover {
-        background: #fee2e2;
+        background: #20b2ab83;
       }
 
       &:disabled {
@@ -155,6 +155,7 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.75rem;
+    gap: 16px;
 
     .status-info {
       display: flex;

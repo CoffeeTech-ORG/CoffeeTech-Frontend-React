@@ -1,5 +1,5 @@
 // API Endpoints Constants
-const BASE_URL = 'https://coffeetech-netcoreappweb-f6hwc3fph9hndhhg.centralus-01.azurewebsites.net/api/v1';
+const BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL;
 
 export const API_ENDPOINTS = {
   // Authentication

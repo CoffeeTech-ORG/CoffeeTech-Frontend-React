@@ -84,6 +84,48 @@ export const farmsService = {
     });
   },
 
+  async updateFarm(id: number, data: { name: string; location: string }): Promise<Farm> {
+    try {
+      const response = await api.put(`/farms/${id}`, {
+        id: id,
+        name: data.name,
+        location: data.location
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to update farm');
+    }
+  },
+
+  async deleteFarm(id: number): Promise<void> {
+    try {
+      await api.delete(`/farms/${id}`);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to delete farm');
+    }
+  },
+
+  async updateSection(id: number, data: { name: string; type: string }): Promise<Section> {
+    try {
+      const response = await api.put(`/sections/${id}`, {
+        id: id,
+        name: data.name,
+        type: data.type
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to update section');
+    }
+  },
+
+  async deleteSection(id: number): Promise<void> {
+    try {
+      await api.delete(`/sections/${id}`);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to delete section');
+    }
+  },
+
   async createSection(farmId: string, data: { name: string; growthStage: 'plantula' | 'vegetativo' | 'floracion' | 'fructificacion' | 'maduracion' | 'cosecha' }): Promise<Section> {
     try {
       // Map growth stage to display name

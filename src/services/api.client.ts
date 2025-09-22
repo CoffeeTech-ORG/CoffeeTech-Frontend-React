@@ -1,7 +1,7 @@
 import axios from 'axios';
-import API_ENDPOINTS from './api.endpoints';
 
-const BASE_URL = API_ENDPOINTS.ASSIGNMENTS.replace('/assignments', '');
+// Use environment variable directly for consistency
+const BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL;
 
 const api = axios.create({
   baseURL: BASE_URL,

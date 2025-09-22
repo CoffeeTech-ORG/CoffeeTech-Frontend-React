@@ -1,20 +1,20 @@
 import React from 'react';
-import { MapPin, Info, Settings, AlertTriangle, Leaf } from 'lucide-react';
+import { MapPin, Info, Settings, AlertTriangle, Leaf, Trash2, Edit } from 'lucide-react';
 import { Section } from '../../../services/farms.service';
 import './SectionCard.scss';
 
 interface SectionCardProps {
   section: Section;
   onViewDetails?: (sectionId: string) => void;
-  onSettings?: (sectionId: string) => void;
-  onClick?: (sectionId: string) => void;
+  onDelete?: (sectionId: string) => void;
+  onEdit?: (sectionId: string) => void;
 }
 
 export const SectionCard: React.FC<SectionCardProps> = ({ 
   section, 
   onViewDetails, 
-  onSettings,
-  onClick
+  onDelete,
+  onEdit
 }) => {
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
@@ -80,8 +80,8 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   return (
     <div 
       className="section-card"
-      onClick={() => onClick?.(section.id)}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      onClick={() => onViewDetails?.(section.id)}
+      style={{ cursor: onViewDetails ? 'pointer' : 'default' }}
     >
       <div className="section-card__header">
         <div className="section-card__title">
@@ -104,21 +104,21 @@ export const SectionCard: React.FC<SectionCardProps> = ({
             className="action-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onViewDetails?.(section.id);
+              onEdit?.(section.id);
             }}
-            title="View Details"
+            title="Edit"
           >
-            <Info size={16} />
+            <Edit size={16} />
           </button>
           <button 
             className="action-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onSettings?.(section.id);
+              onDelete?.(section.id);
             }}
-            title="Settings"
+            title="Delete"
           >
-            <Settings size={16} />
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
@@ -134,26 +134,6 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         </div>
       </div>
       
-      <div className="section-card__health">
-        <div className="health-bar">
-          <div 
-            className="health-bar__fill"
-            style={{ 
-              width: `${section.healthPercentage}%`,
-              backgroundColor: getHealthColor(section.healthPercentage)
-            }}
-          />
-        </div>
-        <div className="health-stats">
-          <span 
-            className="health-percentage"
-            style={{ color: getHealthColor(section.healthPercentage) }}
-          >
-            {section.healthPercentage}%
-          </span>
-          <span className="health-label">Health</span>
-        </div>
-      </div>
       
       <div className="section-card__footer">
         <span className="last-update">

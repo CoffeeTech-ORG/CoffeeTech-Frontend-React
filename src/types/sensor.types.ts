@@ -10,12 +10,11 @@ export interface Sensor {
 export type SensorType = 
   | 'COMBINED'
   | 'TEMPERATURE'
-  | 'HUMIDITY'
+  | 'PRECIPITATION'
   | 'SOIL_MOISTURE'
-  | 'LIGHT'
-  | 'PH'
-  | 'CONDUCTIVITY';
-
+  | 'NPK'
+  | 'HUMIDITY'
+  
 export type SensorStatus = 
   | 'ACTIVE'
   | 'INACTIVE'

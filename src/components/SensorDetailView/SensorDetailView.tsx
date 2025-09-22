@@ -57,11 +57,10 @@ export const SensorDetailView: React.FC<SensorDetailViewProps> = ({
     switch (type) {
       case 'COMBINED': return '📊';
       case 'TEMPERATURE': return '🌡️';
-      case 'HUMIDITY': return '💧';
+      case 'PRECIPITATION': return '💧';
       case 'SOIL_MOISTURE': return '🌱';
-      case 'LIGHT': return '☀️';
-      case 'PH': return '🧪';
-      case 'CONDUCTIVITY': return '⚡';
+      case 'NPK': return '☀️';
+      case 'HUMIDITY': return '🧪';
       default: return '📡';
     }
   };

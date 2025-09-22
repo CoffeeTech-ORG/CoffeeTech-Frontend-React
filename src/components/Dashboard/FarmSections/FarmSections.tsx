@@ -4,7 +4,10 @@ import { ArrowLeft, Plus, User, Bell } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
+import { EditSectionModal, EditSectionData } from '../EditSectionModal/EditSectionModal';
+import { DeleteSectionModal } from '../DeleteSectionModal/DeleteSectionModal';
 import { useFarms, Farm, Section } from '../../../hooks/useFarms';
+import { farmsService } from '../../../services/farms.service';
 import { useAuth } from '../../../contexts/AuthContext';
 import './FarmSections.scss';
 import '../Dashboard.scss';
@@ -21,6 +24,10 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
   const [loading, setLoading] = useState(true);
   const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
   const [addingSectionLoading, setAddingSectionLoading] = useState(false);
+  const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
+  const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
+  const [isDeleteSectionModalOpen, setIsDeleteSectionModalOpen] = useState(false);
+  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
   const { user, logout } = useAuth();
   const { getFarmSections, createSection } = useFarms();
 
@@ -50,8 +57,73 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     }
   };
 
-  const handleSectionSettings = (sectionId: string) => {
-    message.info(`Section settings for ${sectionId}`);
+  const handleSectionEdit = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (section) {
+      setSectionToEdit(section);
+      setIsEditSectionModalOpen(true);
+    }
+  };
+
+  const handleSectionDelete = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (section) {
+      setSectionToDelete(section);
+      setIsDeleteSectionModalOpen(true);
+    }
+  };
+
+  const handleDeleteSectionConfirm = async () => {
+    if (!sectionToDelete) return;
+
+    try {
+      const sectionIdNumber = parseInt(sectionToDelete.id, 10);
+      if (isNaN(sectionIdNumber)) {
+        throw new Error('Invalid section ID');
+      }
+
+      await farmsService.deleteSection(sectionIdNumber);
+      
+      // Remove the section from the local state
+      setSections(prevSections => prevSections.filter(s => s.id !== sectionToDelete.id));
+      
+      message.success('Section deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting section:', error);
+      message.error('Failed to delete section. Please try again.');
+      throw error; // Re-throw to let the modal handle the loading state
+    }
+  };
+
+  const handleDeleteSectionModalClose = () => {
+    setIsDeleteSectionModalOpen(false);
+    setSectionToDelete(null);
+  };
+
+  const handleEditSectionSubmit = async (data: EditSectionData) => {
+    try {
+      console.log('Updating section with data:', data);
+      
+      await farmsService.updateSection(data.id, {
+        name: data.name,
+        type: data.type
+      });
+      
+      // Reload the sections list to ensure we have the latest data
+      await loadFarmSections();
+      
+      setIsEditSectionModalOpen(false);
+      setSectionToEdit(null);
+      message.success('Section updated successfully!');
+    } catch (error) {
+      console.error('Error updating section:', error);
+      throw error; // Re-throw to let the modal handle the error display
+    }
+  };
+
+  const handleEditSectionModalClose = () => {
+    setIsEditSectionModalOpen(false);
+    setSectionToEdit(null);
   };
 
   const handleAddSection = () => {
@@ -166,24 +238,6 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                     <span className="stat-number">{sections.length}</span>
                     <span className="stat-label">Total Sections</span>
                   </div>
-                  <div className="stat">
-                    <span className="stat-number">{averageHealth}%</span>
-                    <span className="stat-label">Average Health</span>
-                  </div>
-                  <div className="health-breakdown">
-                    <div className="health-item healthy">
-                      <span className="health-count">{healthSummary.healthy}</span>
-                      <span className="health-label">Healthy</span>
-                    </div>
-                    <div className="health-item warning">
-                      <span className="health-count">{healthSummary.warning}</span>
-                      <span className="health-label">Warning</span>
-                    </div>
-                    <div className="health-item critical">
-                      <span className="health-count">{healthSummary.critical}</span>
-                      <span className="health-label">Critical</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -214,9 +268,9 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                     <SectionCard
                       key={section.id}
                       section={section}
-                      onClick={handleSectionDetails}
                       onViewDetails={handleSectionDetails}
-                      onSettings={handleSectionSettings}
+                      onEdit={handleSectionEdit}
+                      onDelete={handleSectionDelete}
                     />
                   ))}
                 </div>
@@ -232,6 +286,20 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
         onSubmit={handleSubmitAddSection}
         loading={addingSectionLoading}
         farmId={farm.id}
+      />
+
+      <EditSectionModal
+        isOpen={isEditSectionModalOpen}
+        onClose={handleEditSectionModalClose}
+        onSubmit={handleEditSectionSubmit}
+        section={sectionToEdit}
+      />
+
+      <DeleteSectionModal
+        isOpen={isDeleteSectionModalOpen}
+        onClose={handleDeleteSectionModalClose}
+        onConfirm={handleDeleteSectionConfirm}
+        section={sectionToDelete}
       />
     </div>
   );

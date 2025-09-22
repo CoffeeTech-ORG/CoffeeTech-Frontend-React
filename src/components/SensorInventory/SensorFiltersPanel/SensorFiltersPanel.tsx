@@ -11,13 +11,12 @@ interface SensorFiltersPanelProps {
 
 const SENSOR_STATUSES: SensorStatus[] = ['ACTIVE', 'INACTIVE', 'MAINTENANCE', 'ERROR'];
 const SENSOR_TYPES: SensorType[] = [
-  'COMBINED', 
-  'TEMPERATURE', 
-  'HUMIDITY', 
-  'SOIL_MOISTURE', 
-  'LIGHT', 
-  'PH', 
-  'CONDUCTIVITY'
+  'COMBINED',
+  'TEMPERATURE',
+  'PRECIPITATION',
+  'SOIL_MOISTURE',
+  'NPK',
+  'HUMIDITY'
 ];
 
 export const SensorFiltersPanel: React.FC<SensorFiltersPanelProps> = ({
@@ -129,7 +128,7 @@ export const SensorFiltersPanel: React.FC<SensorFiltersPanelProps> = ({
           </div>
 
           {/* Location Filter */}
-          <div className="filter-group">
+          {/* <div className="filter-group">
             <label htmlFor="location">Location</label>
             <input
               id="location"
@@ -139,7 +138,7 @@ export const SensorFiltersPanel: React.FC<SensorFiltersPanelProps> = ({
               onChange={(e) => handleFilterChange('location', e.target.value)}
               className="filter-input"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Quick Status Filters */}

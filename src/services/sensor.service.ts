@@ -1,7 +1,8 @@
 import { Sensor, SensorFormData } from '../types/sensor.types';
 import { fetchWithAuth } from './api.client';
 
-const SENSORS_API_BASE = 'https://coffeetech-netcoreappweb-f6hwc3fph9hndhhg.centralus-01.azurewebsites.net/api/v1/sensors';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL;
+const SENSORS_API_BASE = `${API_BASE_URL}/sensors`;
 
 export class SensorService {
   private static instance: SensorService;

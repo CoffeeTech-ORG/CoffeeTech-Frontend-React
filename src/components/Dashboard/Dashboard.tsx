@@ -5,8 +5,11 @@ import { FarmCard } from './FarmCard/FarmCard';
 import { FarmSections } from './FarmSections/FarmSections';
 import SectionDetailView from '../SectionDetailView';
 import { SensorInventory } from '../SensorInventory/SensorInventory';
+import { EditFarmModal, EditFarmData } from './EditFarmModal/EditFarmModal';
+import { DeleteFarmModal } from './DeleteFarmModal/DeleteFarmModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
+import { farmsService } from '../../services/farms.service';
 import { Button, Spin, message } from 'antd';
 import { User, Bell } from 'lucide-react';
 import './Dashboard.scss';
@@ -19,6 +22,10 @@ export const Dashboard: React.FC = () => {
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'farm-sections' | 'section-detail'>('dashboard');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [farmToEdit, setFarmToEdit] = useState<Farm | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [farmToDelete, setFarmToDelete] = useState<Farm | null>(null);
   const { user, logout } = useAuth();
   const { getFarms, getWeatherData } = useFarms();
 
@@ -50,8 +57,74 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleSettings = (farmId: string) => {
-    message.info(`Settings for farm ${farmId}`);
+  const handleEdit = (farmId: string) => {
+    const farm = farms.find(f => f.id === farmId);
+    if (farm) {
+      setFarmToEdit(farm);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleDelete = (farmId: string) => {
+    const farm = farms.find(f => f.id === farmId);
+    if (farm) {
+      setFarmToDelete(farm);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!farmToDelete) return;
+
+    try {
+      const farmIdNumber = parseInt(farmToDelete.id, 10);
+      if (isNaN(farmIdNumber)) {
+        throw new Error('Invalid farm ID');
+      }
+
+      await farmsService.deleteFarm(farmIdNumber);
+      
+      // Remove the farm from the local state
+      setFarms(prevFarms => prevFarms.filter(f => f.id !== farmToDelete.id));
+      
+      message.success('Farm deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting farm:', error);
+      message.error('Failed to delete farm. Please try again.');
+      throw error; // Re-throw to let the modal handle the loading state
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    setIsDeleteModalOpen(false);
+    setFarmToDelete(null);
+  };
+
+  const handleEditSubmit = async (data: EditFarmData) => {
+    try {
+      console.log('Updating farm with data:', data);
+      
+      await farmsService.updateFarm(data.id, {
+        name: data.name,
+        location: data.location
+      });
+      
+      // Reload the farms list to ensure we have the latest data
+      const updatedFarms = await getFarms();
+      setFarms(updatedFarms);
+      
+      setIsEditModalOpen(false);
+      setFarmToEdit(null);
+      message.success('Farm updated successfully!');
+    } catch (error) {
+      console.error('Error updating farm:', error);
+      throw error; // Re-throw to let the modal handle the error display
+    }
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setFarmToEdit(null);
   };
 
   const handleBackToDashboard = () => {
@@ -98,7 +171,8 @@ export const Dashboard: React.FC = () => {
                       key={farm.id}
                       farm={farm}
                       onViewDetails={handleViewDetails}
-                      onSettings={handleSettings}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>
@@ -188,6 +262,20 @@ export const Dashboard: React.FC = () => {
           {renderContent()}
         </main>
       </div>
+
+      <EditFarmModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        onSubmit={handleEditSubmit}
+        farm={farmToEdit}
+      />
+
+      <DeleteFarmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        farm={farmToDelete}
+      />
     </div>
   );
 };

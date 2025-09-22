@@ -1,18 +1,20 @@
 import React from 'react';
-import { MapPin, Info, Settings, AlertTriangle } from 'lucide-react';
+import { MapPin, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
 import './FarmCard.scss';
 
 interface FarmCardProps {
   farm: Farm;
   onViewDetails?: (farmId: string) => void;
-  onSettings?: (farmId: string) => void;
+  onEdit?: (farmId: string) => void;
+  onDelete?: (farmId: string) => void;
 }
 
 export const FarmCard: React.FC<FarmCardProps> = ({ 
   farm, 
-  onViewDetails, 
-  onSettings 
+  onViewDetails,
+  onEdit,
+  onDelete 
 }) => {
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
@@ -48,41 +50,21 @@ export const FarmCard: React.FC<FarmCardProps> = ({
           </button>
           <button 
             className="action-btn"
-            onClick={() => onViewDetails?.(farm.id)}
+            onClick={() => onEdit?.(farm.id)}
           >
-            <Info size={16} />
+            <Edit size={16} />
           </button>
           <button 
             className="action-btn"
-            onClick={() => onSettings?.(farm.id)}
+            onClick={() => onDelete?.(farm.id)}
           >
-            <Settings size={16} />
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
       
       <p className="farm-card__location">{farm.location}</p>
       
-      <div className="farm-card__health">
-        <div className="health-bar">
-          <div 
-            className="health-bar__fill"
-            style={{ 
-              width: `${farm.healthPercentage}%`,
-              backgroundColor: getHealthColor(farm.healthPercentage)
-            }}
-          />
-        </div>
-        <div className="health-stats">
-          <span 
-            className="health-percentage"
-            style={{ color: getHealthColor(farm.healthPercentage) }}
-          >
-            {farm.healthPercentage}%
-          </span>
-          <span className="health-label">Healthy</span>
-        </div>
-      </div>
     </div>
   );
 };
