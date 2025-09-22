@@ -34,7 +34,11 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   };
 
   return (
-    <div className="farm-card">
+    <div 
+      className="farm-card"
+      onClick={() => onViewDetails?.(farm.id)}
+      style={{ cursor: onViewDetails ? 'pointer' : 'default' }}
+    >
       <div className="farm-card__header">
         <div className="farm-card__title">
           {getHealthIcon(farm.status)}

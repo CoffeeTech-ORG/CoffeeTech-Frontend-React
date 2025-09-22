@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Info, Settings, AlertTriangle, Leaf, Trash2, Edit } from 'lucide-react';
+import { MapPin, Info, Settings, AlertTriangle, Leaf, Trash2, Edit, Cable } from 'lucide-react';
 import { Section } from '../../../services/farms.service';
 import './SectionCard.scss';
 
@@ -8,13 +8,15 @@ interface SectionCardProps {
   onViewDetails?: (sectionId: string) => void;
   onDelete?: (sectionId: string) => void;
   onEdit?: (sectionId: string) => void;
+  onAddDevice?: (sectionId: string) => void;
 }
 
 export const SectionCard: React.FC<SectionCardProps> = ({ 
   section, 
   onViewDetails, 
   onDelete,
-  onEdit
+  onEdit,
+  onAddDevice
 }) => {
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
@@ -94,11 +96,11 @@ export const SectionCard: React.FC<SectionCardProps> = ({
             className="action-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onViewDetails?.(section.id);
+              onAddDevice?.(section.id);
             }}
-            title="View Location"
+            title="Assign Device"
           >
-            <MapPin size={16} />
+            <Cable size={16} />
           </button>
           <button 
             className="action-btn"
