@@ -5,6 +5,7 @@ import { FarmCard } from './FarmCard/FarmCard';
 import { FarmSections } from './FarmSections/FarmSections';
 import SectionDetailView from '../SectionDetailView';
 import { SensorInventory } from '../SensorInventory/SensorInventory';
+import { Reports } from '../Reports/Reports';
 import { EditFarmModal, EditFarmData } from './EditFarmModal/EditFarmModal';
 import { DeleteFarmModal } from './DeleteFarmModal/DeleteFarmModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -194,12 +195,7 @@ export const Dashboard: React.FC = () => {
         );
       
       case 'reports':
-        return (
-          <div className="dashboard-content">
-            <h2 className="section-title">Reports</h2>
-            <p>Reports functionality will be implemented here.</p>
-          </div>
-        );
+        return <Reports />;
       
       case 'settings':
         return <SensorInventory />;
