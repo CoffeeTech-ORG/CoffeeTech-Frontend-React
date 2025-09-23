@@ -48,27 +48,36 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         <div className="farm-card__actions">
           <button 
             className="action-btn"
-            onClick={() => onViewDetails?.(farm.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails?.(farm.id);
+            }}
           >
             <MapPin size={16} />
           </button>
           <button 
             className="action-btn"
-            onClick={() => onEdit?.(farm.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.(farm.id);
+            }}
           >
             <Edit size={16} />
           </button>
           <button 
             className="action-btn"
-            onClick={() => onDelete?.(farm.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(farm.id);
+            }}
           >
             <Trash2 size={16} />
           </button>
         </div>
       </div>
-      
-      <p className="farm-card__location">{farm.location}</p>
-      
+
+      <p className="farm-card__location"> <MapPin size={16} /> {farm.location}</p>
+
     </div>
   );
 };

@@ -127,6 +127,18 @@ export const Dashboard: React.FC = () => {
     setFarmToEdit(null);
   };
 
+  const handleFarmCreated = async () => {
+    // Reload farms after a new farm is created
+    try {
+      const updatedFarms = await getFarms();
+      setFarms(updatedFarms);
+    } catch (error) {
+      console.error('Error reloading farms after creation:', error);
+      // Don't show error message here as the creation was successful
+      // Just log it for debugging
+    }
+  };
+
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
     setSelectedFarm(null);
@@ -233,6 +245,7 @@ export const Dashboard: React.FC = () => {
       <Sidebar
         activeKey={activeTab}
         onMenuClick={setActiveTab}
+        onFarmCreated={handleFarmCreated}
       />
       
       <div className="dashboard__main">

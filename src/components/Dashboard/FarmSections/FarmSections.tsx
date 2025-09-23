@@ -4,6 +4,8 @@ import { ArrowLeft, Plus, User, Bell } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
+import { AddDeviceModal, AddDeviceData } from '../AddDeviceModal/AddDeviceModal';
+import { AssignDeviceModal, AssignDeviceData } from '../AssignDeviceModal/AssignDeviceModal';
 import { EditSectionModal, EditSectionData } from '../EditSectionModal/EditSectionModal';
 import { DeleteSectionModal } from '../DeleteSectionModal/DeleteSectionModal';
 import { useFarms, Farm, Section } from '../../../hooks/useFarms';
@@ -24,6 +26,11 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
   const [loading, setLoading] = useState(true);
   const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
   const [addingSectionLoading, setAddingSectionLoading] = useState(false);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [addingDeviceLoading, setAddingDeviceLoading] = useState(false);
+  const [isAssignDeviceModalOpen, setIsAssignDeviceModalOpen] = useState(false);
+  const [assigningDeviceLoading, setAssigningDeviceLoading] = useState(false);
+  const [sectionToAssignDevice, setSectionToAssignDevice] = useState<Section | null>(null);
   const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
   const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
   const [isDeleteSectionModalOpen, setIsDeleteSectionModalOpen] = useState(false);
@@ -147,6 +154,73 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     }
   };
 
+  const handleAddDevice = () => {
+    setIsAddDeviceModalOpen(true);
+  };
+
+  const handleCloseAddDeviceModal = () => {
+    setIsAddDeviceModalOpen(false);
+  };
+
+  const handleSubmitAddDevice = async (data: AddDeviceData) => {
+    try {
+      setAddingDeviceLoading(true);
+      await farmsService.createDevice(data.deviceHubId);
+      message.success('Device added successfully!');
+      setIsAddDeviceModalOpen(false);
+    } catch (error: any) {
+      console.error('Error creating device:', error);
+      
+      // Check if it's a duplicate MAC address error
+      if (error.message && error.message.includes('already exists')) {
+        message.error('A device with this MAC address already exists. Please use a different MAC address.');
+      } else {
+        message.error('Failed to add device. Please try again.');
+      }
+      
+      throw error; // Re-throw to let the modal handle the error message
+    } finally {
+      setAddingDeviceLoading(false);
+    }
+  };
+
+  const handleAssignDevice = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (section) {
+      setSectionToAssignDevice(section);
+      setIsAssignDeviceModalOpen(true);
+    }
+  };
+
+  const handleCloseAssignDeviceModal = () => {
+    setIsAssignDeviceModalOpen(false);
+    setSectionToAssignDevice(null);
+  };
+
+  const handleSubmitAssignDevice = async (data: AssignDeviceData) => {
+    if (!sectionToAssignDevice) return;
+
+    try {
+      setAssigningDeviceLoading(true);
+      const sectionIdNumber = parseInt(sectionToAssignDevice.id, 10);
+      
+      if (isNaN(sectionIdNumber)) {
+        throw new Error('Invalid section ID');
+      }
+
+      await farmsService.createAssignment(sectionIdNumber, data.deviceId);
+      message.success('Device assigned to section successfully!');
+      setIsAssignDeviceModalOpen(false);
+      setSectionToAssignDevice(null);
+    } catch (error: any) {
+      console.error('Error assigning device:', error);
+      message.error('Failed to assign device. Please try again.');
+      throw error; // Re-throw to let the modal handle the error message
+    } finally {
+      setAssigningDeviceLoading(false);
+    }
+  };
+
 
   const handleMenuClick = (key: string) => {
     if (key === 'dashboard') {
@@ -157,20 +231,6 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       message.info(`Navigate to ${key}`);
     }
   };
-
-  const getHealthSummary = () => {
-    if (sections.length === 0) return { healthy: 0, warning: 0, critical: 0 };
-    
-    return sections.reduce((acc, section) => {
-      acc[section.status]++;
-      return acc;
-    }, { healthy: 0, warning: 0, critical: 0 });
-  };
-
-  const healthSummary = getHealthSummary();
-  const averageHealth = sections.length > 0 
-    ? Math.round(sections.reduce((sum, section) => sum + section.healthPercentage, 0) / sections.length)
-    : 0;
 
   return (
     <div className="dashboard">
@@ -220,14 +280,25 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                 </div>
               </div>
               
-              <Button
-                type="primary"
-                icon={<Plus size={20} />}
-                onClick={handleAddSection}
-                className="add-section-btn"
-              >
-                Add Section
-              </Button>
+              <div className="header-buttons">
+                <Button
+                  type="primary"
+                  icon={<Plus size={20} />}
+                  onClick={handleAddSection}
+                  className="add-section-btn"
+                >
+                  Add Section
+                </Button>
+
+                <Button
+                  type="primary"
+                  icon={<Plus size={20} />}
+                  onClick={handleAddDevice}
+                  className="add-section-btn"
+                >
+                  Add Device
+                </Button>
+              </div>
             </div>
 
             <div className="farm-sections__summary">
@@ -271,6 +342,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                       onViewDetails={handleSectionDetails}
                       onEdit={handleSectionEdit}
                       onDelete={handleSectionDelete}
+                      onAddDevice={handleAssignDevice}
                     />
                   ))}
                 </div>
@@ -286,6 +358,22 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
         onSubmit={handleSubmitAddSection}
         loading={addingSectionLoading}
         farmId={farm.id}
+      />
+
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        onClose={handleCloseAddDeviceModal}
+        onSubmit={handleSubmitAddDevice}
+        loading={addingDeviceLoading}
+      />
+
+      <AssignDeviceModal
+        isOpen={isAssignDeviceModalOpen}
+        onClose={handleCloseAssignDeviceModal}
+        onSubmit={handleSubmitAssignDevice}
+        sectionId={sectionToAssignDevice?.id || null}
+        sectionName={sectionToAssignDevice?.name || null}
+        loading={assigningDeviceLoading}
       />
 
       <EditSectionModal

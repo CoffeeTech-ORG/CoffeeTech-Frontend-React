@@ -16,6 +16,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
   viewMode
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -78,6 +79,26 @@ export const SensorCard: React.FC<SensorCardProps> = ({
     }
   };
 
+  const handleCopySensorCode = async () => {
+    try {
+      await navigator.clipboard.writeText(sensor.sensorCode);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      console.log('Sensor code copied to clipboard:', sensor.sensorCode);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = sensor.sensorCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      console.log('Sensor code copied to clipboard (fallback):', sensor.sensorCode);
+    }
+  };
+
   return (
     <div className={`sensor-card ${viewMode} ${sensor.status.toLowerCase()}`}>
       <div className="sensor-card-header">
@@ -86,7 +107,14 @@ export const SensorCard: React.FC<SensorCardProps> = ({
             {getSensorTypeIcon(sensor.type)}
           </div>
           <div className="sensor-details">
-            <h3 className="sensor-code">{sensor.sensorCode}</h3>
+            <h3 
+              className={`sensor-code clickable ${isCopied ? 'copied' : ''}`}
+              onClick={handleCopySensorCode}
+              title={isCopied ? 'Copied!' : 'Click to copy sensor code'}
+              style={{ cursor: 'pointer' }}
+            >
+              {isCopied ? '📋 Copied!' : sensor.sensorCode}
+            </h3>
             <p className="sensor-type">{sensor.type.replace('_', ' ')}</p>
           </div>
         </div>

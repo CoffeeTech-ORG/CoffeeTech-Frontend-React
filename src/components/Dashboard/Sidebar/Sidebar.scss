@@ -130,3 +130,7 @@
     }
   }
 }
+
+:where(.css-dev-only-do-not-override-imrp2p).ant-menu .ant-menu-item .ant-menu-item-icon, :where(.css-dev-only-do-not-override-imrp2p).ant-menu .ant-menu-submenu-title .ant-menu-item-icon{
+  color: #fff !important;
+}

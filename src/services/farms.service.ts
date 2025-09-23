@@ -36,6 +36,12 @@ export interface Section {
   };
 }
 
+export interface Device {
+  id: number;
+  dataRecordId: number;
+  deviceHubId: string;
+}
+
 export const farmsService = {
   async getFarms(): Promise<Farm[]> {
     try {
@@ -146,6 +152,54 @@ export const farmsService = {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to create section');
+    }
+  },
+
+  async getDevices(): Promise<Device[]> {
+    try {
+      const response = await api.get('/devices');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch devices');
+    }
+  },
+
+  async createDevice(deviceHubId: string): Promise<Device> {
+    try {
+      // First, check if the device with this MAC address already exists
+      const existingDevices = await this.getDevices();
+      const deviceExists = existingDevices.some(device => 
+        device.deviceHubId === deviceHubId
+      );
+
+      if (deviceExists) {
+        throw new Error('A device with this MAC address already exists');
+      }
+
+      const response = await api.post('/devices', {
+        dataRecordId: 0,
+        deviceHubId: deviceHubId
+      });
+      return response.data;
+    } catch (error: any) {
+      // If it's our custom duplicate error, re-throw it as is
+      if (error.message === 'A device with this MAC address already exists') {
+        throw error;
+      }
+      // Otherwise, use the generic error handling
+      throw new Error(error.response?.data?.message || 'Failed to create device');
+    }
+  },
+
+  async createAssignment(sectionId: number, deviceId: number): Promise<any> {
+    try {
+      const response = await api.post('/assignments', {
+        sectionId: sectionId,
+        deviceId: deviceId
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to create assignment');
     }
   },
 };

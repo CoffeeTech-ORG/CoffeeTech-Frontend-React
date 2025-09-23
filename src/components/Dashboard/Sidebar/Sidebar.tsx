@@ -17,9 +17,10 @@ interface SidebarProps {
   activeKey: string;
   onMenuClick: (key: string) => void;
   onAddFarm?: () => void;
+  onFarmCreated?: () => Promise<void>;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddFarm }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddFarm, onFarmCreated }) => {
   const { user } = useAuth();
   const [isAddFarmOpen, setIsAddFarmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,6 +66,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
     try {
       if (!user) throw new Error('No user found');
       await createFarm(data, user.id);
+      
+      // Notify parent component that a new farm was created
+      if (onFarmCreated) {
+        await onFarmCreated();
+      }
     } finally {
       setLoading(false);
     }
