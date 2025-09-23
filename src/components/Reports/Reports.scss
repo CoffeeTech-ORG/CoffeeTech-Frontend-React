@@ -1,52 +1,102 @@
+@import '../../styles/variables.scss';
+
 .reports-container {
-  padding: 24px;
-  background-color: #f5f5f5;
-  min-height: 100vh;
+  background: $background-white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: $shadow-light;
+  min-height: calc(100vh - 100px);
 
-  .ant-card {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+  .reports-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
 
-    .ant-card-head {
-      border-bottom: 1px solid #e8e8e8;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-
-      .ant-card-head-title {
-        color: white;
+    .header-title {
+      h2 {
+        font-size: 24px;
         font-weight: 600;
+        color: $text-primary;
+        margin: 0 0 0.5rem 0;
+      }
+
+      .ant-typography {
+        font-size: 16px;
+        color: $text-secondary;
+        margin: 0;
       }
     }
   }
 
-  .filter-highlight {
-    background: linear-gradient(135deg, #f0f2ff 0%, #e6f7ff 100%);
-    border: 1px solid #d6e4ff;
-    border-radius: 6px;
-    padding: 12px;
-    margin-top: 16px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  // Filter Card Styles
+  .ant-card {
+    border-radius: $border-radius-md;
+    box-shadow: $shadow-light;
+    border: 1px solid $border-color;
+
+    .ant-card-head {
+      border-bottom: 1px solid $border-color;
+      background: $background-white;
+      
+      .ant-card-head-title {
+        color: $text-primary;
+        font-weight: 600;
+        font-size: 16px;
+      }
+    }
+
+    .ant-card-body {
+      padding: $spacing-md;
+    }
   }
 
+  // Filter highlight section
+  .filter-highlight {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #0ea5e9;
+    border-radius: $border-radius-sm;
+    padding: $spacing-sm;
+    margin-top: $spacing-sm;
+    box-shadow: inset 0 1px 3px rgba(14, 165, 233, 0.1);
+    
+    .ant-typography {
+      margin: 0;
+      color: $text-primary;
+      
+      &.ant-typography-secondary {
+        color: $text-secondary;
+      }
+    }
+  }
+
+  // Report stat cards
   .report-stat-card {
     height: 100%;
     transition: all 0.3s ease;
+    border-radius: $border-radius-md;
+    border: 1px solid $border-color;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: $shadow-medium;
+    }
+
+    .ant-card-body {
+      padding: $spacing-sm;
     }
 
     .ant-statistic-title {
       font-size: 12px;
       font-weight: 500;
-      color: #666;
+      color: $text-secondary;
       margin-bottom: 4px;
     }
 
     .ant-statistic-content {
       .ant-statistic-content-value {
         font-weight: 600;
+        color: $text-primary;
       }
 
       .ant-statistic-content-prefix {
@@ -56,6 +106,7 @@
     }
   }
 
+  // Nutrients grid
   .nutrients-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -65,48 +116,123 @@
     .nutrient-item {
       text-align: center;
       padding: 8px;
-      background: #fafafa;
-      border-radius: 4px;
-      border: 1px solid #e8e8e8;
+      background: $background-light;
+      border-radius: $border-radius-sm;
+      border: 1px solid $border-color;
 
       .nutrient-value {
         font-weight: 600;
         font-size: 14px;
+        color: $text-primary;
       }
 
       .nutrient-label {
         font-size: 10px;
-        color: #666;
+        color: $text-secondary;
         margin-top: 2px;
       }
     }
   }
 
-  .loading-container {
+  // Loading and empty states
+  .loading-container, .no-data-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 48px;
-    background: white;
-    border-radius: 8px;
+    padding: $spacing-xl;
+    background: $background-white;
+    border-radius: $border-radius-md;
+    border: 2px dashed $border-color;
+    
+    .ant-typography {
+      color: $text-secondary;
+      font-size: 16px;
+    }
   }
 
-  .no-data-container {
-    text-align: center;
-    padding: 48px;
-    color: #666;
-    background: white;
-    border-radius: 8px;
-  }
-
+  // Export actions
   .export-actions {
     .ant-btn {
       margin-left: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: $shadow-light;
+      border-radius: $border-radius-sm;
       
       &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: $shadow-medium;
+      }
+
+      &.ant-btn-primary {
+        background-color: $primary-color;
+        border-color: $primary-color;
+
+        &:hover {
+          background-color: darken($primary-color, 8%);
+          border-color: darken($primary-color, 8%);
+        }
+      }
+    }
+  }
+
+  // Table specific styles to match existing app style
+  .report-table-container {
+    .ant-card-head {
+      background: $background-white;
+      
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: $text-primary;
+      }
+    }
+
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: $background-light;
+        border-bottom: 2px solid $border-color;
+        color: $text-primary;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .ant-table-tbody > tr > td {
+        border-bottom: 1px solid lighten($border-color, 5%);
+        color: $text-primary;
+      }
+
+      .ant-table-tbody > tr:hover > td {
+        background: lighten($primary-color, 45%);
+      }
+
+      .ant-table-tbody > tr:nth-child(2n) > td {
+        background: lighten($background-light, 2%);
+      }
+
+      .ant-table-tbody > tr:nth-child(2n):hover > td {
+        background: lighten($primary-color, 45%);
+      }
+
+      // Tag styles
+      .ant-tag {
+        border-radius: $border-radius-sm;
+        font-weight: 500;
+        font-size: 11px;
+        padding: 2px 8px;
+      }
+    }
+
+    .ant-table-pagination {
+      margin: $spacing-md 0 0 0;
+      
+      .ant-pagination-item {
+        border-radius: $border-radius-sm;
+      }
+
+      .ant-pagination-item-active {
+        background-color: $primary-color;
+        border-color: $primary-color;
       }
     }
   }
@@ -115,14 +241,24 @@
 // Responsive design
 @media (max-width: 768px) {
   .reports-container {
-    padding: 16px;
+    padding: $spacing-sm;
+    border-radius: $border-radius-sm;
+
+    .reports-header {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .header-title h2 {
+        font-size: 20px;
+      }
+    }
 
     .ant-col {
-      margin-bottom: 16px;
+      margin-bottom: $spacing-sm;
     }
 
     .filter-highlight {
-      padding: 8px;
+      padding: $spacing-xs;
       font-size: 12px;
     }
 
@@ -141,20 +277,26 @@
         }
       }
     }
+
+    .export-actions {
+      .ant-btn {
+        margin: 4px 0;
+        width: 100%;
+      }
+    }
   }
 }
 
 @media (max-width: 480px) {
   .reports-container {
-    padding: 12px;
+    padding: $spacing-xs;
+
+    .reports-header .header-title h2 {
+      font-size: 18px;
+    }
 
     .ant-card .ant-card-head .ant-card-head-title {
       font-size: 16px;
-    }
-
-    .export-actions .ant-btn {
-      margin: 4px 0;
-      width: 100%;
     }
   }
 }

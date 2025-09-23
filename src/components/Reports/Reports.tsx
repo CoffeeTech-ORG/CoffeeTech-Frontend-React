@@ -167,14 +167,16 @@ export const Reports: React.FC = () => {
   const selectedSection = sections.find(s => s.id === selectedSectionId);
 
   return (
-    <div className="reports-container" style={{ padding: '24px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <Title level={2} style={{ marginBottom: '8px', color: '#1a1a1a' }}>
-          Reports Dashboard
-        </Title>
-        <Text type="secondary">
-          Generate comprehensive reports for your farms and sections
-        </Text>
+    <div className="reports-container">
+      <div className="reports-header">
+        <div className="header-title">
+          <Title level={2} style={{ marginBottom: '8px', color: '#262626', fontSize: '24px' }}>
+            Reports Dashboard
+          </Title>
+          <Text type="secondary">
+            Generate comprehensive reports for your farms and sections
+          </Text>
+        </div>
       </div>
 
       {/* Filters Card */}

@@ -173,6 +173,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
 
   return (
     <Card
+      className="report-table-container"
       title={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Title level={4} style={{ margin: 0 }}>
@@ -183,12 +184,12 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
               placeholder="Search farms, sections, or dates"
               allowClear
               enterButton={<SearchOutlined />}
-              size="small"
+              size="middle"
               onSearch={handleSearch}
               onChange={(e) => !e.target.value && handleSearch('')}
               style={{ width: 250 }}
             />
-            <Button icon={<FilterOutlined />} size="small">
+            <Button icon={<FilterOutlined />} size="middle">
               Filters
             </Button>
           </Space>
@@ -204,14 +205,14 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           total: filteredData.length,
           pageSize: pageSize,
           showSizeChanger: true,
-          showQuickJumper: true,
+          showQuickJumper: false,
           showTotal: (total, range) =>
             `${range[0]}-${range[1]} of ${total} records`,
           pageSizeOptions: ['10', '25', '50', '100'],
           onShowSizeChange: (_, size) => setPageSize(size),
         }}
         scroll={{ x: 1200 }}
-        size="small"
+        size="middle"
         bordered
       />
     </Card>
