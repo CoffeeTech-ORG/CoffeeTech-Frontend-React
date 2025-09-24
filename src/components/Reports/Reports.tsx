@@ -317,7 +317,7 @@ export const Reports: React.FC = () => {
                   >
                     Export CSV
                   </Button>
-                  <Button 
+                  {/* <Button 
                     icon={<DownloadOutlined />}
                     onClick={() => handleExportReport('excel')}
                   >
@@ -328,7 +328,7 @@ export const Reports: React.FC = () => {
                     onClick={() => handleExportReport('pdf')}
                   >
                     Export PDF
-                  </Button>
+                  </Button> */}
                 </Space>
               </Col>
             </Row>
