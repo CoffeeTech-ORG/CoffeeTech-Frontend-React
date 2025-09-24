@@ -15,11 +15,13 @@ export interface Farm {
 }
 
 export interface WeatherData {
+  cityName: string;
   temperature: number;
-  location: string;
-  condition: string;
+  mainCondition: string;
   realFeel: number;
   date: string;
+  location: string;
+  condition: string;
 }
 
 export interface Section {
@@ -74,23 +76,9 @@ export const useFarms = () => {
   }, []);
 
   const getWeatherData = useCallback(async (): Promise<WeatherData> => {
-    // Note: Weather data endpoint not provided in the API list
-    // Using mock data for now - replace when weather endpoint is available
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          temperature: 20,
-          location: 'Lima, Peru',
-          condition: 'Partly Cloudy',
-          realFeel: 19,
-          date: new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-          }),
-        });
-      }, 600);
-    });
+    // Use the farms service which now connects to OpenWeatherMap API
+    const { farmsService } = await import('../services/farms.service');
+    return await farmsService.getWeatherData();
   }, []);
 
   const createSection = useCallback(async (

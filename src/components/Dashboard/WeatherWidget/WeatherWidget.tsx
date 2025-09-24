@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, Sun } from 'lucide-react';
+import { Cloud, Sun, CloudRain, Zap } from 'lucide-react';
 import { WeatherData } from '../../../services/farms.service';
 import './WeatherWidget.scss';
 
@@ -8,16 +8,32 @@ interface WeatherWidgetProps {
 }
 
 export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
-  const getWeatherIcon = (condition: string) => {
-    if (condition.toLowerCase().includes('cloudy')) {
-      return (
-        <div className="weather-icon">
-          <Sun className="sun" size={32} />
-          <Cloud className="cloud" size={40} />
-        </div>
-      );
+  const getWeatherIcon = (mainCondition: string) => {
+    const condition = mainCondition.toLowerCase();
+    
+    switch (condition) {
+      case 'clear':
+        return <Sun size={40} className="weather-icon--sunny" />;
+      case 'clouds':
+      case 'mist':
+      case 'smoke':
+      case 'haze':
+      case 'dust':
+      case 'fog':
+        return (
+          <div className="weather-icon">
+            <Sun className="sun" size={32} />
+            <Cloud className="cloud" size={40} />
+          </div>
+        );
+      case 'rain':
+      case 'drizzle':
+        return <CloudRain size={40} className="weather-icon--rainy" />;
+      case 'thunderstorm':
+        return <Zap size={40} className="weather-icon--stormy" />;
+      default:
+        return <Sun size={40} />;
     }
-    return <Sun size={40} />;
   };
 
   return (
@@ -37,7 +53,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
         </div>
         
         <div className="weather-widget__visual">
-          {getWeatherIcon(weather.condition)}
+          {getWeatherIcon(weather.mainCondition)}
           <p className="weather-widget__date">{weather.date}</p>
         </div>
       </div>

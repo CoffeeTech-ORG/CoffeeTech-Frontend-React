@@ -1,4 +1,5 @@
 import { api } from './api.service';
+import { weatherService } from './weather.service';
 
 export interface Farm {
   id: string;
@@ -13,11 +14,13 @@ export interface Farm {
 }
 
 export interface WeatherData {
+  cityName: string;
   temperature: number;
-  location: string;
-  condition: string;
+  mainCondition: string;
   realFeel: number;
   date: string;
+  location: string;
+  condition: string;
 }
 
 export interface Section {
@@ -71,23 +74,26 @@ export const farmsService = {
   },
 
   async getWeatherData(): Promise<WeatherData> {
-    // Note: Weather data endpoint not provided in the API list
-    // Using mock data for now - replace when weather endpoint is available
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          temperature: 20,
-          location: 'Lima, Peru',
-          condition: 'Partly Cloudy',
-          realFeel: 19,
-          date: new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-          }),
-        });
-      }, 600);
-    });
+    try {
+      // Usar el servicio de clima real que consume la API de OpenWeatherMap
+      return await weatherService.getCurrentWeather();
+    } catch (error) {
+      console.error('Error fetching weather data, falling back to mock data:', error);
+      // Fallback a datos mock si falla la API
+      return {
+        cityName: 'Lima',
+        temperature: 20,
+        mainCondition: 'Clouds',
+        location: 'Lima, Peru',
+        condition: 'Partly Cloudy',
+        realFeel: 19,
+        date: new Date().toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }),
+      };
+    }
   },
 
   async updateFarm(id: number, data: { name: string; location: string }): Promise<Farm> {
