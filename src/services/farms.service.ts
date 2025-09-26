@@ -5,6 +5,7 @@ export interface Farm {
   id: string;
   name: string;
   location: string;
+  altitude: number;
   healthPercentage: number;
   status: 'healthy' | 'warning' | 'critical';
   coordinates: {
@@ -32,7 +33,7 @@ export interface Section {
   size: number; // in hectares or area unit
   healthPercentage: number;
   status: 'healthy' | 'warning' | 'critical';
-  lastUpdate: string;
+  updatedAt?: string; // New field from API
   coordinates?: {
     lat: number;
     lng: number;

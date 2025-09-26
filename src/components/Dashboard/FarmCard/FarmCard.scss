@@ -71,12 +71,20 @@
   &__location {
     color: $text-secondary;
     font-size: 14px;
-    // margin: 0 0 $spacing-md 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__altitude {
+    color: $text-secondary;
+    font-size: 14px;
     display: flex;
     align-items: center;
     gap: 10px;
   }
-  
+
   &__health {
     .health-bar {
       width: 100%;

@@ -22,27 +22,28 @@ export interface Device {
 export interface DataRecordRaw {
   id: number | string;
   airHumidityPercent?: number | string;
-  celsiusGradeTemperature?: number | string;
   celciusGradeTemperature?: number | string; // possible misspelling
   soilHumidityPercent?: number | string;
-  precipitationDetected?: boolean | string;
+  precipitationDetected?: boolean | string | number; // Can be 0/1 from API
   nitrogen?: number | string;
   phosphorus?: number | string;
   potassium?: number | string;
   timestamp?: string | number; // optional
+  updatedAt?: string; // API field
   [key: string]: any;
 }
 
 export interface DataRecord {
   id: number | string;
   airHumidityPercent?: number | null;
-  celsiusGradeTemperature?: number | null;
+  celciusGradeTemperature?: number | null; // API spelling variant
   soilHumidityPercent?: number | null;
-  precipitationDetected?: boolean;
+  precipitationDetected?: boolean | number; // Can be 0 or 1 from API
   nitrogen?: number | null;
   phosphorus?: number | null;
   potassium?: number | null;
   timestamp?: string | number | null;
+  updatedAt?: string | null;
 }
 
 export interface Recommendation {

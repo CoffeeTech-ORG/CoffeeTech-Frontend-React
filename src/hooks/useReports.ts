@@ -126,7 +126,7 @@ export const useReports = () => {
       };
     }
 
-    const validTemperatures = data.filter(d => d.celsiusGradeTemperature !== null && d.celsiusGradeTemperature !== undefined);
+    const validTemperatures = data.filter(d => d.celciusGradeTemperature !== null && d.celciusGradeTemperature !== undefined);
     const validAirHumidity = data.filter(d => d.airHumidityPercent !== null && d.airHumidityPercent !== undefined);
     const validSoilHumidity = data.filter(d => d.soilHumidityPercent !== null && d.soilHumidityPercent !== undefined);
     const validNitrogen = data.filter(d => d.nitrogen !== null && d.nitrogen !== undefined);
@@ -137,8 +137,8 @@ export const useReports = () => {
 
     return {
       totalDataPoints: data.length,
-      averageTemperature: validTemperatures.length > 0 
-        ? validTemperatures.reduce((sum, d) => sum + (d.celsiusGradeTemperature || 0), 0) / validTemperatures.length 
+      averageTemperature: validTemperatures.length > 0
+        ? validTemperatures.reduce((sum, d) => sum + (d.celciusGradeTemperature || 0), 0) / validTemperatures.length
         : undefined,
       averageAirHumidity: validAirHumidity.length > 0
         ? validAirHumidity.reduce((sum, d) => sum + (d.airHumidityPercent || 0), 0) / validAirHumidity.length
@@ -165,7 +165,7 @@ export const useReports = () => {
     return data.map(item => ({
       timestamp: typeof item.timestamp === 'string' ? item.timestamp : item.timestamp.toISOString(),
       date: dayjs(item.timestamp).format('MM/DD'),
-      temperature: item.celsiusGradeTemperature || undefined,
+      temperature: item.celciusGradeTemperature || undefined,
       airHumidity: item.airHumidityPercent || undefined,
       soilHumidity: item.soilHumidityPercent || undefined,
       nitrogen: item.nitrogen || undefined,
@@ -193,7 +193,7 @@ function calculateHealthScore(data: ReportData[]): number {
 
   let score = 100;
   const validData = data.filter(d => 
-    d.celsiusGradeTemperature !== null || 
+    d.celciusGradeTemperature !== null || 
     d.airHumidityPercent !== null || 
     d.soilHumidityPercent !== null
   );
@@ -201,9 +201,9 @@ function calculateHealthScore(data: ReportData[]): number {
   if (validData.length === 0) return 50; // Default score
 
   // Temperature score (optimal range: 18-25°C for coffee)
-  const temperatures = validData.filter(d => d.celsiusGradeTemperature !== null);
+  const temperatures = validData.filter(d => d.celciusGradeTemperature !== null);
   if (temperatures.length > 0) {
-    const avgTemp = temperatures.reduce((sum, d) => sum + (d.celsiusGradeTemperature || 0), 0) / temperatures.length;
+    const avgTemp = temperatures.reduce((sum, d) => sum + (d.celciusGradeTemperature || 0), 0) / temperatures.length;
     if (avgTemp < 15 || avgTemp > 30) score -= 20;
     else if (avgTemp < 18 || avgTemp > 25) score -= 10;
   }

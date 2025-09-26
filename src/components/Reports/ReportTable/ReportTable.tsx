@@ -90,7 +90,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           {temp.toFixed(1)}°C
         </Tag>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
-      sorter: (a, b) => (a.celsiusGradeTemperature || 0) - (b.celsiusGradeTemperature || 0),
+      sorter: (a, b) => (a.celciusGradeTemperature || 0) - (b.celciusGradeTemperature || 0),
     },
     {
       title: 'Air Humidity',

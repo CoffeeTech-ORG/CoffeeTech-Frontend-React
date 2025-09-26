@@ -145,7 +145,7 @@ export const Reports: React.FC = () => {
         dayjs(row.timestamp).format('YYYY-MM-DD HH:mm:ss'),
         `"${row.farmName}"`,
         `"${row.sectionName}"`,
-        row.celsiusGradeTemperature?.toFixed(2) || '',
+        row.celciusGradeTemperature?.toFixed(2) || '',
         row.airHumidityPercent?.toFixed(2) || '',
         row.soilHumidityPercent?.toFixed(2) || '',
         row.precipitationDetected ? 'Yes' : 'No',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd';
+import { Modal, Form, Input, Button, message, InputNumber } from 'antd';
 import { X } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '../../../components/GooglePlacesAutocomplete';
 import './AddFarmModal.scss';
@@ -7,6 +7,7 @@ import './AddFarmModal.scss';
 export interface AddFarmData {
   name: string;
   location: string;
+  altitude: number;
 }
 
 interface AddFarmModalProps {
@@ -108,6 +109,27 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               onChange={(value) => {
                 form.setFieldsValue({ location: value });
               }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Altitude (meters)"
+            name="altitude"
+            rules={[
+              { required: true, message: 'Please enter the altitude' },
+              { type: 'number', min: 0, message: 'Altitude must be a positive number' },
+              { type: 'number', max: 10000, message: 'Altitude cannot exceed 10,000 meters' }
+            ]}
+          >
+            <InputNumber
+              placeholder="Enter altitude in meters"
+              size="large"
+              className="form-input"
+              step={0.01}
+              min={0}
+              max={10000}
+              precision={2}
+              style={{ width: '100%' }}
             />
           </Form.Item>
 

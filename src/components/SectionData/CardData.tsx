@@ -7,6 +7,7 @@ interface CardDataProps {
 }
 
 export const CardData: React.FC<CardDataProps> = ({ data }) => {
+  
   if (!data) {
     return (
       <div className="card-data">
@@ -20,7 +21,10 @@ export const CardData: React.FC<CardDataProps> = ({ data }) => {
   const formatTimestamp = (timestamp: string | number | null | undefined) => {
     if (!timestamp) return '—';
     try {
-      return new Date(String(timestamp)).toLocaleString('es-ES', {
+      const date = new Date(String(timestamp));
+      // Check if the date is valid
+      if (isNaN(date.getTime())) return '—';
+      return date.toLocaleString('es-ES', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -32,7 +36,7 @@ export const CardData: React.FC<CardDataProps> = ({ data }) => {
     }
   };
 
-  const formatValue = (value: number | null | undefined, unit = '') => {
+  const formatValue = (value: number | string | null | undefined, unit = '') => {
     if (value === null || value === undefined) return '—';
     return `${value}${unit}`;
   };
@@ -41,56 +45,56 @@ export const CardData: React.FC<CardDataProps> = ({ data }) => {
     <div className="card-data">
       <h4>Datos del sensor</h4>
       <div className="last-update">
-        Último registro: {formatTimestamp(data.timestamp)}
+        Último registro: {formatTimestamp(data.updatedAt || data.timestamp)}
       </div>
       
       <div className="sensor-data">
         <div className="data-item">
           <span className="data-label">Temperatura</span>
-          <span className={`data-value temperature ${data.celsiusGradeTemperature === null ? 'no-data' : ''}`}>
-            {formatValue(data.celsiusGradeTemperature, ' °C')}
+          <span className={`data-value temperature ${data.celciusGradeTemperature === null ? 'no-data' : ''}`}>
+            {formatValue(data.celciusGradeTemperature?.toFixed(2), ' °C')}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Humedad aire</span>
           <span className={`data-value humidity ${data.airHumidityPercent === null ? 'no-data' : ''}`}>
-            {formatValue(data.airHumidityPercent, ' %')}
+            {formatValue(data.airHumidityPercent?.toFixed(2), ' %')}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Humedad suelo</span>
           <span className={`data-value humidity ${data.soilHumidityPercent === null ? 'no-data' : ''}`}>
-            {formatValue(data.soilHumidityPercent, ' %')}
+            {formatValue(data.soilHumidityPercent?.toFixed(2), ' %')}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Precipitación</span>
           <span className={`data-value precipitation`}>
-            {data.precipitationDetected ? 'Sí' : 'No'}
+            {data.precipitationDetected === 1 || data.precipitationDetected === true ? 'Sí' : 'No'}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Nitrógeno</span>
           <span className={`data-value nutrient ${data.nitrogen === null ? 'no-data' : ''}`}>
-            {formatValue(data.nitrogen, ' mg/kg')}
+            {formatValue(data.nitrogen?.toFixed(2), ' mg/kg')}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Fósforo</span>
           <span className={`data-value nutrient ${data.phosphorus === null ? 'no-data' : ''}`}>
-            {formatValue(data.phosphorus, ' mg/kg')}
+            {formatValue(data.phosphorus?.toFixed(2), ' mg/kg')}
           </span>
         </div>
         
         <div className="data-item">
           <span className="data-label">Potasio</span>
           <span className={`data-value nutrient ${data.potassium === null ? 'no-data' : ''}`}>
-            {formatValue(data.potassium, ' mg/kg')}
+            {formatValue(data.potassium?.toFixed(2), ' mg/kg')}
           </span>
         </div>
       </div>

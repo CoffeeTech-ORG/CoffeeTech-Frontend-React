@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, AlertTriangle, Edit, Trash2 } from 'lucide-react';
+import { MapPin, AlertTriangle, Edit, Trash2, Mountain } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
 import './FarmCard.scss';
 
@@ -77,6 +77,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
       </div>
 
       <p className="farm-card__location"> <MapPin size={16} /> {farm.location}</p>
+      <p className="farm-card__altitude"> <Mountain size={16} /> {farm.altitude.toFixed(2)} m</p>
 
     </div>
   );

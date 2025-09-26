@@ -43,18 +43,19 @@ export function useSectionData(initialToken: string | null, sectionId: string | 
     };
 
     // handle misspelling
-    const temp = raw.celsiusGradeTemperature ?? raw.celciusGradeTemperature ?? null;
+    const temp = raw.celciusGradeTemperature ?? null;
 
     return {
       id: raw.id,
       airHumidityPercent: getNumber(raw.airHumidityPercent),
-      celsiusGradeTemperature: getNumber(temp),
+      celciusGradeTemperature: getNumber(temp),
       soilHumidityPercent: getNumber(raw.soilHumidityPercent),
-      precipitationDetected: raw.precipitationDetected === 'true' || raw.precipitationDetected === true,
+      precipitationDetected: raw.precipitationDetected === 'true' || raw.precipitationDetected === true || raw.precipitationDetected === 1,
       nitrogen: getNumber(raw.nitrogen),
       phosphorus: getNumber(raw.phosphorus),
       potassium: getNumber(raw.potassium),
-      timestamp: raw.timestamp ?? null
+      timestamp: raw.timestamp ?? null,
+      updatedAt: raw.updatedAt ?? null
     };
   };
 

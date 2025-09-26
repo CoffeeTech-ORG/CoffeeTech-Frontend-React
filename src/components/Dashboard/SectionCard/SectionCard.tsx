@@ -18,6 +18,25 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   onEdit,
   onAddDevice
 }) => {
+  const formatLastUpdate = (updatedAt?: string, lastUpdate?: string) => {
+    const dateToFormat = updatedAt || lastUpdate;
+    if (!dateToFormat) return '—';
+    
+    try {
+      const date = new Date(dateToFormat);
+      if (isNaN(date.getTime())) return '—';
+      
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '—';
+    }
+  };
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
     if (percentage >= 60) return '#faad14';
@@ -139,7 +158,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       
       <div className="section-card__footer">
         <span className="last-update">
-          Last updated: {new Date(section.lastUpdate).toLocaleDateString()}
+          Last updated: {formatLastUpdate(section.updatedAt)}
         </span>
       </div>
     </div>
