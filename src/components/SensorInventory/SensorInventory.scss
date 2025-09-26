@@ -275,6 +275,18 @@
 
     .view-controls {
       justify-content: center;
+
+      .view-mode-toggle {
+        // Hide list view button on mobile
+        .view-btn:last-child {
+          display: none;
+        }
+
+        // Remove border-right from grid button when list is hidden
+        .view-btn:first-child {
+          border-right: none;
+        }
+      }
     }
 
     .sensors-container.grid .sensors-grid {

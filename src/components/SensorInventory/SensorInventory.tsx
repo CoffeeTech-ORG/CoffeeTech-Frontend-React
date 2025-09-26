@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSensors } from '../../hooks/useSensors';
 import { SensorFilters } from '../../types/sensor.types';
 import { SensorCard } from './SensorCard/SensorCard';
@@ -22,6 +22,24 @@ export const SensorInventory: React.FC = () => {
   const [filters, setFilters] = useState<SensorFilters>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Force grid view on mobile screens
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (window.innerWidth <= 768 && viewMode === 'list') {
+        setViewMode('grid');
+      }
+    };
+
+    // Check initially
+    checkScreenSize();
+
+    // Add resize listener
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [viewMode]);
 
   const filteredSensors = useMemo(() => {
     return filterSensors(filters);

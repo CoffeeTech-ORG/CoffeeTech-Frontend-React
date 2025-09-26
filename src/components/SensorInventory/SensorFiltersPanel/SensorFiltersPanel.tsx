@@ -79,7 +79,7 @@ export const SensorFiltersPanel: React.FC<SensorFiltersPanelProps> = ({
       <div className={`filters-content ${isExpanded ? 'expanded' : ''}`}>
         <div className="filters-row">
           {/* Search */}
-          <div className="filter-group">
+          {/* <div className="filter-group">
             <label htmlFor="search">Search</label>
             <input
               id="search"
@@ -89,7 +89,7 @@ export const SensorFiltersPanel: React.FC<SensorFiltersPanelProps> = ({
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
               className="search-input"
             />
-          </div>
+          </div> */}
 
           {/* Status Filter */}
           <div className="filter-group">

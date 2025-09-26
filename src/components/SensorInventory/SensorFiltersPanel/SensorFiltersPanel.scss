@@ -92,7 +92,7 @@
 
 .filters-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   padding: 1.5rem;
   align-items: end;
@@ -212,6 +212,7 @@
 
   .filters-header {
     padding: 1rem;
+    gap: 0.5rem;
 
     .filters-title {
       flex-direction: column;

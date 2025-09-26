@@ -305,7 +305,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                     type="primary"
                     className="add-section-btn"
                   >
-                    icon={<Plus size={20} />}
+                    {<Plus size={20} />}
                   </Button>
                 </Dropdown>
               </div>

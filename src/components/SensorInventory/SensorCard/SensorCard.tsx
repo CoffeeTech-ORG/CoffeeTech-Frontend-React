@@ -142,7 +142,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
             <span className="status-text">{sensor.status}</span>
           </div>
           
-          {sensor.status !== 'MAINTENANCE' && sensor.status !== 'ERROR' && (
+          {/* {sensor.status !== 'MAINTENANCE' && sensor.status !== 'ERROR' && (
             <button
               className={`status-toggle-btn ${sensor.status.toLowerCase()}`}
               onClick={handleStatusToggle}
@@ -150,7 +150,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
             >
               {sensor.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
             </button>
-          )}
+          )} */}
         </div>
 
         <div className="sensor-last-seen">
