@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button, message } from 'antd';
 import { X } from 'lucide-react';
+import { GooglePlacesAutocomplete } from '../../../components/GooglePlacesAutocomplete';
 import './AddFarmModal.scss';
 
 export interface AddFarmData {
@@ -95,10 +96,18 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               { max: 100, message: 'Location cannot exceed 100 characters' }
             ]}
           >
-            <Input
+            <GooglePlacesAutocomplete
               placeholder="Enter location"
               size="large"
               className="form-input"
+              onPlaceSelect={(place) => {
+                if (place.formatted_address) {
+                  form.setFieldsValue({ location: place.formatted_address });
+                }
+              }}
+              onChange={(value) => {
+                form.setFieldsValue({ location: value });
+              }}
             />
           </Form.Item>
 
