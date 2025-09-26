@@ -6,6 +6,7 @@ export interface Farm {
   id: string;
   name: string;
   location: string;
+  altitude: number;
   healthPercentage: number;
   status: 'healthy' | 'warning' | 'critical';
   coordinates: {

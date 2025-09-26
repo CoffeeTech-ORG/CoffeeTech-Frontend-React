@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
 import { farmsService } from '../../services/farms.service';
 import { Button, Spin, message } from 'antd';
-import { User, Bell } from 'lucide-react';
+import { LogOutIcon } from 'lucide-react';
 import './Dashboard.scss';
 
 export const Dashboard: React.FC = () => {
@@ -251,18 +251,19 @@ export const Dashboard: React.FC = () => {
           </div>
           
           <div className="header-right">
-            <Button
+            {/* <Button
               icon={<Bell size={20} />}
               type="text"
               className="header-btn"
-            />
+            /> */}
+            
             <Button
-              icon={<User size={20} />}
               type="text"
               className="header-btn"
               onClick={logout}
             >
-              {user?.username}
+              {user?.username}&nbsp;
+              <LogOutIcon size={20} />
             </Button>
           </div>
         </header>

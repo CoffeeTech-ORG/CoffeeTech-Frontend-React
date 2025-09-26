@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Spin, message } from 'antd';
-import { ArrowLeft, Plus, User, Bell } from 'lucide-react';
+import { Button, Spin, message, Dropdown, MenuProps } from 'antd';
+import { ArrowLeft, Plus, User, Bell, MoreVertical } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
@@ -281,23 +281,33 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
               </div>
               
               <div className="header-buttons">
-                <Button
-                  type="primary"
-                  icon={<Plus size={20} />}
-                  onClick={handleAddSection}
-                  className="add-section-btn"
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: 'add-section',
+                        label: 'Add Section',
+                        icon: <Plus size={16} />,
+                        onClick: handleAddSection,
+                      },
+                      {
+                        key: 'add-device',
+                        label: 'Add Device',
+                        icon: <Plus size={16} />,
+                        onClick: handleAddDevice,
+                      },
+                    ],
+                  }}
+                  placement="bottomRight"
+                  trigger={['click']}
                 >
-                  Add Section
-                </Button>
-
-                <Button
-                  type="primary"
-                  icon={<Plus size={20} />}
-                  onClick={handleAddDevice}
-                  className="add-section-btn"
-                >
-                  Add Device
-                </Button>
+                  <Button
+                    type="primary"
+                    className="add-section-btn"
+                  >
+                    icon={<Plus size={20} />}
+                  </Button>
+                </Dropdown>
               </div>
             </div>
 
