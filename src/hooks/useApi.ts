@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://coffeetech-netcoreappweb-f6hwc3fph9hndhhg.centralus-01.azurewebsites.net/api/v1';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL;
 
 export interface ApiResponse<T = any> {
   data: T;

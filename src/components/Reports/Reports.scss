@@ -238,6 +238,51 @@
   }
 }
 
+.custom-pagination .ant-select-selector input {
+  display: none;
+}
+
+.custom-pagination .ant-select-selector a {
+  cursor: pointer;
+}
+
+.ant-select-show-search:where(.css-dev-only-do-not-override-imrp2p).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  cursor: pointer;
+}
+
+.custom-pagination .ant-select-arrow {
+  display: none;
+}
+
+.custom-pagination .anticon-search{
+  display: none;
+}
+
+.custom-pagination .ant-pagination-options-size-changer .ant-select-selection-item::after {
+  content: '\FE65';
+  position: absolute;
+  top: -0.6px;
+  right: -6.5px;
+  color: rgba(0,0,0,.25) ;
+  transform: rotate(90deg) scaleY(1) scaleX(0.9);
+  font-size: 21px;
+  display: inline-block;
+  align-items: center;
+  justify-content: center;
+  vertical-align: top;
+}
+
+.ant-pagination-competence.custom-pagination 
+.ant-pagination-options-size-changer 
+.ant-select-selection-item::after {
+    right: -3px;
+}
+
+
+:where(.css-dev-only-do-not-override-imrp2p).ant-pagination .ant-pagination-item-active a {
+  color: #fff !important;
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .reports-container {

@@ -26,6 +26,12 @@ export const API_ENDPOINTS = {
   
   // Recommendations
   RECOMMENDATIONS: `${BASE_URL}/recommendations`,
+  
+  // Reports
+  REPORTS: `${BASE_URL}/reports`,
+  REPORTS_DATA: `${BASE_URL}/reports/data`,
+  REPORTS_SUMMARY: `${BASE_URL}/reports/summary`,
+  REPORTS_EXPORT: `${BASE_URL}/reports/export`,
 } as const;
 
 export default API_ENDPOINTS;

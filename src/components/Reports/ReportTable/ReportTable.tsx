@@ -16,6 +16,11 @@ interface ReportTableProps {
 export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
   const [filteredData, setFilteredData] = useState<ReportData[]>(data);
   const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
+  const [searchClicked, setSearchClicked] = useState(false);
+  
+  const pageSizes = [10, 25, 50, 100];
+  const total = filteredData.length;
 
   React.useEffect(() => {
     setFilteredData(data);
@@ -202,14 +207,24 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
         dataSource={filteredData}
         rowKey={(record) => `${record.id}_${record.timestamp}`}
         pagination={{
-          total: filteredData.length,
-          pageSize: pageSize,
+          className: "custom-pagination",
+          pageSizeOptions: pageSizes,
           showSizeChanger: true,
-          showQuickJumper: false,
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} of ${total} records`,
-          pageSizeOptions: ['10', '25', '50', '100'],
-          onShowSizeChange: (_, size) => setPageSize(size),
+          size: 'default',
+          defaultPageSize: pageSizes[0],
+          locale: { items_per_page: '/ pages' },
+          defaultCurrent: page,
+          showTotal: (total) => `Total: ${total}`,
+          onShowSizeChange: (current, size) => {
+            setSearchClicked(true)
+            setPageSize(size)
+          },
+          current: page,
+          onChange: (page, pageSize) => {
+            setSearchClicked(true)
+            setPage(page)
+          },
+          total: total,
         }}
         scroll={{ x: 1200 }}
         size="middle"

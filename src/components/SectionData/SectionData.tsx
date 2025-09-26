@@ -63,17 +63,17 @@ export const SectionData: React.FC<SectionDataProps> = ({ authToken, section, on
             onClick={() => refresh()} 
             disabled={loading}
           >
-            {loading ? 'Cargando...' : 'Actualizar'}
+            {loading ? 'Loading...' : 'Refresh'}
           </button>
           {onClose && (
             <button className="close-btn" onClick={onClose}>
-              Cerrar
+              Close
             </button>
           )}
         </div>
       </div>
 
-      {loading && <div className="loading-state">Cargando datos de la sección...</div>}
+      {loading && <div className="loading-state">Loading section data...</div>}
 
       {error && (
         <div className="error-state">
@@ -84,9 +84,9 @@ export const SectionData: React.FC<SectionDataProps> = ({ authToken, section, on
       {!loading && !error && (
         <div className="section-content">
           <div className="content-section assignments-section">
-            <h4>Dispositivo asignado</h4>
+            <h4>Assigned Device</h4>
             {assignments.length === 0 && (
-              <div className="no-device">No hay dispositivo asignado a esta sección.</div>
+              <div className="no-device">No device assigned to this section.</div>
             )}
             {assignments.length > 1 && (
               <div className="assignment-selector">

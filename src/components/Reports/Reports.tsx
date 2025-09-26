@@ -35,6 +35,7 @@ export const Reports: React.FC = () => {
     getFarms, 
     getSectionsByFarm, 
     generateReport, 
+    getReportSummary,
     generateReportSummary,
     prepareChartData 
   } = useReports();
@@ -89,15 +90,28 @@ export const Reports: React.FC = () => {
       };
 
       const data = await generateReport(filters);
-      const summary = generateReportSummary(data);
+      const summary = await getReportSummary(filters);
       
       setReportData(data);
       setReportSummary(summary);
       setHasGenerated(true);
       
       message.success('Report generated successfully');
-    } catch (error) {
-      message.error('Error generating report');
+    } catch (error: any) {
+      console.error('Error generating report:', error);
+      
+      // Show specific error message
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data || 
+                          error.message || 
+                          'Error generating report';
+      
+      message.error(`Failed to generate report: ${errorMessage}`);
+      
+      // Reset states on error
+      setReportData([]);
+      setReportSummary(null);
+      setHasGenerated(false);
     } finally {
       setIsGenerating(false);
     }
@@ -337,9 +351,9 @@ export const Reports: React.FC = () => {
           {reportData.length > 0 ? (
             <>
               {/* Summary */}
-              {reportSummary && (
+              {/* {reportSummary && (
                 <ReportSummaryComponent summary={reportSummary} style={{ marginBottom: '24px' }} />
-              )}
+              )} */}
 
               {/* Charts */}
               <ReportChart 

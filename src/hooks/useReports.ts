@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { ReportData, ReportFilters, ReportSummary, ChartDataPoint } from '../types/report.types';
 import { Farm, Section, useFarms } from './useFarms';
+import { api } from '../services/api.service';
+import { API_ENDPOINTS } from '../services/api.endpoints';
 
 export const useReports = () => {
   const [loading, setLoading] = useState(false);
@@ -34,31 +36,32 @@ export const useReports = () => {
     setError(null);
 
     try {
-      // Build query parameters
+      // Build query parameters matching backend expectations
       const params = new URLSearchParams();
       
       if (filters.farmId) {
-        params.append('farm_id', filters.farmId.toString());
+        params.append('farmId', filters.farmId.toString());
       }
       
       if (filters.sectionId) {
-        params.append('section_id', filters.sectionId.toString());
+        params.append('sectionId', filters.sectionId.toString());
       }
       
       if (filters.startDate) {
-        params.append('start_date', filters.startDate.format('YYYY-MM-DD'));
+        params.append('startDate', filters.startDate.format('YYYY-MM-DD'));
       }
       
       if (filters.endDate) {
-        params.append('end_date', filters.endDate.format('YYYY-MM-DD'));
+        params.append('endDate', filters.endDate.format('YYYY-MM-DD'));
       }
 
-      // For demo purposes, we'll simulate data since we don't have the exact endpoint
-      // In a real app, this would be: await api.get(`/api/reports/data?${params}`);
-      
-      const mockData: ReportData[] = generateMockReportData(filters);
-      
-      return mockData;
+      if (filters.dataType && filters.dataType !== 'all') {
+        params.append('dataType', filters.dataType);
+      }
+
+      // Call real API endpoint
+      const response = await api.get(`${API_ENDPOINTS.REPORTS_DATA}?${params}`);
+      return response.data;
     } catch (error) {
       setError('Error generating report data');
       console.error('Error generating report:', error);
@@ -68,7 +71,53 @@ export const useReports = () => {
     }
   }, []);
 
-  // Generate report summary
+  // Get report summary from backend
+  const getReportSummary = useCallback(async (filters: ReportFilters): Promise<ReportSummary> => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters.farmId) {
+        params.append('farmId', filters.farmId.toString());
+      }
+      
+      if (filters.sectionId) {
+        params.append('sectionId', filters.sectionId.toString());
+      }
+      
+      if (filters.startDate) {
+        params.append('startDate', filters.startDate.format('YYYY-MM-DD'));
+      }
+      
+      if (filters.endDate) {
+        params.append('endDate', filters.endDate.format('YYYY-MM-DD'));
+      }
+
+      if (filters.dataType && filters.dataType !== 'all') {
+        params.append('dataType', filters.dataType);
+      }
+
+      const response = await api.get(`${API_ENDPOINTS.REPORTS_SUMMARY}?${params}`);
+      
+      // Transform backend response to frontend format
+      const backendSummary = response.data;
+      return {
+        totalDataPoints: backendSummary.recordCount,
+        averageTemperature: backendSummary.environmental?.averageTemperature,
+        averageAirHumidity: backendSummary.environmental?.averageAirHumidity,
+        averageSoilHumidity: backendSummary.environmental?.averageSoilHumidity,
+        precipitationDays: backendSummary.environmental?.precipitationDays || 0,
+        averageNitrogen: backendSummary.nutrients?.averageNitrogen,
+        averagePhosphorus: backendSummary.nutrients?.averagePhosphorus,
+        averagePotassium: backendSummary.nutrients?.averagePotassium,
+        healthScore: calculateHealthScore([]) // You can implement this or get it from backend
+      };
+    } catch (error) {
+      console.error('Error fetching report summary:', error);
+      throw error;
+    }
+  }, []);
+
+  // Generate report summary from data (fallback)
   const generateReportSummary = useCallback((data: ReportData[]): ReportSummary => {
     if (data.length === 0) {
       return {
@@ -132,6 +181,7 @@ export const useReports = () => {
     getFarms,
     getSectionsByFarm,
     generateReport,
+    getReportSummary,
     generateReportSummary,
     prepareChartData
   };
@@ -176,40 +226,3 @@ function calculateHealthScore(data: ReportData[]): number {
   return Math.max(0, Math.min(100, score));
 }
 
-// Mock data generator for demonstration
-function generateMockReportData(filters: ReportFilters): ReportData[] {
-  const startDate = filters.startDate || dayjs().subtract(30, 'day');
-  const endDate = filters.endDate || dayjs();
-  const data: ReportData[] = [];
-
-  const daysCount = endDate.diff(startDate, 'day');
-  
-  for (let i = 0; i <= daysCount; i++) {
-    const date = startDate.clone().add(i, 'day');
-    
-    // Generate 2-4 data points per day
-    const pointsPerDay = Math.floor(Math.random() * 3) + 2;
-    
-    for (let j = 0; j < pointsPerDay; j++) {
-      const timestamp = date.clone().add(j * (24 / pointsPerDay), 'hour');
-      
-      data.push({
-        id: `${i}_${j}`,
-        timestamp: timestamp.toDate(),
-        sectionId: filters.sectionId || '1',
-        sectionName: `Section ${filters.sectionId || '1'}`,
-        farmId: filters.farmId || '1',
-        farmName: `Farm ${filters.farmId || '1'}`,
-        airHumidityPercent: 60 + Math.random() * 30,
-        celsiusGradeTemperature: 18 + Math.random() * 10,
-        soilHumidityPercent: 40 + Math.random() * 40,
-        precipitationDetected: Math.random() > 0.8,
-        nitrogen: 10 + Math.random() * 20,
-        phosphorus: 5 + Math.random() * 15,
-        potassium: 15 + Math.random() * 25
-      });
-    }
-  }
-
-  return data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-}
