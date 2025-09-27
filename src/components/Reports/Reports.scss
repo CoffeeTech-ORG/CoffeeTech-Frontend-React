@@ -186,6 +186,39 @@
       }
     }
 
+    // Improved table scroll for mobile
+    .ant-table-wrapper {
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      max-width: 100%;
+      
+      &::-webkit-scrollbar {
+        height: 6px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: #f0f0f0;
+        border-radius: 3px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: #bfbfbf;
+        border-radius: 3px;
+        
+        &:hover {
+          background: #999;
+        }
+      }
+
+      .ant-table-container {
+        width: 100%;
+        
+        .ant-table-body {
+          overflow-x: visible;
+        }
+      }
+    }
+
     .ant-table {
       .ant-table-thead > tr > th {
         background: $background-light;
@@ -340,8 +373,283 @@
       font-size: 18px;
     }
 
-    .ant-card .ant-card-head .ant-card-head-title {
-      font-size: 16px;
+    .ant-card {
+      .ant-card-head .ant-card-head-title {
+        font-size: 16px;
+      }
+
+      .ant-card-body {
+        padding: $spacing-sm;
+      }
+    }
+
+    .ant-col {
+      &.ant-col-xs-24 {
+        margin-bottom: $spacing-xs;
+      }
+    }
+
+    .ant-select,
+    .ant-picker,
+    .ant-btn {
+      height: 36px;
+      font-size: 14px;
+    }
+
+    .filter-highlight {
+      padding: $spacing-xs;
+      font-size: 11px;
+      
+      .ant-typography {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+@media (min-width: 0px) and (max-width: 768px) {
+  .reports-container {
+    padding: 8px;
+    margin: 0;
+    border-radius: 8px;
+
+    .reports-header {
+      margin-bottom: 1rem;
+
+      .header-title {
+        h2 {
+          font-size: 16px;
+          margin-bottom: 4px;
+        }
+
+        .ant-typography {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .report-table-container {
+      margin: 0 -8px;
+
+      .ant-card-body {
+        padding: 2px;
+      }
+
+      .ant-table-wrapper {
+        margin: 0 -2px;
+        
+        &::-webkit-scrollbar {
+          height: 3px;
+        }
+
+        .ant-table {
+          width: calc(100vw - 130px) !important;
+          
+          .ant-table-thead > tr > th {
+            font-size: 9px;
+            padding: 4px 2px;
+            min-width: 50px;
+            line-height: 1.2;
+          }
+
+          .ant-table-tbody > tr > td {
+            font-size: 9px;
+            padding: 3px 2px;
+            line-height: 1.3;
+            
+            .ant-tag {
+              display: inline-block;
+              min-width: auto;
+            }
+          }
+        }
+      }
+    }
+
+    .ant-card {
+      margin-bottom: 16px;
+      border-radius: 8px;
+
+      .ant-card-head {
+        padding: 12px 16px;
+        min-height: auto;
+
+        .ant-card-head-title {
+          font-size: 14px;
+          line-height: 1.4;
+        }
+
+        .ant-card-extra {
+          .ant-btn {
+            padding: 4px 8px;
+            height: 32px;
+            font-size: 12px;
+            
+            .anticon {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+
+      .ant-card-body {
+        padding: 12px 16px;
+      }
+    }
+
+    // Ultra compact form elements
+    .ant-select,
+    .ant-picker {
+      height: 32px;
+      font-size: 12px;
+
+      .ant-select-selector,
+      .ant-picker-input input {
+        font-size: 12px;
+        line-height: 30px;
+      }
+    }
+
+    .ant-btn {
+      height: 32px;
+      padding: 4px 8px;
+      font-size: 12px;
+      
+      &.ant-btn-sm {
+        height: 28px;
+        padding: 2px 6px;
+        font-size: 11px;
+      }
+    }
+
+    // Form labels
+    .ant-typography {
+      font-size: 12px;
+      
+      &.ant-typography-secondary {
+        font-size: 11px;
+      }
+    }
+
+    // Row and column adjustments
+    .ant-row {
+      margin-left: -4px;
+      margin-right: -4px;
+
+      .ant-col {
+        padding-left: 4px;
+        padding-right: 4px;
+        margin-bottom: 8px;
+      }
+    }
+
+    // Filter highlight ultra compact
+    .filter-highlight {
+      padding: 6px 8px;
+      margin-top: 8px;
+      font-size: 10px;
+      line-height: 1.3;
+
+      .ant-typography {
+        font-size: 10px;
+        margin: 0;
+      }
+    }
+
+    // Export actions stack vertically
+    .ant-space {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+
+      .ant-space-item {
+        width: 100%;
+
+        .ant-btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+
+    // Loading and no data states
+    .loading-container,
+    .no-data-container {
+      padding: 24px 12px;
+
+      .ant-typography {
+        font-size: 13px;
+        text-align: center;
+      }
+    }
+
+    // Table responsiveness
+    .report-table-container {
+      .ant-table-wrapper {
+        .ant-table {
+          font-size: 11px;
+
+          .ant-table-thead > tr > th {
+            font-size: 10px;
+            padding: 8px 4px;
+          }
+
+          .ant-table-tbody > tr > td {
+            padding: 6px 4px;
+            font-size: 11px;
+          }
+        }
+
+        .ant-table-pagination {
+          margin: 12px 0 0 0;
+          
+          .ant-pagination-item,
+          .ant-pagination-prev,
+          .ant-pagination-next {
+            min-width: 28px;
+            height: 28px;
+            line-height: 26px;
+            font-size: 11px;
+          }
+        }
+      }
+    }
+
+    // Nutrients grid ultra compact
+    .nutrients-grid {
+      gap: 2px;
+      grid-template-columns: repeat(3, 1fr);
+
+      .nutrient-item {
+        padding: 4px 2px;
+        
+        .nutrient-value {
+          font-size: 10px;
+        }
+        
+        .nutrient-label {
+          font-size: 8px;
+          margin-top: 1px;
+        }
+      }
+    }
+
+    // Report stat cards
+    .report-stat-card {
+      .ant-card-body {
+        padding: 8px 12px;
+      }
+
+      .ant-statistic-title {
+        font-size: 10px;
+        margin-bottom: 2px;
+      }
+
+      .ant-statistic-content {
+        .ant-statistic-content-value {
+          font-size: 14px;
+        }
+      }
     }
   }
 }

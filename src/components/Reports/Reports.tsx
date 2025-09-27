@@ -29,6 +29,7 @@ export const Reports: React.FC = () => {
   const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { 
     loading, 
@@ -52,6 +53,22 @@ export const Reports: React.FC = () => {
       setSelectedSectionId(undefined);
     }
   }, [selectedFarmId]);
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    // Check initially
+    checkScreenSize();
+
+    // Add resize listener
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const loadFarms = async () => {
     try {
@@ -198,20 +215,19 @@ export const Reports: React.FC = () => {
         title="Report Filters" 
         style={{ marginBottom: '24px' }}
         extra={
-          <Space>
-            <Button 
-              type="primary" 
-              icon={<ReloadOutlined />}
-              onClick={handleGenerateReport}
-              loading={isGenerating}
-              disabled={!selectedFarmId}
-            >
-              Generate Report
-            </Button>
-          </Space>
+          <Button 
+            type="primary" 
+            icon={<ReloadOutlined />}
+            onClick={handleGenerateReport}
+            loading={isGenerating}
+            disabled={!selectedFarmId}
+            size="middle"
+          >
+            Generate Report
+          </Button>
         }
       >
-        <Row gutter={[16, 16]}>
+        <Row gutter={[8, 8]}>
           <Col xs={24} sm={12} md={6}>
             <div>
               <Text strong>Farm *</Text>
@@ -221,6 +237,7 @@ export const Reports: React.FC = () => {
                 value={selectedFarmId}
                 onChange={setSelectedFarmId}
                 loading={loading}
+                size="middle"
               >
                 {farms.map(farm => (
                   <Option key={farm.id} value={farm.id}>
@@ -241,6 +258,7 @@ export const Reports: React.FC = () => {
                 onChange={setSelectedSectionId}
                 allowClear
                 disabled={!selectedFarmId}
+                size="middle"
               >
                 {sections.map(section => (
                   <Option key={section.id} value={section.id}>
@@ -260,6 +278,7 @@ export const Reports: React.FC = () => {
                 onChange={handleDateRangeChange}
                 format="YYYY-MM-DD"
                 allowClear={false}
+                size="middle"
               />
             </div>
           </Col>
@@ -271,6 +290,7 @@ export const Reports: React.FC = () => {
                 style={{ width: '100%', marginTop: '4px' }}
                 value={dataType}
                 onChange={setDataType}
+                size="middle"
               >
                 <Option value="all">All Data</Option>
                 <Option value="environmental">Environmental</Option>
@@ -314,8 +334,8 @@ export const Reports: React.FC = () => {
         <>
           {/* Export Actions */}
           <Card style={{ marginBottom: '24px' }}>
-            <Row justify="space-between" align="middle">
-              <Col>
+            <Row justify="space-between" align="middle" gutter={[8, 8]}>
+              <Col xs={24} sm={12}>
                 <Title level={4} style={{ margin: 0 }}>
                   Report Results
                 </Title>
@@ -323,23 +343,29 @@ export const Reports: React.FC = () => {
                   {reportData.length} data points found
                 </Text>
               </Col>
-              <Col>
-                <Space>
+              <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   <Button 
                     icon={<DownloadOutlined />}
                     onClick={() => handleExportReport('csv')}
+                    size="middle"
+                    style={{ width: '100%' }}
                   >
                     Export CSV
                   </Button>
                   {/* <Button 
                     icon={<DownloadOutlined />}
                     onClick={() => handleExportReport('excel')}
+                    size="middle"
+                    style={{ width: '100%' }}
                   >
                     Export Excel
                   </Button>
                   <Button 
                     icon={<DownloadOutlined />}
                     onClick={() => handleExportReport('pdf')}
+                    size="middle"
+                    style={{ width: '100%' }}
                   >
                     Export PDF
                   </Button> */}
@@ -355,12 +381,14 @@ export const Reports: React.FC = () => {
                 <ReportSummaryComponent summary={reportSummary} style={{ marginBottom: '24px' }} />
               )} */}
 
-              {/* Charts */}
-              <ReportChart 
-                data={prepareChartData(reportData)} 
-                dataType={dataType}
-                style={{ marginBottom: '24px' }}
-              />
+              {/* Charts - Hidden on mobile */}
+              {!isMobile && (
+                <ReportChart 
+                  data={prepareChartData(reportData)} 
+                  dataType={dataType}
+                  style={{ marginBottom: '24px' }}
+                />
+              )}
 
               {/* Data Table */}
               <ReportTable data={reportData} />

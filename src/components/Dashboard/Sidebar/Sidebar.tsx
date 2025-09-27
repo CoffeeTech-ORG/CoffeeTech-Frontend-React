@@ -24,11 +24,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
   const { user } = useAuth();
   const [isAddFarmOpen, setIsAddFarmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
+      setIsMobile(window.innerWidth <= 768);
     };
 
     window.addEventListener('resize', handleResize);

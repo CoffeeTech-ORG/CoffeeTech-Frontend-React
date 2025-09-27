@@ -18,6 +18,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [searchClicked, setSearchClicked] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const pageSizes = [10, 25, 50, 100];
   const total = filteredData.length;
@@ -25,6 +26,17 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
   React.useEffect(() => {
     setFilteredData(data);
   }, [data]);
+
+  // Check if mobile for responsive design
+  React.useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleSearch = (value: string) => {
     if (!value) {
@@ -60,8 +72,8 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       title: 'Timestamp',
       dataIndex: 'timestamp',
       key: 'timestamp',
-      width: 150,
-      render: (timestamp) => dayjs(timestamp).format('MM/DD/YY HH:mm'),
+      width: isMobile ? 100 : 150,
+      render: (timestamp) => dayjs(timestamp).format(isMobile ? 'MM/DD HH:mm' : 'MM/DD/YY HH:mm'),
       sorter: (a, b) => dayjs(a.timestamp).unix() - dayjs(b.timestamp).unix(),
       defaultSortOrder: 'descend',
     },
@@ -69,34 +81,34 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       title: 'Farm',
       dataIndex: 'farmName',
       key: 'farmName',
-      width: 120,
+      width: isMobile ? 80 : 120,
       ellipsis: true,
     },
     {
       title: 'Section',
       dataIndex: 'sectionName',
       key: 'sectionName',
-      width: 120,
+      width: isMobile ? 80 : 120,
       ellipsis: true,
     },
     {
-      title: 'Temperature',
+      title: isMobile ? 'Temp' : 'Temperature',
       dataIndex: 'celsiusGradeTemperature',
       key: 'temperature',
-      width: 100,
+      width: isMobile ? 70 : 100,
       align: 'center',
       render: (temp) => temp !== null && temp !== undefined ? (
         <Tag color={getTemperatureColor(temp)}>
-          {temp.toFixed(1)}°C
+          {temp.toFixed(1)}°{isMobile ? '' : 'C'}
         </Tag>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
       sorter: (a, b) => (a.celciusGradeTemperature || 0) - (b.celciusGradeTemperature || 0),
     },
     {
-      title: 'Air Humidity',
+      title: isMobile ? 'Air H.' : 'Air Humidity',
       dataIndex: 'airHumidityPercent',
       key: 'airHumidity',
-      width: 110,
+      width: isMobile ? 70 : 110,
       align: 'center',
       render: (humidity) => humidity !== null && humidity !== undefined ? (
         <Tag color={getHumidityColor(humidity, true)}>
@@ -106,10 +118,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       sorter: (a, b) => (a.airHumidityPercent || 0) - (b.airHumidityPercent || 0),
     },
     {
-      title: 'Soil Humidity',
+      title: isMobile ? 'Soil H.' : 'Soil Humidity',
       dataIndex: 'soilHumidityPercent',
       key: 'soilHumidity',
-      width: 110,
+      width: isMobile ? 70 : 110,
       align: 'center',
       render: (humidity) => humidity !== null && humidity !== undefined ? (
         <Tag color={getHumidityColor(humidity, false)}>
@@ -119,10 +131,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       sorter: (a, b) => (a.soilHumidityPercent || 0) - (b.soilHumidityPercent || 0),
     },
     {
-      title: 'Precipitation',
+      title: isMobile ? 'Rain' : 'Precipitation',
       dataIndex: 'precipitationDetected',
       key: 'precipitation',
-      width: 100,
+      width: isMobile ? 60 : 100,
       align: 'center',
       render: (precipitation) => (
         <Tag color={precipitation ? '#1890ff' : '#f5f5f5'} style={{ color: precipitation ? '#fff' : '#999' }}>
@@ -139,10 +151,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       title: 'N',
       dataIndex: 'nitrogen',
       key: 'nitrogen',
-      width: 80,
+      width: isMobile ? 50 : 80,
       align: 'center',
       render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+        <span style={{ color: '#1890ff', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
           {value.toFixed(1)}
         </span>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
@@ -152,10 +164,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       title: 'P',
       dataIndex: 'phosphorus',
       key: 'phosphorus',
-      width: 80,
+      width: isMobile ? 50 : 80,
       align: 'center',
       render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#52c41a', fontWeight: 'bold' }}>
+        <span style={{ color: '#52c41a', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
           {value.toFixed(1)}
         </span>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
@@ -165,10 +177,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       title: 'K',
       dataIndex: 'potassium',
       key: 'potassium',
-      width: 80,
+      width: isMobile ? 50 : 80,
       align: 'center',
       render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#faad14', fontWeight: 'bold' }}>
+        <span style={{ color: '#faad14', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
           {value.toFixed(1)}
         </span>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
@@ -180,21 +192,37 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
     <Card
       className="report-table-container"
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={4} style={{ margin: 0 }}>
+        <div 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: isMobile ? 'flex-start' : 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '0'
+          }}
+        >
+          <Title level={4} style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
             Raw Data Table
           </Title>
-          <Space>
+          <Space 
+            direction={isMobile ? 'vertical' : 'horizontal'} 
+            size="small"
+            style={{ width: isMobile ? '100%' : 'auto' }}
+          >
             <Search
-              placeholder="Search farms, sections, or dates"
+              placeholder={isMobile ? "Search..." : "Search farms, sections, or dates"}
               allowClear
               enterButton={<SearchOutlined />}
-              size="middle"
+              size={isMobile ? "small" : "middle"}
               onSearch={handleSearch}
               onChange={(e) => !e.target.value && handleSearch('')}
-              style={{ width: 250 }}
+              style={{ width: isMobile ? '100%' : 250 }}
             />
-            <Button icon={<FilterOutlined />} size="middle">
+            <Button 
+              icon={<FilterOutlined />} 
+              size={isMobile ? "small" : "middle"}
+              style={{ width: isMobile ? '100%' : 'auto' }}
+            >
               Filters
             </Button>
           </Space>
@@ -208,10 +236,10 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
         rowKey={(record) => `${record.id}_${record.timestamp}`}
         pagination={{
           className: "custom-pagination",
-          pageSizeOptions: pageSizes,
-          showSizeChanger: true,
-          size: 'default',
-          defaultPageSize: pageSizes[0],
+          pageSizeOptions: isMobile ? [5, 10, 25] : pageSizes,
+          showSizeChanger: !isMobile,
+          size: isMobile ? 'small' : 'default',
+          defaultPageSize: isMobile ? 5 : pageSizes[0],
           locale: { items_per_page: '/ pages' },
           defaultCurrent: page,
           showTotal: (total) => `Total: ${total}`,
@@ -225,10 +253,12 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
             setPage(page)
           },
           total: total,
+          simple: isMobile,
+          // showQuickJumper: !isMobile,
         }}
-        scroll={{ x: 1200 }}
-        size="middle"
-        bordered
+        scroll={{ x: 'max-content' }}
+        size={isMobile ? "small" : "middle"}
+        bordered={!isMobile}
       />
     </Card>
   );

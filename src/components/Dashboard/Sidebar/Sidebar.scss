@@ -107,13 +107,13 @@
 }
 
 // Responsive
-@media (max-width: 768px) {
-  .sidebar {
-    width: 200px;
-  }
-}
+// @media (max-width: 768px) {
+//   .sidebar {
+//     width: 200px;
+//   }
+// }
 
-@media (max-width: 480px) {
+@media (min-width: 0px) and (max-width: 768px) {
   .sidebar {
     width: 60px;
     padding: 12px;
