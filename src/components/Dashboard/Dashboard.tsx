@@ -8,6 +8,7 @@ import { SensorInventory } from '../SensorInventory/SensorInventory';
 import { Reports } from '../Reports/Reports';
 import { EditFarmModal, EditFarmData } from './EditFarmModal/EditFarmModal';
 import { DeleteFarmModal } from './DeleteFarmModal/DeleteFarmModal';
+import { FarmMapModal } from './FarmMapModal/FarmMapModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
 import { farmsService } from '../../services/farms.service';
@@ -27,6 +28,8 @@ export const Dashboard: React.FC = () => {
   const [farmToEdit, setFarmToEdit] = useState<Farm | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [farmToDelete, setFarmToDelete] = useState<Farm | null>(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [farmToViewMap, setFarmToViewMap] = useState<Farm | null>(null);
   const { user, logout } = useAuth();
   const { getFarms, getWeatherData } = useFarms();
 
@@ -71,6 +74,14 @@ export const Dashboard: React.FC = () => {
     if (farm) {
       setFarmToDelete(farm);
       setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleViewMap = (farmId: string) => {
+    const farm = farms.find(f => f.id === farmId);
+    if (farm) {
+      setFarmToViewMap(farm);
+      setIsMapModalOpen(true);
     }
   };
 
@@ -186,6 +197,7 @@ export const Dashboard: React.FC = () => {
                       onViewDetails={handleViewDetails}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onViewMap={handleViewMap}
                     />
                   ))}
                 </div>
@@ -285,6 +297,16 @@ export const Dashboard: React.FC = () => {
         onClose={handleDeleteModalClose}
         onConfirm={handleDeleteConfirm}
         farm={farmToDelete}
+      />
+
+      <FarmMapModal
+        isOpen={isMapModalOpen}
+        onClose={() => {
+          setIsMapModalOpen(false);
+          setFarmToViewMap(null);
+        }}
+        farmName={farmToViewMap?.name || ''}
+        location={farmToViewMap?.location || ''}
       />
     </div>
   );

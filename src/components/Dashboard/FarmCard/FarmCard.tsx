@@ -8,13 +8,15 @@ interface FarmCardProps {
   onViewDetails?: (farmId: string) => void;
   onEdit?: (farmId: string) => void;
   onDelete?: (farmId: string) => void;
+  onViewMap?: (farmId: string) => void;
 }
 
 export const FarmCard: React.FC<FarmCardProps> = ({ 
   farm, 
   onViewDetails,
   onEdit,
-  onDelete 
+  onDelete,
+  onViewMap
 }) => {
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
@@ -50,7 +52,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
             className="action-btn"
             onClick={(e) => {
               e.stopPropagation();
-              onViewDetails?.(farm.id);
+              onViewMap?.(farm.id);
             }}
           >
             <MapPin size={16} />
