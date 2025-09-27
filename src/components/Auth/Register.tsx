@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import { Form, Input, Button, Typography, message, Segmented } from 'antd';
+import { ArrowLeft, Users, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { Logo } from '../Logo/Logo';
 import './Auth.scss';
 
@@ -13,6 +14,7 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  rolId: number;
 }
 
 interface RegisterProps {
@@ -24,6 +26,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const handleSubmit = async (values: RegisterFormData) => {
@@ -33,12 +36,13 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
         username: values.username,
         email: values.email,
         password: values.password,
+        rolId: values.rolId,
       });
-      message.success('Registration successful!');
+      message.success(t('auth.success.register'));
       // Redirect to dashboard after successful registration
       navigate('/dashboard', { replace: true });
     } catch (error) {
-      message.error('Registration failed. Please try again.');
+      message.error(t('auth.error.register'));
     } finally {
       setLoading(false);
     }
@@ -55,7 +59,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
         
         <div className="auth-header">
           <Logo size="large" />
-          <Title level={2} className="auth-title">Sign Up</Title>
+          <Title level={2} className="auth-title">{t('auth.register.title')}</Title>
         </div>
 
         <Form
@@ -63,13 +67,45 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
           layout="vertical"
           onFinish={handleSubmit}
           className="auth-form"
+          initialValues={{ rolId: 2 }}
         >
+
+          <Form.Item
+            name="rolId"
+            rules={[{ required: true, message: t('auth.validation.role') }]}
+          >
+            <Segmented
+              size="large"
+              options={[
+                {
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Users size={16} />
+                      <span>{t('auth.manager')}</span>
+                    </div>
+                  ),
+                  value: 1,
+                },
+                {
+                  label: (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UserCheck size={16} />
+                      <span>{t('auth.farmer')}</span>
+                    </div>
+                  ),
+                  value: 2,
+                },
+              ]}
+              className="role-selector"
+            />
+          </Form.Item>
+
           <Form.Item
             name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
+            rules={[{ required: true, message: t('auth.validation.username') }]}
           >
             <Input
-              placeholder="Username"
+              placeholder={t('auth.username')}
               size="large"
               className="auth-input"
             />
@@ -78,12 +114,12 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
+              { required: true, message: t('auth.validation.email') },
+              { type: 'email', message: t('auth.validation.email.valid') }
             ]}
           >
             <Input
-              placeholder="Email"
+              placeholder={t('auth.email')}
               size="large"
               className="auth-input"
             />
@@ -92,12 +128,12 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Please input your password!' },
-              { min: 6, message: 'Password must be at least 6 characters!' }
+              { required: true, message: t('auth.validation.password') },
+              { min: 6, message: t('auth.validation.password.min') }
             ]}
           >
             <Input.Password
-              placeholder="Password"
+              placeholder={t('auth.password')}
               size="large"
               className="auth-input"
             />
@@ -107,19 +143,19 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
             name="confirmPassword"
             dependencies={['password']}
             rules={[
-              { required: true, message: 'Please confirm your password!' },
+              { required: true, message: t('auth.validation.confirmPassword') },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Passwords do not match!'));
+                  return Promise.reject(new Error(t('auth.validation.passwords.match')));
                 },
               }),
             ]}
           >
             <Input.Password
-              placeholder="Confirm Password"
+              placeholder={t('auth.confirmPassword')}
               size="large"
               className="auth-input"
             />
@@ -133,15 +169,15 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
               loading={loading}
               className="auth-submit-btn"
             >
-              SIGN UP
+              {t('auth.register.button')}
             </Button>
           </Form.Item>
         </Form>
 
         <div className="auth-footer">
           <Text className="auth-switch">
-            Already have your account?{' '}
-            <Link onClick={onSwitchToLogin}>Log In</Link>
+            {t('auth.switch.login')}{' '}
+            <Link onClick={onSwitchToLogin}>{t('auth.login.title')}</Link>
           </Text>
         </div>
       </div>

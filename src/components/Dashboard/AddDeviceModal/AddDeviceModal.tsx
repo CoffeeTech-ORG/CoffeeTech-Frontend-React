@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button } from 'antd';
 import { X } from 'lucide-react';
+import { useI18n } from '../../../contexts/I18nContext';
 import './AddDeviceModal.scss';
 
 export interface AddDeviceData {
@@ -19,6 +20,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
   onClose,
   onSubmit
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -54,7 +56,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Add New Device</h2>
+        <h2 className="modal-title">{t('device.add')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -71,20 +73,20 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Device Hub MAC"
+            label={t('device.mac')}
             name="deviceHubId"
             rules={[
-              { required: true, message: 'Please enter the device hub MAC address' },
-              { min: 2, message: 'Device hub MAC must be at least 2 characters' },
-              { max: 100, message: 'Device hub MAC cannot exceed 100 characters' },
+              { required: true, message: t('device.mac.validation') },
+              { min: 2, message: t('device.mac.length.min') },
+              { max: 100, message: t('device.mac.length.max') },
               {
                 pattern: /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
-                message: 'Please enter a valid MAC address format (e.g., 1C:69:20:31:4B:78)'
+                message: t('device.mac.format')
               }
             ]}
           >
             <Input
-              placeholder="Enter device hub MAC address (e.g., 1C:69:20:31:4B:78)"
+              placeholder={t('device.mac.placeholder')}
               size="large"
               className="form-input"
               style={{ textTransform: 'uppercase' }}
@@ -99,7 +101,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -108,7 +110,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Add Device
+              {t('device.add')}
             </Button>
           </div>
         </Form>

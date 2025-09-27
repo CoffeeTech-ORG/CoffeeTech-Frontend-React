@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Recommendation } from '../../types/api.types';
+import { useI18n } from '../../contexts/I18nContext';
 import './RecommendationList.scss';
 
 interface RecommendationListProps {
@@ -7,6 +8,7 @@ interface RecommendationListProps {
 }
 
 export const RecommendationList: React.FC<RecommendationListProps> = ({ items = [] }) => {
+  const { t } = useI18n();
   // Estado para manejar qué recomendaciones están expandidas
   const [expandedItems, setExpandedItems] = useState<Set<string | number>>(
     // La más reciente (primera en la lista) está expandida por defecto
@@ -47,14 +49,14 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({ items = 
       return `Etapa: ${stageMatch[1]}`;
     }
     
-    return 'Recomendación';
+    return t('recommendations.default');
   };
 
   if (!items.length) {
     return (
       <div className="recommendation-list">
         <div className="no-recommendations">
-          No hay recomendaciones disponibles
+          {t('recommendations.noAvailable')}
         </div>
       </div>
     );
@@ -62,9 +64,9 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({ items = 
 
   return (
     <div className="recommendation-list">
-      <h4>Recomendaciones</h4>
+      <h4>{t('recommendations.title')}</h4>
       <div className="recommendations">
-        {items.map((r, index) => {
+        {items.map((r) => {
           const isExpanded = expandedItems.has(r.id);
           const urgencyLevel = getUrgencyLevel(r.recommendationDescription || '');
           const title = extractTitle(r.recommendationDescription || '');

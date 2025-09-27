@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Space, Typography, Input } from 'antd';
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useI18n } from '../../../contexts/I18nContext';
 import { ReportData } from '../../../types/report.types';
 
 const { Title } = Typography;
@@ -14,6 +15,7 @@ interface ReportTableProps {
 }
 
 export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
+  const { t } = useI18n();
   const [filteredData, setFilteredData] = useState<ReportData[]>(data);
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
@@ -69,7 +71,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
 
   const columns: ColumnsType<ReportData> = [
     {
-      title: 'Timestamp',
+      title: t('reports.table.timestamp'),
       dataIndex: 'timestamp',
       key: 'timestamp',
       width: isMobile ? 100 : 150,
@@ -78,21 +80,21 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       defaultSortOrder: 'descend',
     },
     {
-      title: 'Farm',
+      title: t('reports.table.farm'),
       dataIndex: 'farmName',
       key: 'farmName',
       width: isMobile ? 80 : 120,
       ellipsis: true,
     },
     {
-      title: 'Section',
+      title: t('reports.table.section'),
       dataIndex: 'sectionName',
       key: 'sectionName',
       width: isMobile ? 80 : 120,
       ellipsis: true,
     },
     {
-      title: isMobile ? 'Temp' : 'Temperature',
+      title: isMobile ? t('reports.table.tempShort') : t('reports.table.temperature'),
       dataIndex: 'celsiusGradeTemperature',
       key: 'temperature',
       width: isMobile ? 70 : 100,
@@ -105,7 +107,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       sorter: (a, b) => (a.celciusGradeTemperature || 0) - (b.celciusGradeTemperature || 0),
     },
     {
-      title: isMobile ? 'Air H.' : 'Air Humidity',
+      title: isMobile ? t('reports.table.airHumidityShort') : t('reports.table.airHumidity'),
       dataIndex: 'airHumidityPercent',
       key: 'airHumidity',
       width: isMobile ? 70 : 110,
@@ -118,7 +120,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       sorter: (a, b) => (a.airHumidityPercent || 0) - (b.airHumidityPercent || 0),
     },
     {
-      title: isMobile ? 'Soil H.' : 'Soil Humidity',
+      title: isMobile ? t('reports.table.soilHumidityShort') : t('reports.table.soilHumidity'),
       dataIndex: 'soilHumidityPercent',
       key: 'soilHumidity',
       width: isMobile ? 70 : 110,
@@ -131,19 +133,19 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       sorter: (a, b) => (a.soilHumidityPercent || 0) - (b.soilHumidityPercent || 0),
     },
     {
-      title: isMobile ? 'Rain' : 'Precipitation',
+      title: isMobile ? t('reports.table.precipitationShort') : t('reports.table.precipitation'),
       dataIndex: 'precipitationDetected',
       key: 'precipitation',
       width: isMobile ? 60 : 100,
       align: 'center',
       render: (precipitation) => (
         <Tag color={precipitation ? '#1890ff' : '#f5f5f5'} style={{ color: precipitation ? '#fff' : '#999' }}>
-          {precipitation ? 'Yes' : 'No'}
+          {precipitation ? t('common.yes') : t('common.no')}
         </Tag>
       ),
       filters: [
-        { text: 'Yes', value: true },
-        { text: 'No', value: false },
+        { text: t('common.yes'), value: true },
+        { text: t('common.no'), value: false },
       ],
       onFilter: (value, record) => record.precipitationDetected === value,
     },
@@ -202,7 +204,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           }}
         >
           <Title level={4} style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
-            Raw Data Table
+            {t('reports.table.title')}
           </Title>
           <Space 
             direction={isMobile ? 'vertical' : 'horizontal'} 
@@ -210,7 +212,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
             style={{ width: isMobile ? '100%' : 'auto' }}
           >
             <Search
-              placeholder={isMobile ? "Search..." : "Search farms, sections, or dates"}
+              placeholder={isMobile ? t('reports.table.searchShort') : t('reports.table.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               size={isMobile ? "small" : "middle"}
@@ -223,7 +225,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
               size={isMobile ? "small" : "middle"}
               style={{ width: isMobile ? '100%' : 'auto' }}
             >
-              Filters
+              {t('reports.table.filters')}
             </Button>
           </Space>
         </div>
@@ -242,7 +244,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           defaultPageSize: isMobile ? 5 : pageSizes[0],
           locale: { items_per_page: '/ pages' },
           defaultCurrent: page,
-          showTotal: (total) => `Total: ${total}`,
+          showTotal: (total) => `${t('reports.table.total')}: ${total}`,
           onShowSizeChange: (current, size) => {
             setSearchClicked(true)
             setPageSize(size)

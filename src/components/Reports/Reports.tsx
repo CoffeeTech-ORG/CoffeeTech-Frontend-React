@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Card, Select, DatePicker, Button, Row, Col, Spin, message, Typography, Space } from 'antd';
 import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useReports } from '../../hooks/useReports';
+import { useI18n } from '../../contexts/I18nContext';
 import { Farm, Section } from '../../hooks/useFarms';
 import { ReportFilters, ReportData, ReportSummary } from '../../types/report.types';
 import { ReportChart } from './ReportChart/ReportChart';
@@ -16,6 +17,7 @@ const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
 export const Reports: React.FC = () => {
+  const { t } = useI18n();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>();
@@ -75,7 +77,7 @@ export const Reports: React.FC = () => {
       const farmsData = await getFarms();
       setFarms(farmsData);
     } catch (error) {
-      message.error('Error loading farms');
+      message.error(t('reports.error.loadingFarms'));
     }
   };
 
@@ -85,13 +87,13 @@ export const Reports: React.FC = () => {
       setSections(sectionsData);
       setSelectedSectionId(undefined); // Reset section selection
     } catch (error) {
-      message.error('Error loading sections');
+      message.error(t('reports.error.loadingSections'));
     }
   };
 
   const handleGenerateReport = async () => {
     if (!selectedFarmId) {
-      message.warning('Please select a farm to generate the report');
+      message.warning(t('reports.warning.selectFarm'));
       return;
     }
 
@@ -113,7 +115,7 @@ export const Reports: React.FC = () => {
       setReportSummary(summary);
       setHasGenerated(true);
       
-      message.success('Report generated successfully');
+      message.success(t('reports.success.generated'));
     } catch (error: any) {
       console.error('Error generating report:', error);
       
@@ -121,9 +123,9 @@ export const Reports: React.FC = () => {
       const errorMessage = error.response?.data?.message || 
                           error.response?.data || 
                           error.message || 
-                          'Error generating report';
+                          t('reports.error.generating');
       
-      message.error(`Failed to generate report: ${errorMessage}`);
+      message.error(`${t('reports.error.failed')}: ${errorMessage}`);
       
       // Reset states on error
       setReportData([]);
@@ -138,7 +140,7 @@ export const Reports: React.FC = () => {
     if (format === 'csv' && reportData.length > 0) {
       exportToCSV();
     } else {
-      message.info(`Export to ${format.toUpperCase()} will be implemented soon`);
+      message.info(`${t('reports.export.comingSoon')} ${format.toUpperCase()}`);
     }
   };
 
@@ -184,7 +186,7 @@ export const Reports: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      message.success('Report exported to CSV successfully');
+      message.success(t('reports.export.success'));
     }
   };
 
@@ -202,17 +204,17 @@ export const Reports: React.FC = () => {
       <div className="reports-header">
         <div className="header-title">
           <Title level={2} style={{ marginBottom: '8px', color: '#262626', fontSize: '24px' }}>
-            Reports Dashboard
+            {t('reports.title')}
           </Title>
           <Text type="secondary">
-            Generate comprehensive reports for your farms and sections
+            {t('reports.description')}
           </Text>
         </div>
       </div>
 
       {/* Filters Card */}
       <Card 
-        title="Report Filters" 
+        title={t('reports.dateRange')} 
         style={{ marginBottom: '24px' }}
         extra={
           <Button 
@@ -223,17 +225,17 @@ export const Reports: React.FC = () => {
             disabled={!selectedFarmId}
             size="middle"
           >
-            Generate Report
+            {t('reports.generate')}
           </Button>
         }
       >
         <Row gutter={[8, 8]}>
           <Col xs={24} sm={12} md={6}>
             <div>
-              <Text strong>Farm *</Text>
+              <Text strong>{t('reports.farmFilter')} *</Text>
               <Select
                 style={{ width: '100%', marginTop: '4px' }}
-                placeholder="Select a farm"
+                placeholder={t('reports.placeholders.selectFarm')}
                 value={selectedFarmId}
                 onChange={setSelectedFarmId}
                 loading={loading}
@@ -250,10 +252,10 @@ export const Reports: React.FC = () => {
 
           <Col xs={24} sm={12} md={6}>
             <div>
-              <Text strong>Section</Text>
+              <Text strong>{t('reports.sectionFilter')}</Text>
               <Select
                 style={{ width: '100%', marginTop: '4px' }}
-                placeholder="All sections"
+                placeholder={t('reports.placeholders.allSections')}
                 value={selectedSectionId}
                 onChange={setSelectedSectionId}
                 allowClear
@@ -271,7 +273,7 @@ export const Reports: React.FC = () => {
 
           <Col xs={24} sm={12} md={6}>
             <div>
-              <Text strong>Date Range</Text>
+              <Text strong>{t('reports.dateRange')}</Text>
               <RangePicker
                 style={{ width: '100%', marginTop: '4px' }}
                 value={dateRange}
@@ -285,17 +287,17 @@ export const Reports: React.FC = () => {
 
           <Col xs={24} sm={12} md={6}>
             <div>
-              <Text strong>Data Type</Text>
+              <Text strong>{t('reports.dataType')}</Text>
               <Select
                 style={{ width: '100%', marginTop: '4px' }}
                 value={dataType}
                 onChange={setDataType}
                 size="middle"
               >
-                <Option value="all">All Data</Option>
-                <Option value="environmental">Environmental</Option>
-                <Option value="soil">Soil Data</Option>
-                <Option value="nutrients">Nutrients</Option>
+                <Option value="all">{t('reports.dataTypes.all')}</Option>
+                <Option value="environmental">{t('reports.dataTypes.environmental')}</Option>
+                <Option value="soil">{t('reports.dataTypes.soil')}</Option>
+                <Option value="nutrients">{t('reports.dataTypes.nutrients')}</Option>
               </Select>
             </div>
           </Col>
@@ -303,7 +305,7 @@ export const Reports: React.FC = () => {
 
         {selectedFarm && (
           <div className="filter-highlight">
-            <Text strong>Selected: </Text>
+            <Text strong>{t('reports.selected')}: </Text>
             <Text>{selectedFarm.name}</Text>
             {selectedSection && (
               <>
@@ -323,7 +325,7 @@ export const Reports: React.FC = () => {
           <div style={{ textAlign: 'center', padding: '48px' }}>
             <Spin size="large" />
             <div style={{ marginTop: '16px' }}>
-              <Text>Generating report...</Text>
+              <Text>{t('reports.generating')}</Text>
             </div>
           </div>
         </Card>
@@ -337,10 +339,10 @@ export const Reports: React.FC = () => {
             <Row justify="space-between" align="middle" gutter={[8, 8]}>
               <Col xs={24} sm={12}>
                 <Title level={4} style={{ margin: 0 }}>
-                  Report Results
+                  {t('reports.results')}
                 </Title>
                 <Text type="secondary">
-                  {reportData.length} data points found
+                  {reportData.length} {t('reports.dataPointsFound')}
                 </Text>
               </Col>
               <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
@@ -351,7 +353,7 @@ export const Reports: React.FC = () => {
                     size="middle"
                     style={{ width: '100%' }}
                   >
-                    Export CSV
+                    {t('reports.export.csv')}
                   </Button>
                   {/* <Button 
                     icon={<DownloadOutlined />}
@@ -397,7 +399,7 @@ export const Reports: React.FC = () => {
             <Card>
               <div style={{ textAlign: 'center', padding: '48px' }}>
                 <Text type="secondary" style={{ fontSize: '16px' }}>
-                  No data found for the selected criteria
+                  {t('reports.noDataFound')}
                 </Text>
               </div>
             </Card>
@@ -410,7 +412,7 @@ export const Reports: React.FC = () => {
         <Card>
           <div style={{ textAlign: 'center', padding: '48px' }}>
             <Text type="secondary" style={{ fontSize: '16px' }}>
-              Select your filters and click "Generate Report" to view data
+              {t('reports.initialState')}
             </Text>
           </div>
         </Card>

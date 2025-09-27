@@ -5,7 +5,9 @@ import { Sidebar } from './Dashboard/Sidebar/Sidebar';
 import SectionData from './SectionData/SectionData';
 import { Section } from '../types/api.types';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 import './Dashboard/Dashboard.scss';
+import { LanguageSelector } from './LanguageSelector';
 
 interface SectionDetailViewProps {
   section: Section;
@@ -15,6 +17,7 @@ interface SectionDetailViewProps {
 
 export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, onBack, onNavigateToSection }) => {
   const { user, token, logout } = useAuth();
+  const { t } = useI18n();
 
   const handleMenuClick = (key: string) => {
     if (key === 'dashboard') {
@@ -36,15 +39,11 @@ export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, o
       <div className="dashboard__main">
         <header className="dashboard__header">
           <div className="header-left">
-            <h1>CoffeeTech</h1>
+            <h1>{t('dashboard.title')}</h1>
           </div>
           
           <div className="header-right">
-            <Button
-              icon={<Bell size={20} />}
-              type="text"
-              className="header-btn"
-            />
+            <LanguageSelector />
             <Button
               icon={<User size={20} />}
               type="text"
@@ -65,7 +64,7 @@ export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, o
                 onClick={onBack}
                 className="back-btn"
               >
-                Back to Sections
+                {t('nav.back')} to {t('sections.title')}
               </Button>
             </div>
             

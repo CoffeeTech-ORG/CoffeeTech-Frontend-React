@@ -11,6 +11,7 @@ import { Logo } from '../../Logo/Logo';
 import { AddFarmModal, AddFarmData } from '../AddFarmModal/AddFarmModal';
 import { createFarm } from '../../../services/farms.createFarm';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useI18n } from '../../../contexts/I18nContext';
 import './Sidebar.scss';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddFarm, onFarmCreated }) => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [isAddFarmOpen, setIsAddFarmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -38,17 +40,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
     {
       key: 'dashboard',
       icon: <BarChart3 size={20} />,
-      label: 'Dashboard',
+      label: t('sidebar.dashboard'),
     },
     {
       key: 'reports',
       icon: <FileText size={20} />,
-      label: 'Reports',
+      label: t('sidebar.reports'),
     },
     {
       key: 'settings',
       icon: <Settings size={20} />,
-      label: 'Sensor Inventory',
+      label: t('sidebar.inventory'),
     },
   ];
 
@@ -91,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
       <div className="sidebar__footer">
         <button className="sidebar__add-farm" onClick={handleAddFarmClick}>
           <Plus size={20} />
-          <span>ADD FARM</span>
+          <span>{t('sidebar.addFarm').toUpperCase()}</span>
         </button>
       </div>
       <AddFarmModal

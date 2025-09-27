@@ -10,8 +10,10 @@ import { EditFarmModal, EditFarmData } from './EditFarmModal/EditFarmModal';
 import { DeleteFarmModal } from './DeleteFarmModal/DeleteFarmModal';
 import { FarmMapModal } from './FarmMapModal/FarmMapModal';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { useFarms, Farm, Section, WeatherData } from '../../hooks/useFarms';
 import { farmsService } from '../../services/farms.service';
+import { LanguageSelector } from '../LanguageSelector';
 import { Button, Spin, message } from 'antd';
 import { LogOutIcon } from 'lucide-react';
 import './Dashboard.scss';
@@ -31,6 +33,7 @@ export const Dashboard: React.FC = () => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [farmToViewMap, setFarmToViewMap] = useState<Farm | null>(null);
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const { getFarms, getWeatherData } = useFarms();
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export const Dashboard: React.FC = () => {
       setFarms(farmsData);
       setWeather(weatherData);
     } catch (error) {
-      message.error('Failed to load dashboard data');
+      message.error(t('dashboard.error.loadData'));
     } finally {
       setLoading(false);
     }
@@ -99,10 +102,10 @@ export const Dashboard: React.FC = () => {
       // Remove the farm from the local state
       setFarms(prevFarms => prevFarms.filter(f => f.id !== farmToDelete.id));
       
-      message.success('Farm deleted successfully!');
+      message.success(t('farm.success.delete'));
     } catch (error) {
       console.error('Error deleting farm:', error);
-      message.error('Failed to delete farm. Please try again.');
+      message.error(t('farm.error.delete'));
       throw error; // Re-throw to let the modal handle the loading state
     }
   };
@@ -127,7 +130,7 @@ export const Dashboard: React.FC = () => {
       
       setIsEditModalOpen(false);
       setFarmToEdit(null);
-      message.success('Farm updated successfully!');
+      message.success(t('farm.success.update'));
     } catch (error) {
       console.error('Error updating farm:', error);
       throw error; // Re-throw to let the modal handle the error display
@@ -183,10 +186,22 @@ export const Dashboard: React.FC = () => {
             {weather && <WeatherWidget weather={weather} />}
             
             <div className="farms-section">
-              <h2 className="section-title">My Farms</h2>
+              <h2 className="section-title">{t('dashboard.myFarms')}</h2>
               {loading ? (
                 <div className="loading-container">
                   <Spin size="large" />
+                </div>
+              ) : farms.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-content">
+                    <div className="empty-state-icon">
+                      🏡
+                    </div>
+                    <h3 className="empty-state-title">{t('dashboard.empty.title')}</h3>
+                    <p className="empty-state-description">
+                      {t('dashboard.empty.description')}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="farms-grid">
@@ -259,15 +274,11 @@ export const Dashboard: React.FC = () => {
       <div className="dashboard__main">
         <header className="dashboard__header">
           <div className="header-left">
-            <h1>CoffeeTech</h1>
+            <h1>{t('dashboard.title')}</h1>
           </div>
           
           <div className="header-right">
-            {/* <Button
-              icon={<Bell size={20} />}
-              type="text"
-              className="header-btn"
-            /> */}
+            <LanguageSelector />
             
             <Button
               type="text"

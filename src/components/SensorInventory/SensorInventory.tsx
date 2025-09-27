@@ -4,9 +4,11 @@ import { SensorFilters } from '../../types/sensor.types';
 import { SensorCard } from './SensorCard/SensorCard';
 import { SensorStatsCard } from './SensorStatsCard/SensorStatsCard';
 import { SensorFiltersPanel } from './SensorFiltersPanel/SensorFiltersPanel';
+import { useI18n } from '../../contexts/I18nContext';
 import './SensorInventory.scss';
 
 export const SensorInventory: React.FC = () => {
+  const { t } = useI18n();
   const { 
     sensors, 
     loading, 
@@ -62,7 +64,7 @@ export const SensorInventory: React.FC = () => {
       <div className="sensor-inventory">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading sensor inventory...</p>
+          <p>{t('sensors.loading')}</p>
         </div>
       </div>
     );
@@ -72,10 +74,10 @@ export const SensorInventory: React.FC = () => {
     return (
       <div className="sensor-inventory">
         <div className="error-message">
-          <h3>Error loading sensor inventory</h3>
+          <h3>{t('sensors.error.loading')}</h3>
           <p>{error}</p>
           <button onClick={handleRefresh} className="retry-btn">
-            Try Again
+            {t('sensors.tryAgain')}
           </button>
         </div>
       </div>
@@ -86,8 +88,8 @@ export const SensorInventory: React.FC = () => {
     <div className="sensor-inventory">
       <div className="inventory-header">
         <div className="header-title">
-          <h1>Sensor Inventory Management</h1>
-          <p>Manage and monitor your sensor network</p>
+          <h1>{t('sensors.inventory.title')}</h1>
+          <p>{t('sensors.inventory.description')}</p>
         </div>
         <div className="header-actions">
           <button 
@@ -95,7 +97,7 @@ export const SensorInventory: React.FC = () => {
             className="refresh-btn"
             disabled={loading}
           >
-            🔄 Refresh
+            🔄 {t('common.refresh')}
           </button>
         </div>
       </div>
@@ -122,13 +124,13 @@ export const SensorInventory: React.FC = () => {
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
           >
-            📱 Grid
+            📱 {t('sensors.view.grid')}
           </button>
           <button 
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
           >
-            📋 List
+            📋 {t('sensors.view.list')}
           </button>
         </div>
       </div>
@@ -138,11 +140,11 @@ export const SensorInventory: React.FC = () => {
         {filteredSensors.length === 0 ? (
           <div className="no-sensors">
             <div className="no-sensors-icon">📡</div>
-            <h3>No sensors found</h3>
+            <h3>{t('sensors.noSensorsFound')}</h3>
             <p>
               {sensors.length === 0 
-                ? "Get started by adding your first sensor" 
-                : "Try adjusting your filters"}
+                ? t('sensors.getStarted') 
+                : t('sensors.adjustFilters')}
             </p>
           </div>
         ) : (

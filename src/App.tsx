@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, App as AntdApp } from 'antd';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { I18nProvider } from './contexts/I18nContext';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { AuthWrapper } from './components/AuthWrapper/AuthWrapper';
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute';
@@ -81,9 +82,11 @@ function App() {
     <ConfigProvider theme={theme}>
       <AntdApp>
         <Router>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </I18nProvider>
         </Router>
       </AntdApp>
     </ConfigProvider>

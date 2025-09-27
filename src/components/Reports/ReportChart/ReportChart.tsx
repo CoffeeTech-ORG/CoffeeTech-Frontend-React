@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
   ComposedChart
 } from 'recharts';
+import { useI18n } from '../../../contexts/I18nContext';
 import { ChartDataPoint } from '../../../types/report.types';
 
 const { Title } = Typography;
@@ -28,13 +29,14 @@ interface ReportChartProps {
 type ChartType = 'line' | 'area' | 'bar' | 'composed';
 
 export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, style }) => {
+  const { t } = useI18n();
   const [chartType, setChartType] = useState<ChartType>('line');
 
   if (data.length === 0) {
     return (
-      <Card title="Data Visualization" style={style}>
+      <Card title={t('reports.chart.title')} style={style}>
         <div style={{ textAlign: 'center', padding: '48px' }}>
-          No data available for visualization
+          {t('reports.chart.noData')}
         </div>
       </Card>
     );
@@ -287,7 +289,7 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, style 
         <Row justify="space-between" align="middle">
           <Col>
             <Title level={4} style={{ margin: 0 }}>
-              Data Visualization
+              {t('reports.chart.title')}
             </Title>
           </Col>
           <Col>
@@ -297,10 +299,10 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, style 
               buttonStyle="solid"
               size="small"
             >
-              <Radio.Button value="line">Line</Radio.Button>
-              <Radio.Button value="area">Area</Radio.Button>
-              <Radio.Button value="bar">Bar</Radio.Button>
-              <Radio.Button value="composed">Mixed</Radio.Button>
+              <Radio.Button value="line">{t('reports.chart.types.line')}</Radio.Button>
+              <Radio.Button value="area">{t('reports.chart.types.area')}</Radio.Button>
+              <Radio.Button value="bar">{t('reports.chart.types.bar')}</Radio.Button>
+              <Radio.Button value="composed">{t('reports.chart.types.mixed')}</Radio.Button>
             </Radio.Group>
           </Col>
         </Row>

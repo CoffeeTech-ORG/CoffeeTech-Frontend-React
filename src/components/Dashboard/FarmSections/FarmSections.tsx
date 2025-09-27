@@ -11,8 +11,10 @@ import { DeleteSectionModal } from '../DeleteSectionModal/DeleteSectionModal';
 import { useFarms, Farm, Section } from '../../../hooks/useFarms';
 import { farmsService } from '../../../services/farms.service';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useI18n } from '../../../contexts/I18nContext';
 import './FarmSections.scss';
 import '../Dashboard.scss';
+import { LanguageSelector } from '../../LanguageSelector';
 
 interface FarmSectionsProps {
   farm: Farm;
@@ -36,6 +38,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
   const [isDeleteSectionModalOpen, setIsDeleteSectionModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const { getFarmSections, createSection } = useFarms();
 
   useEffect(() => {
@@ -49,7 +52,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       setSections(sectionsData);
     } catch (error) {
       console.error('Error loading farm sections:', error);
-      message.error('Failed to load farm sections');
+      message.error(t('sections.error.create'));
     } finally {
       setLoading(false);
     }
@@ -94,10 +97,10 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       // Remove the section from the local state
       setSections(prevSections => prevSections.filter(s => s.id !== sectionToDelete.id));
       
-      message.success('Section deleted successfully!');
+      message.success(t('sections.success.delete'));
     } catch (error) {
       console.error('Error deleting section:', error);
-      message.error('Failed to delete section. Please try again.');
+      message.error(t('sections.error.delete'));
       throw error; // Re-throw to let the modal handle the loading state
     }
   };
@@ -121,7 +124,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       
       setIsEditSectionModalOpen(false);
       setSectionToEdit(null);
-      message.success('Section updated successfully!');
+      message.success(t('sections.success.update'));
     } catch (error) {
       console.error('Error updating section:', error);
       throw error; // Re-throw to let the modal handle the error display
@@ -166,7 +169,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     try {
       setAddingDeviceLoading(true);
       await farmsService.createDevice(data.deviceHubId);
-      message.success('Device added successfully!');
+      message.success(t('sensors.add') + ' successfully!');
       setIsAddDeviceModalOpen(false);
     } catch (error: any) {
       console.error('Error creating device:', error);
@@ -209,7 +212,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       }
 
       await farmsService.createAssignment(sectionIdNumber, data.deviceId);
-      message.success('Device assigned to section successfully!');
+      message.success(t('sensors.assign') + ' successfully!');
       setIsAssignDeviceModalOpen(false);
       setSectionToAssignDevice(null);
     } catch (error: any) {
@@ -242,15 +245,11 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
       <div className="dashboard__main">
         <header className="dashboard__header">
           <div className="header-left">
-            <h1>CoffeeTech</h1>
+            <h1>{t('dashboard.title')}</h1>
           </div>
           
           <div className="header-right">
-            <Button
-              icon={<Bell size={20} />}
-              type="text"
-              className="header-btn"
-            />
+            <LanguageSelector />
             <Button
               icon={<User size={20} />}
               type="text"
@@ -272,7 +271,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                   onClick={onBack}
                   className="back-btn"
                 >
-                  Back to Dashboard
+                  {t('nav.back')} to {t('nav.dashboard')}
                 </Button>
                 <div className="farm-info">
                   <h1 className="farm-name">{farm.name}</h1>
@@ -286,13 +285,13 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                     items: [
                       {
                         key: 'add-section',
-                        label: 'Add Section',
+                        label: t('sections.add'),
                         icon: <Plus size={16} />,
                         onClick: handleAddSection,
                       },
                       {
                         key: 'add-device',
-                        label: 'Add Device',
+                        label: t('sensors.add'),
                         icon: <Plus size={16} />,
                         onClick: handleAddDevice,
                       },
@@ -313,23 +312,23 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
 
             <div className="farm-sections__summary">
               <div className="summary-card">
-                <h3>Sections Overview</h3>
+                <h3>{t('sections.title')} Overview</h3>
                 <div className="summary-stats">
                   <div className="stat">
                     <span className="stat-number">{sections.length}</span>
-                    <span className="stat-label">Total Sections</span>
+                    <span className="stat-label">Total {t('sections.title')}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="farm-sections__content">
-              <h2 className="sections-title">Farm Sections</h2>
+              <h2 className="sections-title">{t('sections.title')}</h2>
               
               {loading ? (
                 <div className="loading-container">
                   <Spin size="large" />
-                  <p>Loading sections...</p>
+                  <p>{t('common.loading')}</p>
                 </div>
               ) : sections.length === 0 ? (
                 <div className="empty-state">
@@ -339,8 +338,8 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                       alt="No sections found" 
                       className="empty-state__image"
                     />
-                    <h3>No sections found</h3>
-                    <p>This farm doesn't have any sections yet. Add your first section to get started.</p>
+                    <h3>{t('sections.empty.title')}</h3>
+                    <p>{t('sections.empty.description')}</p>
                   </div>
                 </div>
               ) : (

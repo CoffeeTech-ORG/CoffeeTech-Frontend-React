@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Select, Button, message } from 'antd';
 import { X } from 'lucide-react';
+import { useI18n } from '../../../contexts/I18nContext';
 import './AddSectionModal.scss';
 
 const { Option } = Select;
@@ -23,16 +24,17 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
   onClose,
   onSubmit
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
   const growthStageOptions = [
-    { value: 'plantula', label: 'Plántula', icon: '🌱' },
-    { value: 'vegetativo', label: 'Vegetativo', icon: '🌿' },
-    { value: 'floracion', label: 'Floración', icon: '🌸' },
-    { value: 'fructificacion', label: 'Fructificación', icon: '🍃' },
-    { value: 'maduracion', label: 'Maduración', icon: '🟡' },
-    { value: 'cosecha', label: 'Cosecha', icon: '☕' }
+    { value: 'plantula', label: t('sectionType.plantula'), icon: '🌱' },
+    { value: 'vegetativo', label: t('sectionType.vegetativo'), icon: '🌿' },
+    { value: 'floracion', label: t('sectionType.floracion'), icon: '🌸' },
+    { value: 'fructificacion', label: t('sectionType.fructificacion'), icon: '🍃' },
+    { value: 'maduracion', label: t('sectionType.maduracion'), icon: '🟡' },
+    { value: 'cosecha', label: t('sectionType.cosecha'), icon: '☕' }
   ];
 
   const handleSubmit = async (values: AddSectionData) => {
@@ -41,10 +43,10 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
       await onSubmit(values);
       form.resetFields();
       onClose();
-      message.success('Section added successfully!');
+      message.success(t('sections.success.create'));
     } catch (error) {
       console.error('Error adding section:', error);
-      message.error('Failed to add section. Please try again.');
+      message.error(t('sections.error.create'));
     } finally {
       setSubmitting(false);
     }
@@ -66,7 +68,7 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Add New Section</h2>
+        <h2 className="modal-title">{t('sections.add')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -83,30 +85,30 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Section Name"
+            label={t('sections.name')}
             name="name"
             rules={[
-              { required: true, message: 'Please enter a section name' },
-              { min: 2, message: 'Section name must be at least 2 characters' },
-              { max: 50, message: 'Section name cannot exceed 50 characters' }
+              { required: true, message: t('sections.name.validation') },
+              { min: 2, message: t('sections.name.length.min') },
+              { max: 50, message: t('sections.name.length.max') }
             ]}
           >
             <Input
-              placeholder="Enter section name"
+              placeholder={t('sections.name.placeholder')}
               size="large"
               className="form-input"
             />
           </Form.Item>
 
           <Form.Item
-            label="Growth Stage Type"
+            label={t('sections.growthStage')}
             name="growthStage"
             rules={[
-              { required: true, message: 'Please select a growth stage' }
+              { required: true, message: t('sections.growthStage.validation') }
             ]}
           >
             <Select
-              placeholder="Select growth stage"
+              placeholder={t('sections.growthStage.placeholder')}
               size="large"
               className="form-select"
             >
@@ -129,7 +131,7 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -138,7 +140,7 @@ export const AddSectionModal: React.FC<AddSectionModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Add Section
+              {t('sections.add')}
             </Button>
           </div>
         </Form>

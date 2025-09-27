@@ -3,6 +3,7 @@ import { Form, Input, Button, Typography, message } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { Logo } from '../Logo/Logo';
 import './Auth.scss';
 
@@ -22,6 +23,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { loginWithCredentials } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,13 +31,13 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
     setLoading(true);
     try {
       await loginWithCredentials(values.email, values.password);
-      message.success('Login successful!');
+      message.success(t('auth.success.login'));
       
       // Redirigir al dashboard o a la página anterior
       const from = location.state?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
-      message.error('Login failed. Please check your credentials.');
+      message.error(t('auth.error.login'));
       console.error('Login error:', error);
     } finally {
       setLoading(false);
@@ -53,7 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
         
         <div className="auth-header">
           <Logo size="large" />
-          <Title level={2} className="auth-title">Log In</Title>
+          <Title level={2} className="auth-title">{t('auth.login.title')}</Title>
         </div>
 
         <Form
@@ -65,12 +67,12 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
+              { required: true, message: t('auth.validation.email') },
+              { type: 'email', message: t('auth.validation.email.valid') }
             ]}
           >
             <Input
-              placeholder="Email"
+              placeholder={t('auth.email')}
               size="large"
               className="auth-input"
             />
@@ -78,10 +80,10 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
+            rules={[{ required: true, message: t('auth.validation.password') }]}
           >
             <Input.Password
-              placeholder="Password"
+              placeholder={t('auth.password')}
               size="large"
               className="auth-input"
             />
@@ -95,16 +97,16 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
               loading={loading}
               className="auth-submit-btn"
             >
-              LOG IN
+              {t('auth.login.button')}
             </Button>
           </Form.Item>
         </Form>
 
         <div className="auth-footer">
-          <Link className="auth-link">Forgot Password?</Link>
+          {/* <Link className="auth-link">Forgot Password?</Link> */}
           <Text className="auth-switch">
-            Don't have an account?{' '}
-            <Link onClick={onSwitchToRegister}>Sign Up</Link>
+            {t('auth.switch.register')}{' '}
+            <Link onClick={onSwitchToRegister}>{t('auth.register.title')}</Link>
           </Text>
         </div>
       </div>

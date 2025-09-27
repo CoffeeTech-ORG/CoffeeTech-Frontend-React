@@ -17,6 +17,7 @@ interface RegisterData {
   username: string;
   email: string;
   password: string;
+  rolId: number;
 }
 
 export const authService = {
