@@ -1,6 +1,6 @@
 import React from 'react';
 import './Logo.scss';
-import logoImg from '../../public/assets/app_icon/logo.png';
+import logoImg from '/assets/app_icon/logo.png';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large';
