@@ -38,17 +38,17 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({ items = 
 
   const extractTitle = (description: string) => {
     // Extraer la condición de la descripción
-    const conditionMatch = description.match(/Condición:\s*([^.]+)/);
+    const conditionMatch = description.match(/Condición detectada:\s([^\n\r]+)/i);
     if (conditionMatch) {
-      return conditionMatch[1].trim();
+      return conditionMatch[1].trim().replace(/[.:;]+$/g, '');
     }
-    
+
     // Extraer la etapa si no hay condición
-    const stageMatch = description.match(/\[Etapa:\s*([^\]]+)\]/);
+    const stageMatch = description.match(/Etapa:\s([^\n\r]+)/i) || description.match(/Etapa:\s*([^]+)/i);
     if (stageMatch) {
-      return `Etapa: ${stageMatch[1]}`;
+      return stageMatch[1].trim();
     }
-    
+
     return t('recommendations.default');
   };
 
