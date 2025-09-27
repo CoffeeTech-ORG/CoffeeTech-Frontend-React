@@ -35,21 +35,21 @@ export const SectionData: React.FC<SectionDataProps> = ({ authToken, section, on
 
   const getSectionIcon = (type: string) => {
     const typeMap: Record<string, string> = {
-      [t('sectionType.plantula')]: '/src/assets/section_icons/plantula.png',
-      [t('sectionType.vegetativo')]: '/src/assets/section_icons/vegetativo.png',
-      [t('sectionType.floracion')]: '/src/assets/section_icons/floracion.png',
-      [t('sectionType.fructificacion')]: '/src/assets/section_icons/fructificacion.png',
-      [t('sectionType.maduracion')]: '/src/assets/section_icons/maduracion.png',
-      [t('sectionType.cosecha')]: '/src/assets/section_icons/cosecha.png',
+      [t('sectionType.plantula')]: '/src/public/assets/section_icons/plantula.png',
+      [t('sectionType.vegetativo')]: '/src/public/assets/section_icons/vegetativo.png',
+      [t('sectionType.floracion')]: '/src/public/assets/section_icons/floracion.png',
+      [t('sectionType.fructificacion')]: '/src/public/assets/section_icons/fructificacion.png',
+      [t('sectionType.maduracion')]: '/src/public/assets/section_icons/maduracion.png',
+      [t('sectionType.cosecha')]: '/src/public/assets/section_icons/cosecha.png',
       // Mantener compatibilidad con valores en español
-      'Plántula': '/src/assets/section_icons/plantula.png',
-      'Vegetativo': '/src/assets/section_icons/vegetativo.png',
-      'Floración': '/src/assets/section_icons/floracion.png',
-      'Fructificación': '/src/assets/section_icons/fructificacion.png',
-      'Maduración': '/src/assets/section_icons/maduracion.png',
-      'Cosecha': '/src/assets/section_icons/cosecha.png'
+      'Plántula': '/src/public/assets/section_icons/plantula.png',
+      'Vegetativo': '/src/public/assets/section_icons/vegetativo.png',
+      'Floración': '/src/public/assets/section_icons/floracion.png',
+      'Fructificación': '/src/public/assets/section_icons/fructificacion.png',
+      'Maduración': '/src/public/assets/section_icons/maduracion.png',
+      'Cosecha': '/src/public/assets/section_icons/cosecha.png'
     };
-    return typeMap[type] || '/src/assets/section_icons/vegetativo.png';
+    return typeMap[type] || '/src/public/assets/section_icons/vegetativo.png';
   };
 
   return (
