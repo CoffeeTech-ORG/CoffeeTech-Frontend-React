@@ -35,21 +35,21 @@ export const SectionData: React.FC<SectionDataProps> = ({ authToken, section, on
 
   const getSectionIcon = (type: string) => {
     const typeMap: Record<string, string> = {
-      [t('sectionType.plantula')]: '/src/public/assets/section_icons/plantula.png',
-      [t('sectionType.vegetativo')]: '/src/public/assets/section_icons/vegetativo.png',
-      [t('sectionType.floracion')]: '/src/public/assets/section_icons/floracion.png',
-      [t('sectionType.fructificacion')]: '/src/public/assets/section_icons/fructificacion.png',
-      [t('sectionType.maduracion')]: '/src/public/assets/section_icons/maduracion.png',
-      [t('sectionType.cosecha')]: '/src/public/assets/section_icons/cosecha.png',
+      [t('sectionType.plantula')]: '/assets/section_icons/plantula.png',
+      [t('sectionType.vegetativo')]: '/assets/section_icons/vegetativo.png',
+      [t('sectionType.floracion')]: '/assets/section_icons/floracion.png',
+      [t('sectionType.fructificacion')]: '/assets/section_icons/fructificacion.png',
+      [t('sectionType.maduracion')]: '/assets/section_icons/maduracion.png',
+      [t('sectionType.cosecha')]: '/assets/section_icons/cosecha.png',
       // Mantener compatibilidad con valores en español
-      'Plántula': '/src/public/assets/section_icons/plantula.png',
-      'Vegetativo': '/src/public/assets/section_icons/vegetativo.png',
-      'Floración': '/src/public/assets/section_icons/floracion.png',
-      'Fructificación': '/src/public/assets/section_icons/fructificacion.png',
-      'Maduración': '/src/public/assets/section_icons/maduracion.png',
-      'Cosecha': '/src/public/assets/section_icons/cosecha.png'
+      'Plántula': '/assets/section_icons/plantula.png',
+      'Vegetativo': '/assets/section_icons/vegetativo.png',
+      'Floración': '/assets/section_icons/floracion.png',
+      'Fructificación': '/assets/section_icons/fructificacion.png',
+      'Maduración': '/assets/section_icons/maduracion.png',
+      'Cosecha': '/assets/section_icons/cosecha.png'
     };
-    return typeMap[type] || '/src/public/assets/section_icons/vegetativo.png';
+    return typeMap[type] || '/assets/section_icons/vegetativo.png';
   };
 
   return (

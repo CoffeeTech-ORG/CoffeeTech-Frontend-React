@@ -334,7 +334,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                 <div className="empty-state">
                   <div className="empty-state__content">
                     <img 
-                      src="/src/public/assets/section_icons/nosectionsfound1.png" 
+                      src="/assets/section_icons/nosectionsfound1.png" 
                       alt="No sections found" 
                       className="empty-state__image"
                     />
