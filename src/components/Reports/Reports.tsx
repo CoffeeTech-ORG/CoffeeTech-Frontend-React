@@ -174,7 +174,8 @@ export const Reports: React.FC = () => {
       ].join(','))
     ];
 
-    const csvContent = csvRows.join('\n');
+    // Add BOM for better Excel compatibility with UTF-8
+    const csvContent = '\uFEFF' + csvRows.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     
