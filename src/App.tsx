@@ -1,6 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { AuthWrapper } from './components/AuthWrapper/AuthWrapper';
@@ -79,11 +79,13 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <ConfigProvider theme={theme}>
-      <Router>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </Router>
+      <AntdApp>
+        <Router>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </Router>
+      </AntdApp>
     </ConfigProvider>
   );
 }

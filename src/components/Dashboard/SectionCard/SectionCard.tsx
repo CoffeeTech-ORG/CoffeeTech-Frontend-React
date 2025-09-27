@@ -149,10 +149,10 @@ export const SectionCard: React.FC<SectionCardProps> = ({
           <span className="growth-stage__icon">{getGrowthStageIcon(section.type)}</span>
           <span className="growth-stage__name">{getGrowthStageName(section.type)}</span>
         </div>
-        <div className="size-info">
+        {/* <div className="size-info">
           <Leaf size={14} />
           <span>{section.size} hectares</span>
-        </div>
+        </div> */}
       </div>
       
       

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message, InputNumber } from 'antd';
+import { Modal, Form, Input, Button, InputNumber, App } from 'antd';
 import { X } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '../../../components/GooglePlacesAutocomplete';
 import './AddFarmModal.scss';
@@ -24,6 +24,7 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const { message: messageApi } = App.useApp();
 
   const handleSubmit = async (values: AddFarmData) => {
     try {
@@ -31,10 +32,10 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
       await onSubmit(values);
       form.resetFields();
       onClose();
-      message.success('Farm added successfully!');
+      messageApi.success('Farm added successfully!');
     } catch (error) {
       console.error('Error adding farm:', error);
-      message.error('Failed to add farm. Please try again.');
+      messageApi.error('Failed to add farm. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -103,11 +104,15 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               className="form-input"
               onPlaceSelect={(place) => {
                 if (place.formatted_address) {
-                  form.setFieldsValue({ location: place.formatted_address });
+                  form.setFieldValue('location', place.formatted_address);
+                  form.validateFields(['location']);
                 }
               }}
               onChange={(value) => {
-                form.setFieldsValue({ location: value });
+                // Only update if it's different from current value to avoid loops
+                if (form.getFieldValue('location') !== value) {
+                  form.setFieldValue('location', value);
+                }
               }}
             />
           </Form.Item>
