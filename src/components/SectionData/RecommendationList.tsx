@@ -9,10 +9,30 @@ interface RecommendationListProps {
 
 export const RecommendationList: React.FC<RecommendationListProps> = ({ items = [] }) => {
   const { t } = useI18n();
+  
+  // Ordenar las recomendaciones del más reciente al más antiguo
+  const sortedItems = React.useMemo(() => {
+    return [...items].sort((a, b) => {
+      // Primero intentar ordenar por fecha de creación o actualización
+      const dateA = a.createdAt || a.updatedAt || a.timestamp;
+      const dateB = b.createdAt || b.updatedAt || b.timestamp;
+      
+      if (dateA && dateB) {
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      }
+      
+      // Si no hay fechas, ordenar por ID (asumiendo que IDs más altos son más recientes)
+      const idA = typeof a.id === 'number' ? a.id : parseInt(String(a.id), 10);
+      const idB = typeof b.id === 'number' ? b.id : parseInt(String(b.id), 10);
+      
+      return idB - idA;
+    });
+  }, [items]);
+  
   // Estado para manejar qué recomendaciones están expandidas
   const [expandedItems, setExpandedItems] = useState<Set<string | number>>(
     // La más reciente (primera en la lista) está expandida por defecto
-    items.length > 0 ? new Set([items[0].id]) : new Set()
+    sortedItems.length > 0 ? new Set([sortedItems[0].id]) : new Set()
   );
 
   const toggleExpanded = (id: string | number) => {
@@ -66,7 +86,7 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({ items = 
     <div className="recommendation-list">
       <h4>{t('recommendations.title')}</h4>
       <div className="recommendations">
-        {items.map((r) => {
+        {sortedItems.map((r) => {
           const isExpanded = expandedItems.has(r.id);
           const urgencyLevel = getUrgencyLevel(r.recommendationDescription || '');
           const title = extractTitle(r.recommendationDescription || '');
