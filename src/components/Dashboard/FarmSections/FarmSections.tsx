@@ -312,7 +312,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
 
             <div className="farm-sections__summary">
               <div className="summary-card">
-                <h3>{t('sections.title')} Overview</h3>
+                <h3>{t('sections.title')} </h3>
                 <div className="summary-stats">
                   <div className="stat">
                     <span className="stat-number">{sections.length}</span>

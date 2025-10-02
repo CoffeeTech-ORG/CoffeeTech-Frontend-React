@@ -126,7 +126,13 @@ export const useReports = () => {
       };
     }
 
-    const validTemperatures = data.filter(d => d.celciusGradeTemperature !== null && d.celciusGradeTemperature !== undefined);
+    // Support both spelling variants of temperature field
+    const getTemperature = (d: ReportData) => (d as any).celsiusGradeTemperature ?? d.celciusGradeTemperature;
+    
+    const validTemperatures = data.filter(d => {
+      const temp = getTemperature(d);
+      return temp !== null && temp !== undefined;
+    });
     const validAirHumidity = data.filter(d => d.airHumidityPercent !== null && d.airHumidityPercent !== undefined);
     const validSoilHumidity = data.filter(d => d.soilHumidityPercent !== null && d.soilHumidityPercent !== undefined);
     const validNitrogen = data.filter(d => d.nitrogen !== null && d.nitrogen !== undefined);
@@ -138,7 +144,7 @@ export const useReports = () => {
     return {
       totalDataPoints: data.length,
       averageTemperature: validTemperatures.length > 0
-        ? validTemperatures.reduce((sum, d) => sum + (d.celciusGradeTemperature || 0), 0) / validTemperatures.length
+        ? validTemperatures.reduce((sum, d) => sum + (getTemperature(d) || 0), 0) / validTemperatures.length
         : undefined,
       averageAirHumidity: validAirHumidity.length > 0
         ? validAirHumidity.reduce((sum, d) => sum + (d.airHumidityPercent || 0), 0) / validAirHumidity.length
@@ -165,12 +171,12 @@ export const useReports = () => {
     return data.map(item => ({
       timestamp: typeof item.timestamp === 'string' ? item.timestamp : item.timestamp.toISOString(),
       date: dayjs(item.timestamp).format('MM/DD'),
-      temperature: item.celciusGradeTemperature || undefined,
-      airHumidity: item.airHumidityPercent || undefined,
-      soilHumidity: item.soilHumidityPercent || undefined,
-      nitrogen: item.nitrogen || undefined,
-      phosphorus: item.phosphorus || undefined,
-      potassium: item.potassium || undefined,
+      temperature: (item as any).celsiusGradeTemperature ?? item.celciusGradeTemperature ?? undefined,
+      airHumidity: item.airHumidityPercent ?? undefined,
+      soilHumidity: item.soilHumidityPercent ?? undefined,
+      nitrogen: item.nitrogen ?? undefined,
+      phosphorus: item.phosphorus ?? undefined,
+      potassium: item.potassium ?? undefined,
       precipitation: item.precipitationDetected ? 1 : 0
     }));
   }, []);
@@ -192,8 +198,12 @@ function calculateHealthScore(data: ReportData[]): number {
   if (data.length === 0) return 0;
 
   let score = 100;
+  
+  // Support both spelling variants of temperature field
+  const getTemperature = (d: ReportData) => (d as any).celsiusGradeTemperature ?? d.celciusGradeTemperature;
+  
   const validData = data.filter(d => 
-    d.celciusGradeTemperature !== null || 
+    getTemperature(d) !== null || 
     d.airHumidityPercent !== null || 
     d.soilHumidityPercent !== null
   );
@@ -201,9 +211,9 @@ function calculateHealthScore(data: ReportData[]): number {
   if (validData.length === 0) return 50; // Default score
 
   // Temperature score (optimal range: 18-25°C for coffee)
-  const temperatures = validData.filter(d => d.celciusGradeTemperature !== null);
+  const temperatures = validData.filter(d => getTemperature(d) !== null);
   if (temperatures.length > 0) {
-    const avgTemp = temperatures.reduce((sum, d) => sum + (d.celciusGradeTemperature || 0), 0) / temperatures.length;
+    const avgTemp = temperatures.reduce((sum, d) => sum + (getTemperature(d) || 0), 0) / temperatures.length;
     if (avgTemp < 15 || avgTemp > 30) score -= 20;
     else if (avgTemp < 18 || avgTemp > 25) score -= 10;
   }

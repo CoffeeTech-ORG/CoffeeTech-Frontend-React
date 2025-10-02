@@ -52,11 +52,13 @@ interface ReportChartProps {
 
 type ChartType = 'line' | 'area' | 'bar' | 'composed';
 type NutrientFilter = 'all' | 'nitrogen' | 'phosphorus' | 'potassium';
+type EnvironmentalFilter = 'all' | 'temperature' | 'airHumidity';
 
 export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growthStage = 'default', style }) => {
   const { t } = useI18n();
   const [chartType, setChartType] = useState<ChartType>('line');
   const [nutrientFilter, setNutrientFilter] = useState<NutrientFilter>('all');
+  const [environmentalFilter, setEnvironmentalFilter] = useState<EnvironmentalFilter>('all');
   
   // Obtener los parámetros óptimos según la etapa de crecimiento
   const optimalParams = STAGE_OPTIMAL_PARAMS[growthStage];
@@ -77,49 +79,86 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
 
     // Mostrar rangos según el tipo de dato seleccionado
     if (dataType === 'all' || dataType === 'environmental') {
-      // Área sombreada para rango óptimo de temperatura
-      ranges.push(
-        <ReferenceArea
-          key="temp-area"
-          y1={optimalParams.temp[0]}
-          y2={optimalParams.temp[1]}
-          fill="#ff4d4f"
-          fillOpacity={0.1}
-          stroke="none"
-        />,
-        <ReferenceLine
-          key="temp-min"
-          y={optimalParams.temp[0]}
-          stroke="#ff4d4f"
-          strokeDasharray="5 5"
-          strokeWidth={1.5}
-          label={{ 
-            value: `Temp mín: ${optimalParams.temp[0]}°C`, 
-            position: 'right',
-            fill: '#ff4d4f',
-            fontSize: 10,
-            fontWeight: 'bold'
-          }}
-        />,
-        <ReferenceLine
-          key="temp-max"
-          y={optimalParams.temp[1]}
-          stroke="#ff4d4f"
-          strokeDasharray="5 5"
-          strokeWidth={1.5}
-          label={{ 
-            value: `Temp máx: ${optimalParams.temp[1]}°C`, 
-            position: 'right',
-            fill: '#ff4d4f',
-            fontSize: 10,
-            fontWeight: 'bold'
-          }}
-        />
-      );
+      // Mostrar rangos según el filtro ambiental seleccionado
+      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
+      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
+      
+      if (shouldShowTemperature) {
+        // Área sombreada para rango óptimo de temperatura
+        const tempRange = `${optimalParams.temp[0]}°C - ${optimalParams.temp[1]}°C`;
+        ranges.push(
+          <ReferenceArea
+            key="temp-area"
+            y1={optimalParams.temp[0]}
+            y2={optimalParams.temp[1]}
+            fill="#ff4d4f"
+            fillOpacity={0.1}
+            stroke="none"
+            label={{ 
+              value: `Temperatura: ${tempRange}`, 
+              position: 'insideTopRight',
+              fill: '#ff4d4f',
+              fontSize: 11,
+              fontWeight: 'bold'
+            }}
+          />,
+          <ReferenceLine
+            key="temp-min"
+            y={optimalParams.temp[0]}
+            stroke="#ff4d4f"
+            strokeDasharray="5 5"
+            strokeWidth={1.5}
+          />,
+          <ReferenceLine
+            key="temp-max"
+            y={optimalParams.temp[1]}
+            stroke="#ff4d4f"
+            strokeDasharray="5 5"
+            strokeWidth={1.5}
+          />
+        );
+      }
+      
+      if (shouldShowAirHumidity) {
+        // Área sombreada para rango óptimo de humedad del aire
+        const airHumRange = `${70}% - ${80}%`; // Rango óptimo para humedad del aire
+        ranges.push(
+          <ReferenceArea
+            key="air-hum-area"
+            y1={70}
+            y2={80}
+            fill="#1890ff"
+            fillOpacity={0.1}
+            stroke="none"
+            label={{ 
+              value: `Hum. Aire: ${airHumRange}`, 
+              position: 'insideTopRight',
+              fill: '#1890ff',
+              fontSize: 11,
+              fontWeight: 'bold'
+            }}
+          />,
+          <ReferenceLine
+            key="air-hum-min"
+            y={70}
+            stroke="#1890ff"
+            strokeDasharray="5 5"
+            strokeWidth={1.5}
+          />,
+          <ReferenceLine
+            key="air-hum-max"
+            y={80}
+            stroke="#1890ff"
+            strokeDasharray="5 5"
+            strokeWidth={1.5}
+          />
+        );
+      }
     }
 
     if (dataType === 'all' || dataType === 'soil') {
       // Área sombreada para rango óptimo de humedad del suelo
+      const soilRange = `${optimalParams.soil_hum[0]}% - ${optimalParams.soil_hum[1]}%`;
       ranges.push(
         <ReferenceArea
           key="soil-area"
@@ -128,6 +167,13 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
           fill="#52c41a"
           fillOpacity={0.1}
           stroke="none"
+          label={{ 
+            value: `Hum. Suelo: ${soilRange}`, 
+            position: 'insideTopRight',
+            fill: '#52c41a',
+            fontSize: 11,
+            fontWeight: 'bold'
+          }}
         />,
         <ReferenceLine
           key="soil-min"
@@ -135,13 +181,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
           stroke="#52c41a"
           strokeDasharray="5 5"
           strokeWidth={1.5}
-          label={{ 
-            value: `Hum suelo mín: ${optimalParams.soil_hum[0]}%`, 
-            position: 'right',
-            fill: '#52c41a',
-            fontSize: 10,
-            fontWeight: 'bold'
-          }}
         />,
         <ReferenceLine
           key="soil-max"
@@ -149,13 +188,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
           stroke="#52c41a"
           strokeDasharray="5 5"
           strokeWidth={1.5}
-          label={{ 
-            value: `Hum suelo máx: ${optimalParams.soil_hum[1]}%`, 
-            position: 'right',
-            fill: '#52c41a',
-            fontSize: 10,
-            fontWeight: 'bold'
-          }}
         />
       );
     }
@@ -168,6 +200,7 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
       const shouldShowPotassium = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'potassium';
       
       if (shouldShowNitrogen) {
+        const nRange = `${optimalParams.N[0]} - ${optimalParams.N[1]} mg/L`;
         ranges.push(
           <ReferenceArea
             key="n-area"
@@ -176,6 +209,13 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             fill="#faad14"
             fillOpacity={0.1}
             stroke="none"
+            label={{ 
+              value: `N: ${nRange}`, 
+              position: 'insideTopRight',
+              fill: '#faad14',
+              fontSize: 11,
+              fontWeight: 'bold'
+            }}
           />,
           <ReferenceLine
             key="n-min"
@@ -183,13 +223,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#faad14"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `N mín: ${optimalParams.N[0]} mg/L`, 
-              position: 'right',
-              fill: '#faad14',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />,
           <ReferenceLine
             key="n-max"
@@ -197,18 +230,12 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#faad14"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `N máx: ${optimalParams.N[1]} mg/L`, 
-              position: 'right',
-              fill: '#faad14',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />
         );
       }
       
       if (shouldShowPhosphorus) {
+        const pRange = `${optimalParams.P[0]} - ${optimalParams.P[1]} mg/L`;
         ranges.push(
           <ReferenceArea
             key="p-area"
@@ -217,6 +244,13 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             fill="#722ed1"
             fillOpacity={0.1}
             stroke="none"
+            label={{ 
+              value: `P: ${pRange}`, 
+              position: 'insideTopRight',
+              fill: '#722ed1',
+              fontSize: 11,
+              fontWeight: 'bold'
+            }}
           />,
           <ReferenceLine
             key="p-min"
@@ -224,13 +258,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#722ed1"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `P mín: ${optimalParams.P[0]} mg/L`, 
-              position: 'right',
-              fill: '#722ed1',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />,
           <ReferenceLine
             key="p-max"
@@ -238,18 +265,12 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#722ed1"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `P máx: ${optimalParams.P[1]} mg/L`, 
-              position: 'right',
-              fill: '#722ed1',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />
         );
       }
       
       if (shouldShowPotassium) {
+        const kRange = `${optimalParams.K[0]} - ${optimalParams.K[1]} mg/L`;
         ranges.push(
           <ReferenceArea
             key="k-area"
@@ -258,6 +279,13 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             fill="#eb2f96"
             fillOpacity={0.1}
             stroke="none"
+            label={{ 
+              value: `K: ${kRange}`, 
+              position: 'insideTopRight',
+              fill: '#eb2f96',
+              fontSize: 11,
+              fontWeight: 'bold'
+            }}
           />,
           <ReferenceLine
             key="k-min"
@@ -265,13 +293,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#eb2f96"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `K mín: ${optimalParams.K[0]} mg/L`, 
-              position: 'right',
-              fill: '#eb2f96',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />,
           <ReferenceLine
             key="k-max"
@@ -279,13 +300,6 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
             stroke="#eb2f96"
             strokeDasharray="5 5"
             strokeWidth={1.5}
-            label={{ 
-              value: `K máx: ${optimalParams.K[1]} mg/L`, 
-              position: 'right',
-              fill: '#eb2f96',
-              fontSize: 10,
-              fontWeight: 'bold'
-            }}
           />
         );
       }
@@ -378,46 +392,62 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
     const components = [];
 
     if (dataType === 'all' || dataType === 'environmental') {
+      // Mostrar datos según el filtro ambiental seleccionado
+      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
+      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
+      
       if (type === 'area') {
-        components.push(
-          <Area 
-            key="temperature"
-            type="monotone" 
-            dataKey="temperature" 
-            stroke="#ff4d4f" 
-            fill="#ff4d4f"
-            fillOpacity={0.3}
-            name="Temperature (°C)" 
-          />,
-          <Area 
-            key="airHumidity"
-            type="monotone" 
-            dataKey="airHumidity" 
-            stroke="#1890ff" 
-            fill="#1890ff"
-            fillOpacity={0.3}
-            name="Air Humidity (%)" 
-          />
-        );
+        if (shouldShowTemperature) {
+          components.push(
+            <Area 
+              key="temperature"
+              type="monotone" 
+              dataKey="temperature" 
+              stroke="#ff4d4f" 
+              fill="#ff4d4f"
+              fillOpacity={0.3}
+              name="Temperature (°C)" 
+            />
+          );
+        }
+        if (shouldShowAirHumidity) {
+          components.push(
+            <Area 
+              key="airHumidity"
+              type="monotone" 
+              dataKey="airHumidity" 
+              stroke="#1890ff" 
+              fill="#1890ff"
+              fillOpacity={0.3}
+              name="Air Humidity (%)" 
+            />
+          );
+        }
       } else {
-        components.push(
-          <Line 
-            key="temperature"
-            type="monotone" 
-            dataKey="temperature" 
-            stroke="#ff4d4f" 
-            name="Temperature (°C)" 
-            strokeWidth={2}
-          />,
-          <Line 
-            key="airHumidity"
-            type="monotone" 
-            dataKey="airHumidity" 
-            stroke="#1890ff" 
-            name="Air Humidity (%)" 
-            strokeWidth={2}
-          />
-        );
+        if (shouldShowTemperature) {
+          components.push(
+            <Line 
+              key="temperature"
+              type="monotone" 
+              dataKey="temperature" 
+              stroke="#ff4d4f" 
+              name="Temperature (°C)" 
+              strokeWidth={2}
+            />
+          );
+        }
+        if (shouldShowAirHumidity) {
+          components.push(
+            <Line 
+              key="airHumidity"
+              type="monotone" 
+              dataKey="airHumidity" 
+              stroke="#1890ff" 
+              name="Air Humidity (%)" 
+              strokeWidth={2}
+            />
+          );
+        }
       }
     }
 
@@ -548,10 +578,20 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
     const components = [];
 
     if (dataType === 'all' || dataType === 'environmental') {
-      components.push(
-        <Bar key="temperature" dataKey="temperature" fill="#ff4d4f" name="Temperature (°C)" />,
-        <Bar key="airHumidity" dataKey="airHumidity" fill="#1890ff" name="Air Humidity (%)" />
-      );
+      // Mostrar datos según el filtro ambiental seleccionado
+      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
+      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
+      
+      if (shouldShowTemperature) {
+        components.push(
+          <Bar key="temperature" dataKey="temperature" fill="#ff4d4f" name="Temperature (°C)" />
+        );
+      }
+      if (shouldShowAirHumidity) {
+        components.push(
+          <Bar key="airHumidity" dataKey="airHumidity" fill="#1890ff" name="Air Humidity (%)" />
+        );
+      }
     }
 
     if (dataType === 'all' || dataType === 'soil') {
@@ -601,6 +641,20 @@ export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growth
           </Col>
           <Col>
             <Space>
+              {/* Selector de variables ambientales cuando dataType es 'environmental' */}
+              {dataType === 'environmental' && (
+                <Radio.Group 
+                  value={environmentalFilter} 
+                  onChange={(e) => setEnvironmentalFilter(e.target.value)}
+                  buttonStyle="solid"
+                  size="small"
+                >
+                  <Radio.Button value="all">Todos</Radio.Button>
+                  <Radio.Button value="temperature">Temp</Radio.Button>
+                  <Radio.Button value="airHumidity">Hum. Aire</Radio.Button>
+                </Radio.Group>
+              )}
+              
               {/* Selector de nutriente cuando dataType es 'nutrients' */}
               {dataType === 'nutrients' && (
                 <Radio.Group 
