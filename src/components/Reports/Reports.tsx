@@ -160,18 +160,22 @@ export const Reports: React.FC = () => {
 
     const csvRows = [
       csvHeaders.join(','),
-      ...reportData.map(row => [
-        dayjs(row.timestamp).format('YYYY-MM-DD HH:mm:ss'),
-        `"${row.farmName}"`,
-        `"${row.sectionName}"`,
-        row.celciusGradeTemperature?.toFixed(2) || '',
-        row.airHumidityPercent?.toFixed(2) || '',
-        row.soilHumidityPercent?.toFixed(2) || '',
-        row.precipitationDetected ? 'Yes' : 'No',
-        row.nitrogen?.toFixed(2) || '',
-        row.phosphorus?.toFixed(2) || '',
-        row.potassium?.toFixed(2) || ''
-      ].join(','))
+      ...reportData.map(row => {
+        // Support both spelling variants from backend
+        const temperature = (row as any).celsiusGradeTemperature ?? row.celciusGradeTemperature;
+        return [
+          dayjs(row.timestamp).format('YYYY-MM-DD HH:mm:ss'),
+          `"${row.farmName}"`,
+          `"${row.sectionName}"`,
+          temperature?.toFixed(2) || '',
+          row.airHumidityPercent?.toFixed(2) || '',
+          row.soilHumidityPercent?.toFixed(2) || '',
+          row.precipitationDetected ? 'Yes' : 'No',
+          row.nitrogen?.toFixed(2) || '',
+          row.phosphorus?.toFixed(2) || '',
+          row.potassium?.toFixed(2) || ''
+        ].join(',');
+      })
     ];
 
     // Add BOM for better Excel compatibility with UTF-8

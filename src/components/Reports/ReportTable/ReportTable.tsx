@@ -104,7 +104,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           {temp.toFixed(1)}°{isMobile ? '' : 'C'}
         </Tag>
       ) : <span style={{ color: '#d9d9d9' }}>--</span>,
-      sorter: (a, b) => (a.celciusGradeTemperature || 0) - (b.celciusGradeTemperature || 0),
+      sorter: (a, b) => {
+        const tempA = (a as any).celsiusGradeTemperature ?? a.celciusGradeTemperature ?? 0;
+        const tempB = (b as any).celsiusGradeTemperature ?? b.celciusGradeTemperature ?? 0;
+        return tempA - tempB;
+      },
     },
     {
       title: isMobile ? t('reports.table.airHumidityShort') : t('reports.table.airHumidity'),

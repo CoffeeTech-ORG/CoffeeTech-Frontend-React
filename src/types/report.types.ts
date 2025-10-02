@@ -9,7 +9,8 @@ export interface ReportData {
   farmName: string;
   // Sensor data
   airHumidityPercent?: number | null;
-  celciusGradeTemperature?: number | null;
+  celciusGradeTemperature?: number | null; // Old spelling variant (with 'c')
+  celsiusGradeTemperature?: number | null; // Correct spelling (with 's') - from backend
   soilHumidityPercent?: number | null;
   precipitationDetected?: boolean;
   nitrogen?: number | null;
