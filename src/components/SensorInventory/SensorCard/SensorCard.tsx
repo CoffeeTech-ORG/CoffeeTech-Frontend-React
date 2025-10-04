@@ -118,7 +118,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
             <p className="sensor-type">{sensor.type.replace('_', ' ')}</p>
           </div>
         </div>
-        <div className="sensor-actions">
+        {/* <div className="sensor-actions">
           <button
             className="action-btn delete-btn"
             onClick={handleDelete}
@@ -127,7 +127,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
           >
             {isDeleting ? '⏳' : '🗑️'}
           </button>
-        </div>
+        </div> */}
       </div>
 
       <div className="sensor-card-body">

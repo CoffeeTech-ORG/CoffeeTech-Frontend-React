@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Form, Input, Button, InputNumber, App } from 'antd';
 import { X } from 'lucide-react';
 import { GooglePlacesAutocomplete } from '../../../components/GooglePlacesAutocomplete';
+import { useI18n } from '../../../contexts/I18nContext';
 import './AddFarmModal.scss';
 
 export interface AddFarmData {
@@ -22,6 +23,7 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
   onClose,
   onSubmit
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
   const { message: messageApi } = App.useApp();
@@ -32,10 +34,10 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
       await onSubmit(values);
       form.resetFields();
       onClose();
-      messageApi.success('Farm added successfully!');
+      messageApi.success(t('farm.success.create'));
     } catch (error) {
       console.error('Error adding farm:', error);
-      messageApi.error('Failed to add farm. Please try again.');
+      messageApi.error(t('farm.error.create'));
     } finally {
       setSubmitting(false);
     }
@@ -57,7 +59,7 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Add New Farm</h2>
+        <h2 className="modal-title">{t('farm.add.title')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -74,32 +76,32 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Farm Name"
+            label={t('farm.name')}
             name="name"
             rules={[
-              { required: true, message: 'Please enter a farm name' },
-              { min: 2, message: 'Farm name must be at least 2 characters' },
-              { max: 50, message: 'Farm name cannot exceed 50 characters' }
+              { required: true, message: t('farm.name.validation') },
+              { min: 2, message: t('farm.name.length.min') },
+              { max: 50, message: t('farm.name.length.max') }
             ]}
           >
             <Input
-              placeholder="Enter farm name"
+              placeholder={t('farm.name.placeholder')}
               size="large"
               className="form-input"
             />
           </Form.Item>
 
           <Form.Item
-            label="Location"
+            label={t('farm.location')}
             name="location"
             rules={[
-              { required: true, message: 'Please enter a location' },
-              { min: 2, message: 'Location must be at least 2 characters' },
-              { max: 100, message: 'Location cannot exceed 100 characters' }
+              { required: true, message: t('farm.location.validation') },
+              { min: 2, message: t('farm.location.length.min') },
+              { max: 100, message: t('farm.location.length.max') }
             ]}
           >
             <GooglePlacesAutocomplete
-              placeholder="Enter location"
+              placeholder={t('farm.location.placeholder')}
               size="large"
               className="form-input"
               onPlaceSelect={(place) => {
@@ -118,16 +120,16 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
           </Form.Item>
 
           <Form.Item
-            label="Altitude (meters)"
+            label={t('farm.altitude')}
             name="altitude"
             rules={[
-              { required: true, message: 'Please enter the altitude' },
-              { type: 'number', min: 0, message: 'Altitude must be a positive number' },
-              { type: 'number', max: 10000, message: 'Altitude cannot exceed 10,000 meters' }
+              { required: true, message: t('farm.altitude.validation') },
+              { type: 'number', min: 0, message: t('farm.altitude.positive') },
+              { type: 'number', max: 10000, message: t('farm.altitude.max') }
             ]}
           >
             <InputNumber
-              placeholder="Enter altitude in meters"
+              placeholder={t('farm.altitude.placeholder')}
               size="large"
               className="form-input"
               step={0.01}
@@ -146,7 +148,7 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -155,7 +157,7 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Add Farm
+              {t('farm.add.button')}
             </Button>
           </div>
         </Form>

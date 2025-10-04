@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Select, Button, message, Spin } from 'antd';
 import { X } from 'lucide-react';
 import { farmsService, Device } from '../../../services/farms.service';
+import { useI18n } from '../../../contexts/I18nContext';
 import './AssignDeviceModal.scss';
 
 const { Option } = Select;
@@ -26,6 +27,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
   sectionId,
   sectionName
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -44,7 +46,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
       setDevices(devicesData);
     } catch (error) {
       console.error('Error loading devices:', error);
-      message.error('Failed to load devices');
+      message.error(t('device.assign.error'));
     } finally {
       setLoadingDevices(false);
     }
@@ -80,7 +82,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Assign Device to Section</h2>
+        <h2 className="modal-title">{t('device.assign.title')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -92,7 +94,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
       <div className="modal-content">
         {sectionName && (
           <div className="section-info">
-            <p><strong>Section:</strong> {sectionName}</p>
+            <p><strong>{t('device.assign.section')}:</strong> {sectionName}</p>
           </div>
         )}
 
@@ -103,18 +105,18 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Select Device"
+            label={t('device.assign.select')}
             name="deviceId"
             rules={[
-              { required: true, message: 'Please select a device' }
+              { required: true, message: t('device.assign.validation') }
             ]}
           >
             <Select
-              placeholder="Select a device to assign"
+              placeholder={t('device.assign.placeholder')}
               size="large"
               className="form-select"
               loading={loadingDevices}
-              notFoundContent={loadingDevices ? <Spin size="small" /> : 'No devices available'}
+              notFoundContent={loadingDevices ? <Spin size="small" /> : t('device.assign.noDevices')}
             >
               {devices.map((device) => (
                 <Option key={device.id} value={device.id}>
@@ -135,7 +137,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -144,7 +146,7 @@ export const AssignDeviceModal: React.FC<AssignDeviceModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Assign Device
+              {t('device.assign.button')}
             </Button>
           </div>
         </Form>

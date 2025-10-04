@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, message } from 'antd';
 import { X } from 'lucide-react';
 import { Section } from '../../../services/farms.service';
+import { useI18n } from '../../../contexts/I18nContext';
 import './EditSectionModal.scss';
 
 const { Option } = Select;
@@ -26,16 +27,17 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
   onSubmit,
   section
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
   const growthStageOptions = [
-    { value: 'plantula', label: 'Plántula', icon: '🌱' },
-    { value: 'vegetativo', label: 'Vegetativo', icon: '🌿' },
-    { value: 'floracion', label: 'Floración', icon: '🌸' },
-    { value: 'fructificacion', label: 'Fructificación', icon: '🍃' },
-    { value: 'maduracion', label: 'Maduración', icon: '🟡' },
-    { value: 'cosecha', label: 'Cosecha', icon: '☕' }
+    { value: 'plantula', label: t('sectionType.plantula'), icon: '🌱' },
+    { value: 'vegetativo', label: t('sectionType.vegetativo'), icon: '🌿' },
+    { value: 'floracion', label: t('sectionType.floracion'), icon: '🌸' },
+    { value: 'fructificacion', label: t('sectionType.fructificacion'), icon: '🍃' },
+    { value: 'maduracion', label: t('sectionType.maduracion'), icon: '🟡' },
+    { value: 'cosecha', label: t('sectionType.cosecha'), icon: '☕' }
   ];
 
   // Helper function to convert display name to internal value
@@ -89,7 +91,7 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Error updating section:', error);
-      message.error('Failed to update section. Please try again.');
+      message.error(t('sections.error.update'));
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +113,7 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Edit Section</h2>
+        <h2 className="modal-title">{t('sections.edit')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -128,30 +130,30 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Section Name"
+            label={t('sections.name')}
             name="name"
             rules={[
-              { required: true, message: 'Please enter a section name' },
-              { min: 2, message: 'Section name must be at least 2 characters' },
-              { max: 50, message: 'Section name cannot exceed 50 characters' }
+              { required: true, message: t('sections.name.validation') },
+              { min: 2, message: t('sections.name.length.min') },
+              { max: 50, message: t('sections.name.length.max') }
             ]}
           >
             <Input
-              placeholder="Enter section name"
+              placeholder={t('sections.name.placeholder')}
               size="large"
               className="form-input"
             />
           </Form.Item>
 
           <Form.Item
-            label="Growth Stage"
+            label={t('sections.growthStage')}
             name="type"
             rules={[
-              { required: true, message: 'Please select a growth stage' }
+              { required: true, message: t('sections.growthStage.validation') }
             ]}
           >
             <Select
-              placeholder="Select growth stage"
+              placeholder={t('sections.growthStage.placeholder')}
               size="large"
               className="form-select"
             >
@@ -174,7 +176,7 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -183,7 +185,7 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Update Section
+              {t('sections.edit.button')}
             </Button>
           </div>
         </Form>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message } from 'antd';
 import { X } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
+import { useI18n } from '../../../contexts/I18nContext';
 import './EditFarmModal.scss';
 
 export interface EditFarmData {
@@ -24,6 +25,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
   onSubmit,
   farm
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,7 +57,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Error updating farm:', error);
-      message.error('Failed to update farm. Please try again.');
+      message.error(t('farm.error.update'));
     } finally {
       setSubmitting(false);
     }
@@ -77,7 +79,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Edit Farm</h2>
+        <h2 className="modal-title">{t('farm.edit.title')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -94,32 +96,32 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
           requiredMark={false}
         >
           <Form.Item
-            label="Farm Name"
+            label={t('farm.name')}
             name="name"
             rules={[
-              { required: true, message: 'Please enter a farm name' },
-              { min: 2, message: 'Farm name must be at least 2 characters' },
-              { max: 50, message: 'Farm name cannot exceed 50 characters' }
+              { required: true, message: t('farm.name.validation') },
+              { min: 2, message: t('farm.name.length.min') },
+              { max: 50, message: t('farm.name.length.max') }
             ]}
           >
             <Input
-              placeholder="Enter farm name"
+              placeholder={t('farm.name.placeholder')}
               size="large"
               className="form-input"
             />
           </Form.Item>
 
           <Form.Item
-            label="Location"
+            label={t('farm.location')}
             name="location"
             rules={[
-              { required: true, message: 'Please enter a location' },
-              { min: 2, message: 'Location must be at least 2 characters' },
-              { max: 100, message: 'Location cannot exceed 100 characters' }
+              { required: true, message: t('farm.location.validation') },
+              { min: 2, message: t('farm.location.length.min') },
+              { max: 100, message: t('farm.location.length.max') }
             ]}
           >
             <Input
-              placeholder="Enter location"
+              placeholder={t('farm.location.placeholder')}
               size="large"
               className="form-input"
             />
@@ -133,7 +135,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
               disabled={submitting}
               className="cancel-btn"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="primary"
@@ -142,7 +144,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
               loading={submitting}
               className="submit-btn"
             >
-              Update Farm
+              {t('farm.edit.button')}
             </Button>
           </div>
         </Form>

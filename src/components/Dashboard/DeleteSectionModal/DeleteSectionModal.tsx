@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'antd';
 import { X, AlertTriangle } from 'lucide-react';
 import { Section } from '../../../services/farms.service';
+import { useI18n } from '../../../contexts/I18nContext';
 import './DeleteSectionModal.scss';
 
 interface DeleteSectionModalProps {
@@ -17,6 +18,7 @@ export const DeleteSectionModal: React.FC<DeleteSectionModalProps> = ({
   onConfirm,
   section
 }) => {
+  const { t } = useI18n();
   const [deleting, setDeleting] = useState(false);
 
   const handleConfirm = async () => {
@@ -51,7 +53,7 @@ export const DeleteSectionModal: React.FC<DeleteSectionModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Delete Section</h2>
+        <h2 className="modal-title">{t('sections.delete.title')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -68,10 +70,10 @@ export const DeleteSectionModal: React.FC<DeleteSectionModalProps> = ({
           </div>
           <div className="warning-text">
             <p className="warning-message">
-              Are you sure you want to delete the section <strong>"{section.name}"</strong>?
+              {t('sections.delete.confirm')} <strong>"{section.name}"</strong>?
             </p>
             <p className="warning-submessage">
-              This action cannot be undone and will permanently remove all associated data and sensor readings.
+              {t('sections.delete.warning')}
             </p>
           </div>
         </div>
@@ -84,7 +86,7 @@ export const DeleteSectionModal: React.FC<DeleteSectionModalProps> = ({
             disabled={deleting}
             className="cancel-btn"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="primary"
@@ -93,7 +95,7 @@ export const DeleteSectionModal: React.FC<DeleteSectionModalProps> = ({
             loading={deleting}
             className="delete-btn"
           >
-            Delete Section
+            {t('sections.delete.button')}
           </Button>
         </div>
       </div>
