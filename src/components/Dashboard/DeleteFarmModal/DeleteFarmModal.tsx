@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'antd';
 import { X, AlertTriangle } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
+import { useI18n } from '../../../contexts/I18nContext';
 import './DeleteFarmModal.scss';
 
 interface DeleteFarmModalProps {
@@ -17,6 +18,7 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
   onConfirm,
   farm
 }) => {
+  const { t } = useI18n();
   const [deleting, setDeleting] = useState(false);
 
   const handleConfirm = async () => {
@@ -51,7 +53,7 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
       closable={false}
     >
       <div className="modal-header">
-        <h2 className="modal-title">Delete Farm</h2>
+        <h2 className="modal-title">{t('farm.delete.title')}</h2>
         <Button
           type="text"
           icon={<X size={20} />}
@@ -68,10 +70,10 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
           </div>
           <div className="warning-text">
             <p className="warning-message">
-              Are you sure you want to delete the farm <strong>"{farm.name}"</strong>?
+              {t('farm.delete.confirm')} <strong>"{farm.name}"</strong>?
             </p>
             <p className="warning-submessage">
-              This action cannot be undone and will permanently remove all associated data.
+              {t('farm.delete.warning')}
             </p>
           </div>
         </div>
@@ -84,7 +86,7 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
             disabled={deleting}
             className="cancel-btn"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="primary"
@@ -93,7 +95,7 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
             loading={deleting}
             className="delete-btn"
           >
-            Delete Farm
+            {t('farm.delete.button')}
           </Button>
         </div>
       </div>

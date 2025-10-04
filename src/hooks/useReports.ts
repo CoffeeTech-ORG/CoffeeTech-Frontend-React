@@ -168,9 +168,13 @@ export const useReports = () => {
 
   // Transform data for charts
   const prepareChartData = useCallback((data: ReportData[]): ChartDataPoint[] => {
-    return data.map(item => ({
+    // Invertir el orden para que vaya de más antiguo a más reciente (cronológico)
+    const sortedData = [...data].reverse();
+    
+    return sortedData.map(item => ({
       timestamp: typeof item.timestamp === 'string' ? item.timestamp : item.timestamp.toISOString(),
-      date: dayjs(item.timestamp).format('MM/DD'),
+      // Usar formato de fecha + hora para tener puntos únicos en el eje X
+      date: dayjs(item.timestamp).format('MM/DD HH:mm'),
       temperature: (item as any).celsiusGradeTemperature ?? item.celciusGradeTemperature ?? undefined,
       airHumidity: item.airHumidityPercent ?? undefined,
       soilHumidity: item.soilHumidityPercent ?? undefined,
