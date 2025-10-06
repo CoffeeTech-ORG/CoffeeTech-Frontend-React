@@ -163,6 +163,8 @@ export const Reports: React.FC = () => {
       ...reportData.map(row => {
         // Support both spelling variants from backend
         const temperature = (row as any).celsiusGradeTemperature ?? row.celciusGradeTemperature;
+        // precipitationDetected: 0 = Sí llovió, 1 = No llovió
+        const hasRained = row.precipitationDetected === 0 || row.precipitationDetected === false || row.precipitationDetected === '0';
         return [
           dayjs(row.timestamp).format('YYYY-MM-DD HH:mm:ss'),
           `"${row.farmName}"`,
@@ -170,7 +172,7 @@ export const Reports: React.FC = () => {
           temperature?.toFixed(2) || '',
           row.airHumidityPercent?.toFixed(2) || '',
           row.soilHumidityPercent?.toFixed(2) || '',
-          row.precipitationDetected ? 'Yes' : 'No',
+          hasRained ? 'Yes' : 'No',
           row.nitrogen?.toFixed(2) || '',
           row.phosphorus?.toFixed(2) || '',
           row.potassium?.toFixed(2) || ''
@@ -286,6 +288,17 @@ export const Reports: React.FC = () => {
                 format="YYYY-MM-DD"
                 allowClear={false}
                 size="middle"
+                placement={isMobile ? 'bottomLeft' : 'bottomLeft'}
+                getPopupContainer={(trigger) => trigger.parentElement || document.body}
+                panelRender={(panelNode) => (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    maxWidth: isMobile ? '100vw' : 'auto'
+                  }}>
+                    {panelNode}
+                  </div>
+                )}
               />
             </div>
           </Col>

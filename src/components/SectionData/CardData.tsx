@@ -75,7 +75,8 @@ export const CardData: React.FC<CardDataProps> = ({ data }) => {
         <div className="data-item">
           <span className="data-label">{t('cardData.precipitation')}</span>
           <span className={`data-value precipitation`}>
-            {data.precipitationDetected === 1 || data.precipitationDetected === true ? t('common.yes') : t('common.no')}
+            {/* precipitationDetected: 0 = Sí llovió, 1 = No llovió */}
+            {data.precipitationDetected === 0 || data.precipitationDetected === false || data.precipitationDetected === '0' ? t('common.yes') : t('common.no')}
           </span>
         </div>
         

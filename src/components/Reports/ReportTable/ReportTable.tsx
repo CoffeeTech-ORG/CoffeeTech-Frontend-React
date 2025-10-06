@@ -75,7 +75,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       dataIndex: 'timestamp',
       key: 'timestamp',
       width: isMobile ? 100 : 150,
-      render: (timestamp) => dayjs(timestamp).format(isMobile ? 'MM/DD HH:mm' : 'MM/DD/YY HH:mm'),
+      render: (timestamp) => dayjs(timestamp).format(isMobile ? 'DD/MM HH:mm' : 'DD/MM/YYYY HH:mm'),
       sorter: (a, b) => dayjs(a.timestamp).unix() - dayjs(b.timestamp).unix(),
       defaultSortOrder: 'descend',
     },
@@ -142,16 +142,29 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'precipitation',
       width: isMobile ? 60 : 100,
       align: 'center',
-      render: (precipitation) => (
-        <Tag color={precipitation ? '#1890ff' : '#f5f5f5'} style={{ color: precipitation ? '#fff' : '#999' }}>
-          {precipitation ? t('common.yes') : t('common.no')}
-        </Tag>
-      ),
+      render: (precipitation) => {
+        // precipitationDetected: 0 = Sí llovió, 1 = No llovió
+        const hasRained = precipitation === 0 || precipitation === false || precipitation === '0';
+        return (
+          <Tag color={hasRained ? '#1890ff' : '#f5f5f5'} style={{ color: hasRained ? '#fff' : '#999' }}>
+            {hasRained ? t('common.yes') : t('common.no')}
+          </Tag>
+        );
+      },
       filters: [
-        { text: t('common.yes'), value: true },
-        { text: t('common.no'), value: false },
+        { text: t('common.yes'), value: 0 }, // 0 = Sí llovió
+        { text: t('common.no'), value: 1 },  // 1 = No llovió
       ],
-      onFilter: (value, record) => record.precipitationDetected === value,
+      onFilter: (value, record) => {
+        const precipValue = record.precipitationDetected;
+        if (value === 0) {
+          // Filtrar por "Sí llovió" (0, false, '0')
+          return precipValue === 0 || precipValue === false || precipValue === '0';
+        } else {
+          // Filtrar por "No llovió" (1, true, '1')
+          return precipValue === 1 || precipValue === true || precipValue === '1';
+        }
+      },
     },
     {
       title: 'N',
@@ -234,7 +247,11 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
           </Space>
         </div>
       }
-      style={style}
+      style={{ 
+        ...style, 
+        maxWidth: '100%', 
+        margin: '0 auto'
+      }}
     >
       <Table
         columns={columns}
