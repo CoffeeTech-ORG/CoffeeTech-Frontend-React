@@ -8,6 +8,7 @@ import { AuthWrapper } from './components/AuthWrapper/AuthWrapper';
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute';
 import { Spin } from 'antd';
 import './styles/globals.scss';
+import './styles/mobile-datepicker.scss';
 
 const theme = {
   token: {

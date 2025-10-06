@@ -50,7 +50,8 @@ export function useSectionData(initialToken: string | null, sectionId: string | 
       airHumidityPercent: getNumber(raw.airHumidityPercent),
       celciusGradeTemperature: getNumber(temp),
       soilHumidityPercent: getNumber(raw.soilHumidityPercent),
-      precipitationDetected: raw.precipitationDetected === 'true' || raw.precipitationDetected === true || raw.precipitationDetected === 1,
+      // precipitationDetected: mantener el valor del backend tal cual (0 o 1 o boolean)
+      precipitationDetected: raw.precipitationDetected,
       nitrogen: getNumber(raw.nitrogen),
       phosphorus: getNumber(raw.phosphorus),
       potassium: getNumber(raw.potassium),

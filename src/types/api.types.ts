@@ -38,7 +38,7 @@ export interface DataRecord {
   airHumidityPercent?: number | null;
   celciusGradeTemperature?: number | null; // API spelling variant
   soilHumidityPercent?: number | null;
-  precipitationDetected?: boolean | number; // Can be 0 or 1 from API
+  precipitationDetected?: boolean | number | string; // Can be 0 or 1 from API, 0 = Sí llovió, 1 = No llovió
   nitrogen?: number | null;
   phosphorus?: number | null;
   potassium?: number | null;

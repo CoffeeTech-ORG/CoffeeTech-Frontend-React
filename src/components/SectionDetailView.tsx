@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, message } from 'antd';
-import { ArrowLeft, User, Bell } from 'lucide-react';
+import { ArrowLeft, User, Bell, LogOutIcon } from 'lucide-react';
 import { Sidebar } from './Dashboard/Sidebar/Sidebar';
 import SectionData from './SectionData/SectionData';
 import { Section } from '../types/api.types';
@@ -45,12 +45,12 @@ export const SectionDetailView: React.FC<SectionDetailViewProps> = ({ section, o
           <div className="header-right">
             <LanguageSelector />
             <Button
-              icon={<User size={20} />}
               type="text"
               className="header-btn"
               onClick={logout}
             >
-              {user?.username}
+              {user?.username}&nbsp;
+              <LogOutIcon size={20} />
             </Button>
           </div>
         </header>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Spin, message, Dropdown, MenuProps } from 'antd';
-import { ArrowLeft, Plus, User, Bell, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Plus, User, Bell, MoreVertical, LogOutIcon } from 'lucide-react';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { SectionCard } from '../SectionCard/SectionCard';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
@@ -251,12 +251,12 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
           <div className="header-right">
             <LanguageSelector />
             <Button
-              icon={<User size={20} />}
               type="text"
               className="header-btn"
               onClick={logout}
             >
-              {user?.username}
+              {user?.username}&nbsp;
+              <LogOutIcon size={20} />
             </Button>
           </div>
         </header>

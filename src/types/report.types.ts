@@ -12,7 +12,7 @@ export interface ReportData {
   celciusGradeTemperature?: number | null; // Old spelling variant (with 'c')
   celsiusGradeTemperature?: number | null; // Correct spelling (with 's') - from backend
   soilHumidityPercent?: number | null;
-  precipitationDetected?: boolean;
+  precipitationDetected?: boolean | number | string; // 0 = Sí llovió, 1 = No llovió
   nitrogen?: number | null;
   phosphorus?: number | null;
   potassium?: number | null;

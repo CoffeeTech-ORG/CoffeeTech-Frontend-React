@@ -139,7 +139,12 @@ export const useReports = () => {
     const validPhosphorus = data.filter(d => d.phosphorus !== null && d.phosphorus !== undefined);
     const validPotassium = data.filter(d => d.potassium !== null && d.potassium !== undefined);
 
-    const precipitationDays = data.filter(d => d.precipitationDetected === true).length;
+    // precipitationDetected: 0 = Sí llovió, 1 = No llovió
+    const precipitationDays = data.filter(d => 
+      d.precipitationDetected === false || 
+      d.precipitationDetected === 0 || 
+      d.precipitationDetected === '0'
+    ).length;
 
     return {
       totalDataPoints: data.length,
@@ -174,14 +179,19 @@ export const useReports = () => {
     return sortedData.map(item => ({
       timestamp: typeof item.timestamp === 'string' ? item.timestamp : item.timestamp.toISOString(),
       // Usar formato de fecha + hora para tener puntos únicos en el eje X
-      date: dayjs(item.timestamp).format('MM/DD HH:mm'),
+      date: dayjs(item.timestamp).format('DD/MM HH:mm'),
       temperature: (item as any).celsiusGradeTemperature ?? item.celciusGradeTemperature ?? undefined,
       airHumidity: item.airHumidityPercent ?? undefined,
       soilHumidity: item.soilHumidityPercent ?? undefined,
       nitrogen: item.nitrogen ?? undefined,
       phosphorus: item.phosphorus ?? undefined,
       potassium: item.potassium ?? undefined,
-      precipitation: item.precipitationDetected ? 1 : 0
+      // precipitationDetected: 0 = Sí llovió (mostrar 1 en gráfico), 1 = No llovió (mostrar 0 en gráfico)
+      precipitation: (
+        item.precipitationDetected === false || 
+        item.precipitationDetected === 0 || 
+        item.precipitationDetected === '0'
+      ) ? 1 : 0
     }));
   }, []);
 

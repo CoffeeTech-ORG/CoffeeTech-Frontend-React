@@ -1,0 +1,85 @@
+// Mobile Date Picker Improvements
+@media (max-width: 768px) {
+  .ant-picker-dropdown {
+    left: 0 !important;
+    right: 0 !important;
+    max-width: 100vw !important;
+    
+    .ant-picker-panel-container {
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .ant-picker-panels {
+      display: flex !important;
+      flex-direction: column !important;
+      
+      .ant-picker-panel {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+    
+    .ant-picker-header {
+      padding: 8px 12px;
+      
+      button {
+        min-width: 32px;
+        height: 32px;
+      }
+    }
+    
+    .ant-picker-content {
+      width: 100%;
+      
+      th, td {
+        padding: 4px;
+        font-size: 14px;
+      }
+    }
+    
+    .ant-picker-cell {
+      padding: 3px 0;
+      
+      .ant-picker-cell-inner {
+        min-width: 28px;
+        height: 28px;
+        line-height: 28px;
+        font-size: 13px;
+      }
+    }
+    
+    .ant-picker-footer {
+      border-top: 1px solid #f0f0f0;
+      padding: 8px 12px;
+      
+      .ant-picker-ranges {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        
+        .ant-btn {
+          width: 100%;
+          margin: 0;
+        }
+      }
+    }
+  }
+  
+  // Ensure the input is responsive
+  .ant-picker {
+    width: 100% !important;
+    
+    .ant-picker-input {
+      input {
+        font-size: 14px;
+      }
+    }
+  }
+}

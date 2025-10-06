@@ -409,7 +409,9 @@
 
 @media (min-width: 0px) and (max-width: 768px) {
   .reports-container {
-    padding: 8px;
+    background: none;
+    box-shadow: none;
+    padding: 0px;
     margin: 0;
     border-radius: 8px;
 
@@ -648,6 +650,69 @@
       .ant-statistic-content {
         .ant-statistic-content-value {
           font-size: 14px;
+        }
+      }
+    }
+
+    // Date Range Picker Mobile Styles
+    .ant-picker-dropdown {
+      max-width: 95vw !important;
+      
+      .ant-picker-panels {
+        flex-direction: column !important;
+        
+        .ant-picker-panel {
+          width: 100% !important;
+          border-right: none !important;
+          border-bottom: 1px solid #f0f0f0;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+        }
+      }
+      
+      .ant-picker-panel-container {
+        overflow-x: hidden !important;
+      }
+      
+      .ant-picker-date-panel,
+      .ant-picker-month-panel,
+      .ant-picker-year-panel {
+        width: 100% !important;
+      }
+    }
+  }
+}
+
+// Global Date Picker Mobile Styles
+@media (max-width: 768px) {
+  .ant-picker-dropdown {
+    .ant-picker-panels {
+      flex-direction: column !important;
+      
+      > * {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+    
+    .ant-picker-panel-container {
+      overflow-x: auto !important;
+    }
+    
+    .ant-picker-footer {
+      .ant-picker-ranges {
+        flex-direction: column;
+        
+        .ant-btn {
+          width: 100%;
+          margin-bottom: 4px;
         }
       }
     }
