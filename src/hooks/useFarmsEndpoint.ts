@@ -24,11 +24,13 @@ export const useFarmsEndpoint = () => {
     
     // Role 2 = User, solo puede acceder a sus farms
     if (user.role.id === 2) {
-      return `/users/${user.id}/farms`;
+      // return `/users/${user.id}/farms`;
+      return '/farms';
     }
 
     // Fallback para otros roles (por defecto usar endpoint de user específico)
-    return `/users/${user.id}/farms`;
+    // return `/users/${user.id}/farms`;
+    return '/farms';
   };
 
   const isManager = user?.role.id === 1;

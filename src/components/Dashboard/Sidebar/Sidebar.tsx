@@ -36,7 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const menuItems = [
+
+  const allMenuItems = [
     {
       key: 'dashboard',
       icon: <BarChart3 size={20} />,
@@ -46,13 +47,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
       key: 'reports',
       icon: <FileText size={20} />,
       label: t('sidebar.reports'),
+      requiresAdmin: true, // Only visible for role.id === 1
     },
     {
       key: 'settings',
       icon: <Settings size={20} />,
       label: t('sidebar.inventory'),
+      requiresAdmin: true, // Only visible for role.id === 1
     },
   ];
+
+  // Filter items based on user role
+  const menuItems = allMenuItems.filter(item => {
+    if (item.requiresAdmin) {
+      return user?.role?.id === 1; // Only show for Administrator
+    }
+    return true; // Show for all users
+  });
 
   const handleAddFarmClick = () => {
     setIsAddFarmOpen(true);
@@ -90,12 +101,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeKey, onMenuClick, onAddF
         onSelect={({ key }) => onMenuClick(key)}
         items={menuItems}
       />
-      <div className="sidebar__footer">
-        <button className="sidebar__add-farm" onClick={handleAddFarmClick}>
-          <Plus size={20} />
-          <span>{t('sidebar.addFarm').toUpperCase()}</span>
-        </button>
-      </div>
+      {user?.role?.id === 1 && (
+        <div className="sidebar__footer">
+          <button className="sidebar__add-farm" onClick={handleAddFarmClick}>
+            <Plus size={20} />
+            <span>{t('sidebar.addFarm').toUpperCase()}</span>
+          </button>
+        </div>
+      )}
       <AddFarmModal
         isOpen={isAddFarmOpen}
         onClose={handleAddFarmClose}

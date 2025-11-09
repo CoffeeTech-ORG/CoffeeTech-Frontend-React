@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Info, Settings, AlertTriangle, Leaf, Trash2, Edit, Cable } from 'lucide-react';
 import { Section } from '../../../services/farms.service';
+import { useAuth } from '../../../contexts/AuthContext';
 import './SectionCard.scss';
 
 interface SectionCardProps {
@@ -18,6 +19,9 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   onEdit,
   onAddDevice
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role?.id === 1;
+
   const formatLastUpdate = (updatedAt?: string, lastUpdate?: string) => {
     const dateToFormat = updatedAt || lastUpdate;
     if (!dateToFormat) return '—';
@@ -110,38 +114,40 @@ export const SectionCard: React.FC<SectionCardProps> = ({
           <h3>{section.name}</h3>
         </div>
         
-        <div className="section-card__actions">
-          <button 
-            className="action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddDevice?.(section.id);
-            }}
-            title="Assign Device"
-          >
-            <Cable size={16} />
-          </button>
-          <button 
-            className="action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.(section.id);
-            }}
-            title="Edit"
-          >
-            <Edit size={16} />
-          </button>
-          <button 
-            className="action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.(section.id);
-            }}
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="section-card__actions">
+            <button 
+              className="action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddDevice?.(section.id);
+              }}
+              title="Assign Device"
+            >
+              <Cable size={16} />
+            </button>
+            <button 
+              className="action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(section.id);
+              }}
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+            <button 
+              className="action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(section.id);
+              }}
+              title="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="section-card__info">
