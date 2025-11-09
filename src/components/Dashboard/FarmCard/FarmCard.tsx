@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, AlertTriangle, Edit, Trash2, Mountain } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
+import { useAuth } from '../../../contexts/AuthContext';
 import './FarmCard.scss';
 
 interface FarmCardProps {
@@ -18,6 +19,9 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   onDelete,
   onViewMap
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role?.id === 1;
+
   const getHealthColor = (percentage: number) => {
     if (percentage >= 80) return '#52c41a';
     if (percentage >= 60) return '#faad14';
@@ -57,24 +61,28 @@ export const FarmCard: React.FC<FarmCardProps> = ({
           >
             <MapPin size={16} />
           </button>
-          <button 
-            className="action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.(farm.id);
-            }}
-          >
-            <Edit size={16} />
-          </button>
-          <button 
-            className="action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.(farm.id);
-            }}
-          >
-            <Trash2 size={16} />
-          </button>
+          {isAdmin && (
+            <>
+              <button 
+                className="action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(farm.id);
+                }}
+              >
+                <Edit size={16} />
+              </button>
+              <button 
+                className="action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(farm.id);
+                }}
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
         </div>
       </div>
 

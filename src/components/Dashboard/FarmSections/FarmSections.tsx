@@ -40,6 +40,7 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
   const { user, logout } = useAuth();
   const { t } = useI18n();
   const { getFarmSections, createSection } = useFarms();
+  const isAdmin = user?.role?.id === 1;
 
   useEffect(() => {
     loadFarmSections();
@@ -279,35 +280,37 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                 </div>
               </div>
               
-              <div className="header-buttons">
-                <Dropdown
-                  menu={{
-                    items: [
-                      {
-                        key: 'add-section',
-                        label: t('sections.add'),
-                        icon: <Plus size={16} />,
-                        onClick: handleAddSection,
-                      },
-                      {
-                        key: 'add-device',
-                        label: t('sensors.add'),
-                        icon: <Plus size={16} />,
-                        onClick: handleAddDevice,
-                      },
-                    ],
-                  }}
-                  placement="bottomRight"
-                  trigger={['click']}
-                >
-                  <Button
-                    type="primary"
-                    className="add-section-btn"
+              {isAdmin && (
+                <div className="header-buttons">
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: 'add-section',
+                          label: t('sections.add'),
+                          icon: <Plus size={16} />,
+                          onClick: handleAddSection,
+                        },
+                        {
+                          key: 'add-device',
+                          label: t('sensors.add'),
+                          icon: <Plus size={16} />,
+                          onClick: handleAddDevice,
+                        },
+                      ],
+                    }}
+                    placement="bottomRight"
+                    trigger={['click']}
                   >
-                    {<Plus size={20} />}
-                  </Button>
-                </Dropdown>
-              </div>
+                    <Button
+                      type="primary"
+                      className="add-section-btn"
+                    >
+                      {<Plus size={20} />}
+                    </Button>
+                  </Dropdown>
+                </div>
+              )}
             </div>
 
             <div className="farm-sections__summary">
