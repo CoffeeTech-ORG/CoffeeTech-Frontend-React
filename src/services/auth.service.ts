@@ -56,7 +56,8 @@ export const authService = {
       
       return registerResponse;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Registration failed');
+      // Re-lanzar el error completo para que el componente pueda acceder a response.data
+      throw error;
     }
   },
 

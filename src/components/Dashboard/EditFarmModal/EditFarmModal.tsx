@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd';
+import { Modal, Form, Input, Button, InputNumber, message } from 'antd';
 import { X } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
+import { GooglePlacesAutocomplete } from '../../GooglePlacesAutocomplete';
 import { useI18n } from '../../../contexts/I18nContext';
 import './EditFarmModal.scss';
 
@@ -9,6 +10,7 @@ export interface EditFarmData {
   id: number;
   name: string;
   location: string;
+  altitude: number;
 }
 
 interface EditFarmModalProps {
@@ -34,7 +36,8 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
     if (farm && isOpen) {
       form.setFieldsValue({
         name: farm.name,
-        location: farm.location
+        location: farm.location,
+        altitude: farm.altitude
       });
     }
   }, [farm, isOpen, form]);
@@ -52,7 +55,8 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
       await onSubmit({
         id: farmId,
         name: values.name,
-        location: values.location
+        location: values.location,
+        altitude: values.altitude
       });
       onClose();
     } catch (error) {
@@ -120,10 +124,61 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
               { max: 100, message: t('farm.location.length.max') }
             ]}
           >
-            <Input
+            <GooglePlacesAutocomplete
               placeholder={t('farm.location.placeholder')}
               size="large"
               className="form-input"
+              onPlaceSelect={(place) => {
+                if (place.formatted_address) {
+                  form.setFieldValue('location', place.formatted_address);
+                  form.validateFields(['location']);
+                }
+              }}
+              onChange={(value) => {
+                if (form.getFieldValue('location') !== value) {
+                  form.setFieldValue('location', value);
+                }
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={t('farm.altitude')}
+            name="altitude"
+            rules={[
+              { required: true, message: t('farm.altitude.validation') },
+              { type: 'number', min: 0, message: t('farm.altitude.positive') },
+              { type: 'number', max: 10000, message: t('farm.altitude.max') }
+            ]}
+            help={t('farm.altitude.range') || 'Mínimo: 0 m - Máximo: 10000 m'}
+          >
+            <InputNumber
+              placeholder={t('farm.altitude.placeholder')}
+              size="large"
+              className="form-input"
+              step={1}
+              min={0}
+              max={10000}
+              precision={0}
+              style={{ width: '100%' }}
+              controls={false}
+              maxLength={5}
+              parser={(value) => {
+                // Solo permitir números y limitar a 5 caracteres
+                const parsed = value?.replace(/[^\d]/g, '').slice(0, 5) || '';
+                const numValue = parsed ? Number(parsed) : 0;
+                // Si el valor excede 10000, devolver el valor anterior (no actualizar)
+                if (numValue > 10000) {
+                  return form.getFieldValue('altitude') || 0;
+                }
+                return numValue || '' as any;
+              }}
+              onKeyPress={(e) => {
+                // Bloquear cualquier tecla que no sea número
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
           </Form.Item>
 

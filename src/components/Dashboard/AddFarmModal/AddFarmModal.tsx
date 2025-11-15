@@ -127,16 +127,35 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
               { type: 'number', min: 0, message: t('farm.altitude.positive') },
               { type: 'number', max: 10000, message: t('farm.altitude.max') }
             ]}
+            help={t('farm.altitude.range') || 'Mínimo: 0 m - Máximo: 10000 m'}
           >
             <InputNumber
               placeholder={t('farm.altitude.placeholder')}
               size="large"
               className="form-input"
-              step={0.01}
+              step={1}
               min={0}
               max={10000}
-              precision={2}
+              precision={0}
               style={{ width: '100%' }}
+              controls={false}
+              maxLength={5}
+              parser={(value) => {
+                // Solo permitir números y limitar a 5 caracteres
+                const parsed = value?.replace(/[^\d]/g, '').slice(0, 5) || '';
+                const numValue = parsed ? Number(parsed) : 0;
+                // Si el valor excede 10000, devolver el valor anterior (no actualizar)
+                if (numValue > 10000) {
+                  return form.getFieldValue('altitude') || 0;
+                }
+                return numValue || '' as any;
+              }}
+              onKeyPress={(e) => {
+                // Bloquear cualquier tecla que no sea número
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
           </Form.Item>
 
