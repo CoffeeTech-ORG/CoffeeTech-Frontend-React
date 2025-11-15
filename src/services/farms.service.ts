@@ -97,12 +97,13 @@ export const farmsService = {
     }
   },
 
-  async updateFarm(id: number, data: { name: string; location: string }): Promise<Farm> {
+  async updateFarm(id: number, data: { name: string; location: string; altitude: number }): Promise<Farm> {
     try {
       const response = await api.put(`/farms/${id}`, {
         id: id,
         name: data.name,
-        location: data.location
+        location: data.location,
+        altitude: data.altitude
       });
       return response.data;
     } catch (error: any) {

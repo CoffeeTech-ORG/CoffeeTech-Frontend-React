@@ -121,7 +121,8 @@ export const Dashboard: React.FC = () => {
       
       await farmsService.updateFarm(data.id, {
         name: data.name,
-        location: data.location
+        location: data.location,
+        altitude: data.altitude
       });
       
       // Reload the farms list to ensure we have the latest data

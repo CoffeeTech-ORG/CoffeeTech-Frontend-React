@@ -41,8 +41,35 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
       message.success(t('auth.success.register'));
       // Redirect to dashboard after successful registration
       navigate('/dashboard', { replace: true });
-    } catch (error) {
-      message.error(t('auth.error.register'));
+    } catch (error: any) {
+      console.log('Error completo:', error);
+      console.log('Error response:', error?.response);
+      console.log('Error response data:', error?.response?.data);
+      
+      // Mensaje por defecto
+      const defaultMsg = t('auth.error.register');
+      
+      // El backend devuelve un stack trace completo en response.data como string
+      let errorText = '';
+      
+      if (error?.response?.data) {
+        // Si response.data es un string, usarlo directamente
+        errorText = typeof error.response.data === 'string' 
+          ? error.response.data 
+          : JSON.stringify(error.response.data);
+      } else if (error?.message) {
+        errorText = error.message;
+      }
+
+      console.log('Texto del error:', errorText);
+
+      // Detectar texto indicando que el email ya está tomado
+      if (/already taken|is already taken|already registered|email.*taken|correo.*ya.*registrad/i.test(errorText)) {
+        const specific = t('auth.error.emailTaken') || 'Este correo electrónico ya está registrado. Por favor, inicia sesión o usa otro correo';
+        message.error(specific);
+      } else {
+        message.error(defaultMsg);
+      }
     } finally {
       setLoading(false);
     }
