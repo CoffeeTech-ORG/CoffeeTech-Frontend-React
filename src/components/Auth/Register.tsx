@@ -42,33 +42,35 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
       // Redirect to dashboard after successful registration
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
-      console.log('Error completo:', error);
-      console.log('Error response:', error?.response);
-      console.log('Error response data:', error?.response?.data);
+      // Log completo para debugging (solo visible en consola del navegador)
+      console.error('Registration error:', {
+        error,
+        response: error?.response,
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message
+      });
       
-      // Mensaje por defecto
-      const defaultMsg = t('auth.error.register');
+      const status = error?.response?.status;
       
-      // El backend devuelve un stack trace completo en response.data como string
-      let errorText = '';
-      
-      if (error?.response?.data) {
-        // Si response.data es un string, usarlo directamente
-        errorText = typeof error.response.data === 'string' 
-          ? error.response.data 
-          : JSON.stringify(error.response.data);
-      } else if (error?.message) {
-        errorText = error.message;
-      }
-
-      console.log('Texto del error:', errorText);
-
-      // Detectar texto indicando que el email ya está tomado
-      if (/already taken|is already taken|already registered|email.*taken|correo.*ya.*registrad/i.test(errorText)) {
-        const specific = t('auth.error.emailTaken') || 'Este correo electrónico ya está registrado. Por favor, inicia sesión o usa otro correo';
-        message.error(specific);
+      // Verificar si es error de email duplicado basándose SOLO en el código HTTP
+      // 409 Conflict es el código estándar para recursos duplicados
+      if (status === 409) {
+        const specificMsg = t('auth.error.emailTaken') || 'Este correo electrónico ya está registrado. Por favor, inicia sesión o usa otro correo';
+        message.error(specificMsg);
+      } else if (status === 400) {
+        // Bad request - podría ser validación
+        const serverMsg = error?.response?.data?.message;
+        message.error(serverMsg || t('auth.error.validation') || 'Datos de registro inválidos');
+      } else if (status === 500 || status === 502 || status === 503) {
+        // Errores del servidor
+        message.error(t('auth.error.server') || 'Error del servidor. Por favor, intenta más tarde');
+      } else if (!error?.response) {
+        // Error de red (sin respuesta del servidor)
+        message.error(t('auth.error.network') || 'Error de conexión. Verifica tu internet');
       } else {
-        message.error(defaultMsg);
+        // Fallback genérico
+        message.error(t('auth.error.register') || 'Error al registrar. Intenta nuevamente');
       }
     } finally {
       setLoading(false);
