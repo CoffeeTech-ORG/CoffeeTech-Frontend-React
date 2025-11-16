@@ -52,16 +52,29 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
       });
       
       const status = error?.response?.status;
+      const serverMsg = error?.response?.data?.message;
       
-      // Verificar si es error de email duplicado basándose SOLO en el código HTTP
-      // 409 Conflict es el código estándar para recursos duplicados
-      if (status === 500) {
-        const specificMsg = t('auth.error.emailTaken') || 'Este correo electrónico ya está registrado. Por favor, inicia sesión o usa otro correo';
-        message.error(specificMsg);
-      } else if (status === 400) {
-        // Bad request - podría ser validación
-        const serverMsg = error?.response?.data?.message;
-        message.error(serverMsg || t('auth.error.validation') || 'Datos de registro inválidos');
+      if (status === 400) {
+        // Bad request - check if it's a duplicate email error
+        if (serverMsg && serverMsg.includes('correo') && serverMsg.includes('registrado')) {
+          // Email already registered error
+          message.error(serverMsg || t('auth.error.emailTaken'));
+        } else {
+          // Other validation errors
+          message.error(serverMsg || t('auth.error.validation') || 'Datos de registro inválidos');
+        }
+      } else if (status === 409) {
+        // Conflict - duplicate resource
+        message.error(serverMsg || t('auth.error.emailTaken'));
+      } else if (status === 500 || status === 502 || status === 503) {
+        // Server errors
+        message.error(t('auth.error.server') || 'Error del servidor. Por favor, intenta más tarde');
+      } else if (!error?.response) {
+        // Network error (no response from server)
+        message.error(t('auth.error.network') || 'Error de conexión. Verifica tu internet');
+      } else {
+        // Generic error
+        message.error(serverMsg || t('auth.error.register') || 'Error al registrar. Intenta nuevamente');
       }
     } finally {
       setLoading(false);
