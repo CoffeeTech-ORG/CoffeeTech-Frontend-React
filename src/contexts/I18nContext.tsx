@@ -46,6 +46,9 @@ const translations = {
     'auth.success.register': 'Registration successful!',
     'auth.error.register': 'Registration failed. Please try again.',
     'auth.error.emailTaken': 'This email is already registered. Please log in or use another email.',
+    'auth.error.validation': 'Invalid registration data. Please check your information.',
+    'auth.error.server': 'Server error. Please try again later.',
+    'auth.error.network': 'Connection error. Please check your internet connection.',
     'auth.success.login': 'Login successful!',
     'auth.error.login': 'Login failed. Please try again.',
 
@@ -410,6 +413,9 @@ const translations = {
     'auth.success.register': '¡Registro exitoso!',
     'auth.error.register': 'Error en el registro. Inténtalo de nuevo.',
     'auth.error.emailTaken': 'Este correo electrónico ya está registrado. Por favor, inicia sesión o usa otro correo.',
+    'auth.error.validation': 'Datos de registro inválidos. Por favor verifica tu información.',
+    'auth.error.server': 'Error del servidor. Por favor, intenta más tarde.',
+    'auth.error.network': 'Error de conexión. Verifica tu internet.',
     'auth.success.login': '¡Inicio de sesión exitoso!',
     'auth.error.login': 'Error en el inicio de sesión. Inténtalo de nuevo.',
 
