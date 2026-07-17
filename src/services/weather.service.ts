@@ -8,9 +8,7 @@ export class WeatherService {
     this.apiKey = apiKey;
   }
 
-  /**
-   * Obtiene datos del clima para una ciudad específica
-   */
+  /** Weather for a named city. */
   async getWeather(cityName: string): Promise<WeatherData> {
     try {
       const response = await fetch(
@@ -30,8 +28,31 @@ export class WeatherService {
   }
 
   /**
-   * Obtiene la ciudad actual basada en la geolocalización
+   * Weather at a coordinate: the right way for a farm. OpenWeather's grid does not resolve the few
+   * kilometres between the district and the plot, so it works with an exact or approximate point.
+   * Querying by city name instead depends on the PHONE's position and shows Lima at sea level for
+   * Cajamarca farms at 1600 m.
    */
+  async getWeatherAt(latitude: number, longitude: number): Promise<WeatherData> {
+    try {
+      const response = await fetch(
+        `${WeatherService.BASE_URL}?lat=${latitude}&lon=${longitude}` +
+          `&appid=${this.apiKey}&units=metric`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch weather data: ${response.status} ${response.statusText}`);
+      }
+
+      const data: WeatherApiResponse = await response.json();
+      return this.transformWeatherData(data);
+    } catch (error) {
+      console.error('Error fetching weather data by coordinates:', error);
+      throw new Error('Failed to load weather data');
+    }
+  }
+
+  /** Current city from geolocation. */
   async getCurrentCity(): Promise<string> {
     try {
       const position = await this.getCurrentPosition();
@@ -42,14 +63,12 @@ export class WeatherService {
       return cityName || 'Unknown Location';
     } catch (error) {
       console.error('Error getting current city:', error);
-      // Fallback a una ciudad por defecto si no se puede obtener la ubicación
+      // Fall back to a default city if the location cannot be obtained
       return 'Lima, Peru';
     }
   }
 
-  /**
-   * Obtiene la posición actual del usuario
-   */
+  /** The user's current position. */
   private getCurrentPosition(): Promise<GeolocationPosition> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -72,9 +91,7 @@ export class WeatherService {
     });
   }
 
-  /**
-   * Obtiene el nombre de la ciudad basado en coordenadas usando geocoding reverso
-   */
+  /** City name from coordinates, via reverse geocoding. */
   private async getCityFromCoordinates(lat: number, lon: number): Promise<string> {
     try {
       const response = await fetch(
@@ -98,9 +115,7 @@ export class WeatherService {
     }
   }
 
-  /**
-   * Transforma los datos de la API a nuestro formato interno
-   */
+  /** Maps the API data to the internal format. */
   private transformWeatherData(apiData: WeatherApiResponse): WeatherData {
     const currentDate = new Date().toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -119,9 +134,7 @@ export class WeatherService {
     };
   }
 
-  /**
-   * Obtiene el clima para la ubicación actual del usuario
-   */
+  /** Weather for the user's current location. */
   async getCurrentWeather(): Promise<WeatherData> {
     try {
       const cityName = await this.getCurrentCity();
@@ -133,7 +146,7 @@ export class WeatherService {
   }
 }
 
-// Instancia singleton del servicio de clima
+// Singleton instance of the weather service
 // Nota: Debes configurar tu API key de OpenWeatherMap
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 export const weatherService = new WeatherService(API_KEY);

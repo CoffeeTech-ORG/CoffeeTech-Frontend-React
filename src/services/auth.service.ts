@@ -24,7 +24,7 @@ export const authService = {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await api.post('/authentication/sign-in', { email, password });
-      // El backend ya responde con el formato correcto:
+      // The backend already responds in the right shape:
       // { "id": 1, "username": "diego", "email": "diego@coffeetech.com", "token": "eyJh..." }
       const loginResponse: LoginResponse = {
         id: response.data.id,
@@ -45,7 +45,7 @@ export const authService = {
     try {
       const response = await api.post('/authentication/sign-up', userData);
       
-      // Asumir que el register también devuelve el mismo formato
+      // Assume register returns the same shape too.
       const registerResponse: LoginResponse = {
         id: response.data.id,
         username: response.data.username,
@@ -56,7 +56,7 @@ export const authService = {
       
       return registerResponse;
     } catch (error: any) {
-      // Re-lanzar el error completo para que el componente pueda acceder a response.data
+      // Re-throw the full error so the component can access response.data.
       throw error;
     }
   },

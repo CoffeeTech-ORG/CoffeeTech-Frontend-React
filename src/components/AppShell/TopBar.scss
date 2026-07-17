@@ -1,0 +1,229 @@
+@import '../../styles/variables';
+
+.topbar {
+  background: $secondary-color;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__inner {
+    // Same padding as `app-shell__content`, and no max width: if they differ, the brand does not
+    // line up with the page title right below it, and it shows. With the content no longer centred,
+    // a `max-width: 1600px` here would centre the bar over content that already goes full-bleed.
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  &__brand {
+    font-family: $font-family-display;
+    font-size: $font-size-card-title;
+    font-weight: $font-weight-semibold;
+    color: #fff;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    flex: none;
+    letter-spacing: -0.01em;
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    // 44 px tall: tapped with the thumb, in the field, with dirty hands.
+    height: $touch-target;
+    padding: 0 14px;
+    border-radius: $border-radius-sm;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    // The active tab is marked by `NavLink` from the URL, not by local state: arriving via a
+    // direct link the menu still has to show where you are.
+    &.is-active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+  }
+
+  &__user {
+    position: relative;
+  }
+
+  &__user-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: $touch-target;
+    padding: 0 8px;
+    background: none;
+    border: none;
+    border-radius: $border-radius-sm;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: inherit;
+    font-size: $font-size-base;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+    }
+  }
+
+  &__avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: $border-radius-pill;
+    background: rgba(255, 255, 255, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.02em;
+    flex: none;
+  }
+
+  &__user-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 2;
+    min-width: 200px;
+    background: $background-white;
+    color: $text-primary;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-md;
+    box-shadow: $shadow-medium;
+    overflow: hidden;
+  }
+
+  &__menu-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-bottom: 1px solid $border-subtle;
+
+    strong {
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+    }
+
+    span {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+    }
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: $touch-target;
+    padding: 0 14px;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: $font-size-base;
+    color: $text-body;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background: $background-light;
+      color: $text-primary;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// On mobile the name is hidden and the avatar stays: the username is the first thing to drop when
+// width is tight, because whoever uses the phone already knows who they are.
+@media (max-width: 768px) {
+  .topbar {
+    // The tabs move to the bottom (`BottomNav`): the brand and the session stay up top. The
+    // navigation is where the thumb reaches and the header stops competing for width.
+    &__tabs {
+      display: none;
+    }
+
+    &__inner {
+      padding: 0 12px;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    &__user-name {
+      display: none;
+    }
+  }
+}

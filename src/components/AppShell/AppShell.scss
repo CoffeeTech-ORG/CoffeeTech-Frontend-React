@@ -1,0 +1,68 @@
+@import '../../styles/variables';
+
+.app-shell {
+  min-height: 100vh;
+  background: $background-light;
+  display: flex;
+  flex-direction: column;
+
+  &__content {
+    flex: 1;
+    width: 100%;
+
+    // The padding is published as variables so a view can go FULL-BLEED without guessing it. The
+    // farm header needs it: it has to meet the top bar, and estimating the value left a 4 px strip
+    // and horizontal scroll.
+    --shell-pad-x: 32px;
+    --shell-pad-top: 28px;
+
+    // No max width, no centring. A narrow limit protects reading long text, but there are no
+    // paragraphs here: a list and a map, and both use the width. The 1600 cap left ~160 px dead on
+    // each side of a 1920 screen and narrowed the map. Line width is each column's job, not the
+    // frame's.
+    padding: var(--shell-pad-top) var(--shell-pad-x) 64px;
+  }
+
+  // Views that fit the viewport exactly (see `VIEWPORT_FIT` in `AppShell.tsx`).
+  //
+  // The frame stops scrolling and scrolling moves to the view, which decides what moves and what
+  // stays. `min-height: 0` on the content is required: without it a flex child takes its content
+  // height as a minimum and overflows the frame instead of scrolling inside it.
+  &.is-fitted {
+    height: 100vh;
+    overflow: hidden;
+
+    .app-shell__content {
+      min-height: 0;
+      overflow: hidden;
+      padding-bottom: 28px;
+    }
+  }
+}
+
+// Stacked, the frame scrolls like a normal page again: forcing it into the viewport would mean
+// scrolling inside a 366 px column, which is worse than scrolling the whole page.
+@media (max-width: 1200px) {
+  .app-shell.is-fitted {
+    height: auto;
+    overflow: visible;
+
+    .app-shell__content {
+      overflow: visible;
+    }
+  }
+}
+
+// On mobile the side margin is the shell's, set once. Inner views must not add their own: that
+// duplication cost 16 % of screen width in the Hubs view.
+@media (max-width: 768px) {
+  .app-shell__content {
+    --shell-pad-x: 12px;
+    --shell-pad-top: 16px;
+
+    // The bottom padding leaves room for the nav bar, which on mobile sits at the bottom: without
+    // it the last card is covered and the list looks cut off.
+    padding: var(--shell-pad-top) var(--shell-pad-x)
+      calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -1,0 +1,157 @@
+@import '../../styles/variables';
+
+// The sweep's two tones come from the system itself: the canvas ($background-canvas) and one step
+// above it. Over the app's cream they read as "a gap about to be filled", not as grey content.
+$skeleton-base: #e4e0d5;
+$skeleton-shine: #eeeae0;
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    $skeleton-base 25%,
+    $skeleton-shine 50%,
+    $skeleton-base 75%
+  );
+  background-size: 260px 100%;
+  animation: skeleton-sweep 1.2s linear infinite;
+  border-radius: $border-radius-sm;
+
+  &--line {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  &--block {
+    border-radius: $border-radius-sm;
+  }
+
+  // Whole card: it inherits the real shape (border, radius, padding) so nothing moves when the data
+  // arrives. The background is flat; what pulses are the silhouettes inside.
+  &--card {
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-left: 5px solid $border-color;
+    border-radius: $border-radius-lg;
+    padding: 14px 15px;
+    animation: none;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+}
+
+// Whoever asks for less motion does not get an endless sweep on screen: the block stays still, still
+// saying "something is missing here".
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: -260px 0;
+  }
+  to {
+    background-position: 260px 0;
+  }
+}
+
+// -------- compositions --------
+// They live here and not in each view because they are the SHAPE of a specific component: if the card
+// changes, its silhouette has to change in the same place or it stops matching.
+
+.skeleton-section-card {
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  &__thumb {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 11px;
+  }
+
+  &__id {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__chip {
+    width: 96px;
+    height: 22px;
+    border-radius: $border-radius-pill;
+    flex: none;
+  }
+
+  &__foot {
+    height: 14px;
+    width: 45%;
+    margin-top: 11px;
+    padding-top: 11px;
+    border-top: 1px solid $border-subtle;
+  }
+}
+
+.skeleton-farm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-left: 3px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: 14px 16px;
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__chip {
+    width: 84px;
+    height: 24px;
+    border-radius: $border-radius-pill;
+    flex: none;
+  }
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// Same grid as the real section detail (`SectionData.scss`), so the content lands where its gap
+// already was.
+.skeleton-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__main,
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .skeleton-detail {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: start;
+    gap: 18px;
+  }
+}

@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Función para guardar auth data en localStorage y state
+  // Persists the session (localStorage + axios header + state) from a login response.
   const login = (data: LoginResponse) => {
     const authData = {
       user: {
@@ -70,25 +70,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       },
       token: data.token,
     };
-    
-    // Guardar en localStorage
+
     localStorage.setItem('auth', JSON.stringify(authData));
-    
-    // Configurar token en axios
     setAuthToken(data.token);
-    
-    // Actualizar state
     setUser(authData.user);
     setToken(authData.token);
   };
 
-  // Función para login con credenciales (llama al backend)
   const loginWithCredentials = async (email: string, password: string) => {
     try {
       const response = await authService.login(email, password);
-
-      // Usar la función login para guardar los datos
-      login(response); // La respuesta ya tiene el formato correcto
+      login(response);
     } catch (error) {
       console.error('AuthContext: Login failed:', error);
       throw error;
@@ -98,28 +90,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterData) => {
     try {
       const response = await authService.register(userData);
-      
-      // Usar la función login para guardar los datos
-      login(response); // La respuesta ya tiene el formato correcto
+      login(response);
     } catch (error) {
       throw error;
     }
   };
 
   const logout = () => {
-    // Limpiar localStorage
     localStorage.removeItem('auth');
-    localStorage.removeItem('token'); // Por si acaso queda el token viejo
-    
-    // Limpiar token de axios
+    localStorage.removeItem('token'); // in case an old token key is still around
     setAuthToken(null);
-    
-    // Limpiar state
     setUser(null);
     setToken(null);
   };
 
-  // Restaurar sesión al cargar la aplicación
+  // Restore the session on app load.
   useEffect(() => {
     const authData = localStorage.getItem('auth');
     if (authData) {
@@ -128,7 +113,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (parsedAuth.user && parsedAuth.token) {
           setUser(parsedAuth.user);
           setToken(parsedAuth.token);
-          // Configurar token en axios al restaurar sesión
           setAuthToken(parsedAuth.token);
         }
       } catch (error) {

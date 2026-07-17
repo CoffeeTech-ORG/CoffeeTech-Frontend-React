@@ -1,0 +1,82 @@
+@import '../../styles/variables';
+
+// Language pill. One shape with two skins: only the colour changes, and the icon inherits it from
+// the text (`currentColor`), so the two cannot fall out of step.
+//
+// As a `Button type="text"` with the default colour it was dark ink on the dark top bar; the pill
+// sets its own colour per surface instead.
+.lang-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 11px;
+  font-family: inherit;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  svg {
+    flex: none;
+  }
+
+  &__code {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__caret {
+    opacity: 0.5;
+  }
+
+  // -------- on dark surfaces --------
+  // Top bar and the login's brand strip on mobile. Cream at 90 % over #1b1d17 gives 12.6:1.
+  &--dark {
+    color: rgba(244, 241, 234, 0.9);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(244, 241, 234, 0.8);
+      outline-offset: 2px;
+    }
+  }
+
+  // -------- on light surfaces --------
+  &--light {
+    color: $text-body;
+    background: $background-white;
+    border: 1px solid rgba(30, 35, 20, 0.15);
+
+    &:hover {
+      border-color: $text-muted;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// On the phone the pill shares a narrow bar with the avatar and the title.
+@media (max-width: 768px) {
+  .lang-pill {
+    gap: 6px;
+    padding: 7px 10px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}

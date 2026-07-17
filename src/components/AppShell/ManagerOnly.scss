@@ -1,0 +1,60 @@
+@import '../../styles/variables';
+
+.manager-only {
+  max-width: 420px;
+  margin: 56px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: $border-radius-pill;
+    background: $status-neutral-bg;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    font-family: $font-family-display;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__body {
+    font-size: $font-size-base;
+    color: $text-secondary;
+    line-height: $line-height-base;
+    margin: 0;
+  }
+
+  &__action {
+    margin-top: 6px;
+    height: $touch-target;
+    padding: 0 22px;
+    border: none;
+    border-radius: $border-radius-sm;
+    background: $primary-color;
+    color: #fff;
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    &:hover {
+      background: $primary-color-dark;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+}

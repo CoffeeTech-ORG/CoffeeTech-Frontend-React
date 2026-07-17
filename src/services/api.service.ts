@@ -36,9 +36,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Limpiar datos de autenticación
+      // Clear authentication data
       localStorage.removeItem('auth');
-      localStorage.removeItem('token'); // Por si queda algún token viejo
+      localStorage.removeItem('token'); // in case an old token key is still around
       window.location.href = '/login';
     }
     return Promise.reject(error);

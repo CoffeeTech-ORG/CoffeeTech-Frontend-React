@@ -1,75 +1,73 @@
 @import '../../styles/variables.scss';
 
+// The brand: icon and name.
+//
+// Sizes come from the prototype, where the icon is 40 px and the name 22 px beside it. A `--large`
+// variant that was an 80 px circle with NO name ate the brand block on the phone and left the app
+// not saying what it is called.
 .logo {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  
+  gap: 11px;
+
   &__icon {
-    background: $text-primary;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
+    flex: none;
     overflow: hidden;
+    background: $text-primary;
+    border-radius: 50%;
+
     img,
     .logo__img {
+      display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
-      display: block;
     }
   }
-  
+
+  // In the heading serif: it is a proper name, not interface text.
   &__brand {
-    font-weight: 600;
+    font-family: $font-family-display;
+    font-weight: $font-weight-semibold;
     color: $text-primary;
-    
-    &-main {
-      color: $text-primary;
-    }
-    
-    &-sub {
-      color: $primary-color;
-    }
+    white-space: nowrap;
   }
-  
-  // Size variants
+
   &--small {
+    gap: 9px;
+
     .logo__icon {
       width: 32px;
       height: 32px;
-      font-size: 16px;
     }
-    
+
     .logo__brand {
-      font-size: 16px;
+      font-size: $font-size-lg;
     }
   }
-  
+
   &--medium {
     .logo__icon {
-      width: 48px;
-      height: 48px;
-      font-size: 24px;
+      width: 36px;
+      height: 36px;
     }
-    
+
     .logo__brand {
-      font-size: 20px;
+      font-size: $font-size-card-title;
     }
   }
-  
+
   &--large {
     .logo__icon {
-      width: 80px;
-      height: 80px;
-      font-size: 40px;
+      width: 40px;
+      height: 40px;
     }
-    
+
     .logo__brand {
-      font-size: 28px;
+      font-size: $font-size-section;
     }
   }
 }

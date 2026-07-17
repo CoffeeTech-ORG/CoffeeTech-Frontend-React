@@ -1,57 +1,46 @@
 import React from 'react';
-import { Button, Dropdown } from 'antd';
-import { Languages } from 'lucide-react';
+import { Dropdown } from 'antd';
+import { Globe } from 'lucide-react';
 import { useI18n, Language } from '../../contexts/I18nContext';
 import type { MenuProps } from 'antd';
+import './LanguageSelector.scss';
 
-export const LanguageSelector: React.FC = () => {
-  const { language, setLanguage } = useI18n();
+interface LanguageSelectorProps {
+  /**
+   * `dark` for dark surfaces (top bar, the login's brand strip on mobile); `light` for light ones.
+   * Only the colour changes: sizes and content are the same.
+   */
+  tone?: 'dark' | 'light';
+}
 
-  const handleLanguageChange = (selectedLanguage: Language) => {
-    setLanguage(selectedLanguage);
-  };
+/**
+ * Language switcher.
+ *
+ * A globe, not a flag: a flag names a country, not a language, and this app's Spanish is spoken in
+ * Peru, not Spain. The code sits beside it, and the icon uses `currentColor` so text and icon change
+ * together and cannot fall out of step.
+ */
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ tone = 'dark' }) => {
+  const { language, setLanguage, t } = useI18n();
 
+  // The dropdown has room for the full language name, which is clearer than the code.
   const items: MenuProps['items'] = [
-    {
-      key: 'en',
-      label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🇺🇸</span>
-          <span>English</span>
-        </div>
-      ),
-      onClick: () => handleLanguageChange('en'),
-    },
-    {
-      key: 'es',
-      label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🇪🇸</span>
-          <span>Español</span>
-        </div>
-      ),
-      onClick: () => handleLanguageChange('es'),
-    },
+    { key: 'es', label: 'Español', onClick: () => setLanguage('es' as Language) },
+    { key: 'en', label: 'English', onClick: () => setLanguage('en' as Language) },
   ];
 
-  const getCurrentLanguageFlag = () => {
-    return language === 'en' ? '🇺🇸' : '🇪🇸';
-  };
-
   return (
-    <Dropdown
-      menu={{ items }}
-      placement="bottomRight"
-      trigger={['click']}
-    >
-      <Button
-        type="text"
-        className="header-btn language-selector"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+    <Dropdown menu={{ items, selectedKeys: [language] }} placement="bottomRight" trigger={['click']}>
+      <button
+        type="button"
+        className={`lang-pill lang-pill--${tone}`}
+        title={t('common.changeLanguage')}
+        aria-label={t('common.changeLanguage')}
       >
-        <span style={{ fontSize: '16px' }}>{getCurrentLanguageFlag()}</span>
-        <Languages size={16} />
-      </Button>
+        <Globe size={15} aria-hidden="true" />
+        <span className="lang-pill__code">{language.toUpperCase()}</span>
+        <span className="lang-pill__caret" aria-hidden="true">▾</span>
+      </button>
     </Dropdown>
   );
 };

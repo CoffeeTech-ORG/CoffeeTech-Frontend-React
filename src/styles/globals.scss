@@ -1,3 +1,4 @@
+@import './fonts.scss';
 @import './variables.scss';
 
 * {
@@ -7,13 +8,33 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: $background-light;
   color: $text-primary;
+}
+
+// Serif for what is read once and decides: verdicts, screen titles, large figures. The rest of the
+// interface is sans -- it is scanned, not read.
+//
+// The antd selectors are separate because its `Typography.Title` marks the tag with a CLASS, and a
+// class outweighs three elements: with only `h1, h2, h3` the system rule was declared but not applied
+// on the screens that use antd (Reports, Hubs).
+h1, h2, h3,
+h1.ant-typography, h2.ant-typography, h3.ant-typography {
+  font-family: $font-family-display;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  text-wrap: balance;
+}
+
+// Digits aligned in a column (readings, report tables) need a fixed width or the figures jump as
+// they update every 2 minutes.
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 // Custom scrollbar

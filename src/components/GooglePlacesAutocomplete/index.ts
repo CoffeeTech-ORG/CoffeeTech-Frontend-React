@@ -1,1 +1,0 @@
-export { GooglePlacesAutocomplete } from './GooglePlacesAutocomplete';

@@ -1,28 +1,153 @@
-// Color Variables
-$primary-color: #20B2AA;
-$secondary-color: #2C5530;
-$success-color: #52c41a;
-$warning-color: #faad14;
-$error-color: #ff4d4f;
-$text-primary: #262626;
-$text-secondary: #8c8c8c;
-$background-light: #f5f5f5;
-$background-white: #ffffff;
-$border-color: #d9d9d9;
+// ============================================================================
+// CoffeeTech — visual system
+// ============================================================================
+// The variable NAMES are kept across the redesign because 31 SCSS files use them; only the values
+// change, so views not yet touched keep working.
+//
+// There is NO dark theme, by decision: the app is used in full sun in the field, where a light
+// background reads better, and two themes would double the work of each pass. If one is ever added,
+// it goes here and in `statusTokens.ts`.
 
-// Spacing
+// ---------------------------------------------------------------------------
+// Marca
+// ---------------------------------------------------------------------------
+$primary-color: #24472d;        // forest green -- buttons and accents
+$primary-color-dark: #1b2c1f;   // brand green, for gradients
+$primary-color-soft: #e6f0e6;   // superficie verde suave
+$secondary-color: #1b1d17;      // near-black -- nav bar
+
+// ---------------------------------------------------------------------------
+// Surfaces and ink
+// ---------------------------------------------------------------------------
+// The app background is cream, not white: white cards stand out on their own without heavy
+// borders or shadows.
+$background-light: #f4f1ea;     // application background
+$background-canvas: #e7e3d8;    // outer canvas (outside the content)
+$background-white: #ffffff;     // tarjetas
+$background-cream: #faf8f3;     // secondary card, one step below white
+
+$text-primary: #23261f;         // titulares
+$text-body: #3f443a;            // paragraphs
+$text-secondary: #5c6152;       // apoyo
+$text-muted: #8a8f7e;           // pistas y micro-texto
+
+// Borders. The subtle one separates cards; the field one marks areas you type into. They are
+// rgba(30,35,20,.08/.15) composited over the cream, in hex so `darken()` behaves predictably
+// where it is used.
+$border-color: #d4d2ca;         // field border
+$border-subtle: #e6e3da;        // separador de tarjeta
+$border-dashed: rgba(30, 35, 20, 0.22);  // pending / to be configured
+
+// ---------------------------------------------------------------------------
+// Axis 1 · Diagnosis severity  (agronomic judgement)
+// ---------------------------------------------------------------------------
+// Mirror of `statusTokens.ts`: change one, change the other. This axis, and only this one, uses
+// terracotta -- the colour for "the crop needs something".
+$status-ok: #3a7d52;
+$status-ok-bg: #e6f0e6;
+$status-ok-border: #bcd6c2;
+
+$status-warning: #9a6b12;
+$status-warning-bg: #f6ecd2;
+$status-warning-border: #e2c98c;
+
+$status-alert: #b5451f;
+$status-alert-bg: #f7e5dd;
+$status-alert-border: #e0a88f;
+$status-alert-strong: #e0742f;  // acento de urgencia (banner, borde de tarjeta)
+
+// "Outside the optimal range but not urgent": the state that keeps high potassium from painting
+// the same as adequate.
+$status-neutral: #5c6152;
+$status-neutral-bg: #eceef0;
+$status-neutral-border: #d6d9d2;
+
+// ---------------------------------------------------------------------------
+// Axis 2 · Device state  (technical fact, NOT judgement)
+// ---------------------------------------------------------------------------
+// Never uses the severity terracotta: a silent hub is not a crop problem.
+$device-active: #3a7d52;
+$device-silent: #9a6b12;
+$device-unassigned: #9aa2ac;
+
+// ---------------------------------------------------------------------------
+// Axis 3 · Crop stage  (categorical, no judgement)
+// ---------------------------------------------------------------------------
+// Neutral on purpose: no stage is "good" or "bad". The stage's illustration tells them apart, not
+// the colour.
+$stage-fg: $text-body;
+$stage-border: $border-color;
+
+// ---------------------------------------------------------------------------
+// Axis 4 · Chart series identity  (arbitrary)
+// ---------------------------------------------------------------------------
+// Only tells one line from another. Means nothing good or bad.
+$series-n: #08979c;
+$series-p: #531dab;
+$series-k: #c41d7f;
+$series-rain: #1d6fa8;
+
+// Legacy aliases: kept so the files that still use them do not break.
+$success-color: $status-ok;
+$warning-color: $status-warning;
+$error-color: $status-alert;
+
+// ---------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------
+// The families are self-hosted in `fonts.scss`. Serif for verdicts and large figures (read once
+// to decide); sans for the rest of the interface.
+$font-family-display: 'Spectral', Georgia, 'Times New Roman', serif;
+$font-family-base: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  'Helvetica Neue', Arial, sans-serif;
+$font-family-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+// An EIGHT-step scale. A set of arbitrary sizes is not a scale, so the type sizes are confined
+// to these eight steps.
+$font-size-xs: 11px;            // overline, micro-texto
+$font-size-sm: 12.5px;          // secundario, meta
+$font-size-base: 14px;          // body (the most-used size)
+$font-size-lg: 16px;            // cuerpo destacado
+$font-size-card-title: 18px;    // card title
+$font-size-section: 22px;       // section title
+$font-size-page-title: 28px;    // screen title
+$font-size-display: 36px;       // veredicto, cifra grande
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-black: 800;
+
+$line-height-tight: 1.25;
+$line-height-base: 1.55;
+
+$tracking-overline: 0.1em;      // for uppercase labels
+
+// ---------------------------------------------------------------------------
+// Espaciado
+// ---------------------------------------------------------------------------
 $spacing-xs: 8px;
 $spacing-sm: 16px;
 $spacing-md: 24px;
 $spacing-lg: 32px;
 $spacing-xl: 48px;
 
-// Border Radius
-$border-radius-sm: 6px;
-$border-radius-md: 8px;
-$border-radius-lg: 12px;
+// ---------------------------------------------------------------------------
+// Shape and elevation
+// ---------------------------------------------------------------------------
+$border-radius-sm: 10px;
+$border-radius-md: 12px;
+$border-radius-lg: 14px;
+$border-radius-xl: 18px;
+$border-radius-pill: 999px;
 
-// Shadows
-$shadow-light: 0 2px 8px rgba(0, 0, 0, 0.06);
-$shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.1);
-$shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.12);
+$shadow-light: 0 10px 26px -18px rgba(30, 35, 20, 0.35);
+$shadow-medium: 0 14px 34px -20px rgba(30, 35, 20, 0.4);
+$shadow-heavy: 0 40px 80px -30px rgba(30, 35, 20, 0.5);
+
+// Thickness of a card's state accent border.
+$accent-bar-width: 4px;
+
+// Minimum touch target. Used in the field, with dirty hands and in full sun.
+$touch-target: 44px;

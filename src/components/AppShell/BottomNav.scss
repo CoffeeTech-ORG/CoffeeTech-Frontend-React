@@ -1,0 +1,53 @@
+@import '../../styles/variables';
+
+// Mobile only. On desktop the tabs live in the top bar, where the mouse reaches any point just as
+// easily and the footer would be wasted space.
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90; // below antd's dialogs, above the content
+    display: flex;
+    // Respects the home-gesture strip on phones with no physical button: without it the last tab
+    // sits under the system bar.
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: rgba(244, 241, 234, 0.94);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid $border-subtle;
+
+    &__tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      // 56 px tall: the app's primary touch target on mobile, so more generous than the 44
+      // minimum.
+      min-height: 56px;
+      padding: 6px 4px;
+      border-radius: $border-radius-sm;
+      color: $text-muted;
+      text-decoration: none;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      text-align: center;
+
+      &.is-active {
+        color: $primary-color;
+        font-weight: $font-weight-semibold;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $primary-color;
+        outline-offset: -2px;
+      }
+    }
+  }
+}

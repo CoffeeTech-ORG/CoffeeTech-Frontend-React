@@ -1,8 +1,21 @@
-import { Sensor, SensorFormData } from '../types/sensor.types';
+/**
+ * The Hub inventory.
+ *
+ * Points at `/devices` because `/sensors` no longer exists: `Sensor` and `Device` were the same hub in
+ * two tables and were merged into `devices`. See `merge_sensors_into_devices.sql` in the backend.
+ *
+ * The view is READ-ONLY by design: hubs register themselves on their first report
+ * (`POST /devices/report`, called by the Raspberry Pi). There is no `createSensor`, `updateSensor` or
+ * `deleteSensor` -- the backend never had `PUT` or `DELETE` routes for them.
+ *
+ * The only thing operable from the interface is which section each hub is assigned to, and that lives
+ * in the assignments flow.
+ */
+import { Sensor } from '../types/sensor.types';
 import { fetchWithAuth } from './api.client';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_SERVICE_URL;
-const SENSORS_API_BASE = `${API_BASE_URL}/sensors`;
+const DEVICES_API_BASE = `${API_BASE_URL}/devices`;
 
 export class SensorService {
   private static instance: SensorService;
@@ -16,59 +29,18 @@ export class SensorService {
 
   async getAllSensors(): Promise<Sensor[]> {
     try {
-      console.log('Fetching sensors from:', SENSORS_API_BASE);
-      const sensors: Sensor[] = await fetchWithAuth(SENSORS_API_BASE);
-      console.log('Sensors fetched successfully:', sensors);
-      return sensors;
+      return await fetchWithAuth(DEVICES_API_BASE);
     } catch (error) {
-      console.error('Error fetching sensors:', error);
+      console.error('Error al cargar los hubs:', error);
       throw error;
     }
   }
 
   async getSensorById(id: number): Promise<Sensor> {
     try {
-      const sensor: Sensor = await fetchWithAuth(`${SENSORS_API_BASE}/${id}`);
-      return sensor;
+      return await fetchWithAuth(`${DEVICES_API_BASE}/${id}`);
     } catch (error) {
-      console.error('Error fetching sensor:', error);
-      throw error;
-    }
-  }
-
-  async createSensor(sensorData: SensorFormData): Promise<Sensor> {
-    try {
-      const sensor: Sensor = await fetchWithAuth(SENSORS_API_BASE, {
-        method: 'POST',
-        body: JSON.stringify(sensorData),
-      });
-      return sensor;
-    } catch (error) {
-      console.error('Error creating sensor:', error);
-      throw error;
-    }
-  }
-
-  async updateSensor(id: number, sensorData: Partial<SensorFormData>): Promise<Sensor> {
-    try {
-      const sensor: Sensor = await fetchWithAuth(`${SENSORS_API_BASE}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(sensorData),
-      });
-      return sensor;
-    } catch (error) {
-      console.error('Error updating sensor:', error);
-      throw error;
-    }
-  }
-
-  async deleteSensor(id: number): Promise<void> {
-    try {
-      await fetchWithAuth(`${SENSORS_API_BASE}/${id}`, {
-        method: 'DELETE',
-      });
-    } catch (error) {
-      console.error('Error deleting sensor:', error);
+      console.error('Error al cargar el hub:', error);
       throw error;
     }
   }

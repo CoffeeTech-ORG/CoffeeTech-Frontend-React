@@ -14,7 +14,6 @@ export interface Assignment {
 
 export interface Device {
   id: number | string;
-  dataRecordId?: number | string | null;
   deviceHubId?: number | string | null;
   [key: string]: any;
 }
@@ -38,7 +37,7 @@ export interface DataRecord {
   airHumidityPercent?: number | null;
   celciusGradeTemperature?: number | null; // API spelling variant
   soilHumidityPercent?: number | null;
-  precipitationDetected?: boolean | number | string; // Can be 0 or 1 from API, 0 = Sí llovió, 1 = No llovió
+  precipitationDetected?: boolean | number | string; // Can be 0 or 1 from API, 1 = rained, 0 = did not rain
   nitrogen?: number | null;
   phosphorus?: number | null;
   potassium?: number | null;
@@ -53,6 +52,24 @@ export interface Recommendation {
   description?: string;
   recommendationDescription?: string;
   [key: string]: any;
+}
+
+// Agronomic log: one record per event in the crop calendar. Append-only -- the cycle repeats by
+// recording NEW events, not by reactivating earlier ones. It stores only the date (no product
+// catalogue or laboratory values).
+export type AgronomicEventType =
+  | 'flowering'
+  | 'fertilization'
+  | 'harvest_end'
+  | 'soil_sampling'
+  | 'liming';
+
+export interface AgronomicEvent {
+  id: number;
+  sectionId: number;
+  eventType: AgronomicEventType;
+  eventDate: string;
+  notes?: string | null;
 }
 
 export interface ApiResponse<T = any> {

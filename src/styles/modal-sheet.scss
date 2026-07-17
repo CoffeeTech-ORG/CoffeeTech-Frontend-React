@@ -1,0 +1,59 @@
+@import './variables';
+
+// The dialogs, as a bottom sheet on mobile.
+//
+// A centred dialog is a desktop convention: it comes from having a mouse and a large window around it.
+// On a phone it leaves a box floating mid-screen with dead margins above and below, and -- what
+// matters -- puts the buttons in the vertical centre, the area the thumb reaches worst. The design
+// hand-off asks for it explicitly: "centred on desktop; bottom sheet on mobile".
+//
+// It goes in a global sheet and not in each modal because there are seven and the rule is the same in
+// all. Any new dialog inherits it without remembering to copy it.
+//
+// The breakpoint is the same 768 px the rest of the views use.
+@media (max-width: 768px) {
+  .ant-modal-root {
+    .ant-modal-wrap {
+      // Anchors to the bottom instead of centring. `top: auto` cancels the offset antd computes.
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .ant-modal {
+      top: auto;
+      max-width: 100%;
+      margin: 0;
+      padding-bottom: 0;
+      vertical-align: bottom;
+    }
+
+    .ant-modal-content {
+      position: relative;
+      // Rounded corners only on top: at the bottom the sheet meets the screen edge, and rounding
+      // against the edge leaves two background wedges that read as a fault.
+      border-radius: 22px 22px 0 0;
+      // Height cap: without it the sheet can run off screen and hide its own buttons. The 82 % is
+      // the prototype's, and it leaves a strip of what is behind visible, which is what tells a sheet
+      // from a screen change.
+      max-height: 82%;
+      overflow-y: auto;
+      padding-top: 30px; // room for the handle
+      padding-bottom: 20px;
+    }
+
+    // Drag handle. It is what says this closes by pulling down; without it the sheet looks like a
+    // new screen stuck to the bottom edge. A pseudo-element so the seven modals inherit it without
+    // touching their markup.
+    .ant-modal-content::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 38px;
+      height: 4px;
+      margin-left: -19px;
+      background: rgba(30, 35, 20, 0.2);
+      border-radius: 2px;
+    }
+  }
+}

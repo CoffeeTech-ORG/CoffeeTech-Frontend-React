@@ -12,7 +12,7 @@ export interface ReportData {
   celciusGradeTemperature?: number | null; // Old spelling variant (with 'c')
   celsiusGradeTemperature?: number | null; // Correct spelling (with 's') - from backend
   soilHumidityPercent?: number | null;
-  precipitationDetected?: boolean | number | string; // 0 = Sí llovió, 1 = No llovió
+  precipitationDetected?: boolean | number | string; // 1 = rained, 0 = did not rain
   nitrogen?: number | null;
   phosphorus?: number | null;
   potassium?: number | null;
@@ -26,20 +26,17 @@ export interface ReportFilters {
   dataType?: 'all' | 'environmental' | 'soil' | 'nutrients';
 }
 
-export interface ReportSummary {
-  totalDataPoints: number;
-  averageTemperature?: number;
-  averageAirHumidity?: number;
-  averageSoilHumidity?: number;
-  precipitationDays: number;
-  averageNitrogen?: number;
-  averagePhosphorus?: number;
-  averagePotassium?: number;
-  healthScore?: number;
-}
-
 export interface ChartDataPoint {
   timestamp: string;
+  /**
+   * The instant in milliseconds. The REAL X axis of the chart.
+   *
+   * With `date` -- an already-formatted string -- recharts spaced the points at equal intervals
+   * without looking at time: two days of readings visually filled the thirty of the requested range,
+   * and a week-long gap did not look like a gap.
+   */
+  t: number;
+  /** For the tooltip and labels only: readable, but no use for positioning. */
   date: string;
   temperature?: number;
   airHumidity?: number;
@@ -48,10 +45,4 @@ export interface ChartDataPoint {
   phosphorus?: number;
   potassium?: number;
   precipitation?: boolean | number;
-}
-
-export interface ReportExportOptions {
-  format: 'csv' | 'excel' | 'pdf';
-  includeCharts: boolean;
-  includeSummary: boolean;
 }
