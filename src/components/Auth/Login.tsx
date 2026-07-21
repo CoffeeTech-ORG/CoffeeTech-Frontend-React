@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import { Form, Input, Button, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
-import { Logo } from '../Logo/Logo';
+import { AuthLayout } from './AuthLayout';
 import './Auth.scss';
-
-const { Title, Text, Link } = Typography;
 
 interface LoginFormData {
   email: string;
@@ -32,8 +29,8 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
     try {
       await loginWithCredentials(values.email, values.password);
       message.success(t('auth.success.login'));
-      
-      // Redirigir al dashboard o a la página anterior
+
+      // Redirect to the dashboard or the previous page
       const from = location.state?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
@@ -45,71 +42,67 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack }) => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        {onBack && (
-          <button className="auth-back-btn" onClick={onBack}>
-            <ArrowLeft size={24} />
+    <AuthLayout
+      title={t('auth.login.welcome')}
+      subtitle={t('auth.login.lede')}
+      onBack={onBack}
+      footer={
+        <>
+          {t('auth.switch.register')}{' '}
+          <button type="button" className="auth__link" onClick={onSwitchToRegister}>
+            {t('auth.register.title')}
           </button>
-        )}
-        
-        <div className="auth-header">
-          <Logo size="large" />
-          <Title level={2} className="auth-title">{t('auth.login.title')}</Title>
-        </div>
-
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          className="auth-form"
+        </>
+      }
+    >
+      {/* Las etiquetas van SOBRE cada campo, como en el prototipo. Con sólo el marcador dentro,
+          el campo se queda mudo en cuanto empiezas a escribir. */}
+      <Form form={form} layout="vertical" onFinish={handleSubmit} className="auth__form">
+        <Form.Item
+          name="email"
+          label={t('auth.email')}
+          rules={[
+            { required: true, message: t('auth.validation.email') },
+            { type: 'email', message: t('auth.validation.email.valid') },
+          ]}
         >
-          <Form.Item
-            name="email"
-            rules={[
-              { required: true, message: t('auth.validation.email') },
-              { type: 'email', message: t('auth.validation.email.valid') }
-            ]}
+          <Input placeholder={t('auth.email.placeholder')} size="large" autoComplete="email" />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          label={t('auth.password')}
+          rules={[{ required: true, message: t('auth.validation.password') }]}
+        >
+          {/* `Input.Password` ya trae el ojo de ver la contraseña que pide el diseño. */}
+          <Input.Password
+            size="large"
+            autoComplete="current-password"
+          />
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: 0 }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="large"
+            loading={loading}
+            className="auth__submit"
           >
-            <Input
-              placeholder={t('auth.email')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
+            {t('auth.login.button')}
+          </Button>
+        </Form.Item>
 
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: t('auth.validation.password') }]}
-          >
-            <Input.Password
-              placeholder={t('auth.password')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              loading={loading}
-              className="auth-submit-btn"
-            >
-              {t('auth.login.button')}
-            </Button>
-          </Form.Item>
-        </Form>
-
-        <div className="auth-footer">
-          {/* <Link className="auth-link">Forgot Password?</Link> */}
-          <Text className="auth-switch">
-            {t('auth.switch.register')}{' '}
-            <Link onClick={onSwitchToRegister}>{t('auth.register.title')}</Link>
-          </Text>
-        </div>
-      </div>
-    </div>
+        {/* Debajo del botón, no encajado entre la contraseña y él: ahí apretaba el formulario y
+            partía la secuencia «escribe · escribe · entra».
+            Se ve, dice que aún no está, y no se puede pulsar —tampoco con teclado, porque es un
+            <span> y no un enlace. El backend no tiene ninguna ruta de recuperación; ofrecer el
+            enlace sería abrir una puerta que no lleva a ningún sitio, y esconderlo borraría que
+            está previsto. Mismo trato que la exportación a PDF en Reportes. */}
+        <span className="auth__forgot" aria-disabled="true">
+          {t('auth.forgot')} <em>{t('common.soon')}</em>
+        </span>
+      </Form>
+    </AuthLayout>
   );
 };

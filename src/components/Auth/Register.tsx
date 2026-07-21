@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message, Segmented } from 'antd';
-import { ArrowLeft, Users, UserCheck } from 'lucide-react';
+import { Form, Input, Button, message, Segmented } from 'antd';
+import { Users, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
-import { Logo } from '../Logo/Logo';
+import { AuthLayout } from './AuthLayout';
 import './Auth.scss';
-
-const { Title, Text, Link } = Typography;
 
 interface RegisterFormData {
   username: string;
@@ -42,7 +40,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
       // Redirect to dashboard after successful registration
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
-      // Log completo para debugging (solo visible en consola del navegador)
+      // Full log for debugging (browser console only)
       console.error('Registration error:', {
         error,
         response: error?.response,
@@ -82,138 +80,122 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onBack }) =
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        {onBack && (
-          <button className="auth-back-btn" onClick={onBack}>
-            <ArrowLeft size={24} />
+    <AuthLayout
+      title={t('auth.register.heading')}
+      subtitle={t('auth.register.lede')}
+      onBack={onBack}
+      footer={
+        <>
+          {t('auth.switch.login')}{' '}
+          <button type="button" className="auth__link" onClick={onSwitchToLogin}>
+            {t('auth.login.title')}
           </button>
-        )}
-        
-        <div className="auth-header">
-          <Logo size="large" />
-          <Title level={2} className="auth-title">{t('auth.register.title')}</Title>
-        </div>
-
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          className="auth-form"
-          initialValues={{ rolId: 2 }}
+        </>
+      }
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="auth__form"
+        initialValues={{ rolId: 2 }}
+      >
+        <Form.Item
+          name="rolId"
+          label={t('auth.role')}
+          rules={[{ required: true, message: t('auth.validation.role') }]}
         >
-
-          <Form.Item
-            name="rolId"
-            rules={[{ required: true, message: t('auth.validation.role') }]}
-          >
-            <Segmented
-              size="large"
-              options={[
-                {
-                  label: (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Users size={16} />
-                      <span>{t('auth.manager')}</span>
-                    </div>
-                  ),
-                  value: 1,
-                },
-                {
-                  label: (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <UserCheck size={16} />
-                      <span>{t('auth.farmer')}</span>
-                    </div>
-                  ),
-                  value: 2,
-                },
-              ]}
-              className="role-selector"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="username"
-            rules={[{ required: true, message: t('auth.validation.username') }]}
-          >
-            <Input
-              placeholder={t('auth.username')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            rules={[
-              { required: true, message: t('auth.validation.email') },
-              { type: 'email', message: t('auth.validation.email.valid') }
+          <Segmented
+            size="large"
+            options={[
+              {
+                label: (
+                  <>
+                    <Users size={16} />
+                    <span>{t('auth.manager')}</span>
+                  </>
+                ),
+                value: 1,
+              },
+              {
+                label: (
+                  <>
+                    <UserCheck size={16} />
+                    <span>{t('auth.farmer')}</span>
+                  </>
+                ),
+                value: 2,
+              },
             ]}
+            className="auth__role"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="username"
+          label={t('auth.username')}
+          rules={[{ required: true, message: t('auth.validation.username') }]}
+        >
+          <Input placeholder={t('auth.username.placeholder')} size="large" autoComplete="username" />
+        </Form.Item>
+
+        <Form.Item
+          name="email"
+          label={t('auth.email')}
+          rules={[
+            { required: true, message: t('auth.validation.email') },
+            { type: 'email', message: t('auth.validation.email.valid') },
+          ]}
+        >
+          <Input placeholder={t('auth.email.placeholder')} size="large" autoComplete="email" />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          label={t('auth.password')}
+          rules={[
+            { required: true, message: t('auth.validation.password') },
+            { min: 6, message: t('auth.validation.password.min') },
+          ]}
+        >
+          <Input.Password size="large" autoComplete="new-password" />
+        </Form.Item>
+
+        <Form.Item
+          name="confirmPassword"
+          label={t('auth.confirmPassword')}
+          dependencies={['password']}
+          rules={[
+            { required: true, message: t('auth.validation.confirmPassword') },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('password') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error(t('auth.validation.passwords.match')));
+              },
+            }),
+          ]}
+        >
+          <Input.Password
+            placeholder={t('auth.confirmPassword.placeholder')}
+            size="large"
+            autoComplete="new-password"
+          />
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: 0 }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="large"
+            loading={loading}
+            className="auth__submit"
           >
-            <Input
-              placeholder={t('auth.email')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            rules={[
-              { required: true, message: t('auth.validation.password') },
-              { min: 6, message: t('auth.validation.password.min') }
-            ]}
-          >
-            <Input.Password
-              placeholder={t('auth.password')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            dependencies={['password']}
-            rules={[
-              { required: true, message: t('auth.validation.confirmPassword') },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error(t('auth.validation.passwords.match')));
-                },
-              }),
-            ]}
-          >
-            <Input.Password
-              placeholder={t('auth.confirmPassword')}
-              size="large"
-              className="auth-input"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              loading={loading}
-              className="auth-submit-btn"
-            >
-              {t('auth.register.button')}
-            </Button>
-          </Form.Item>
-        </Form>
-
-        <div className="auth-footer">
-          <Text className="auth-switch">
-            {t('auth.switch.login')}{' '}
-            <Link onClick={onSwitchToLogin}>{t('auth.login.title')}</Link>
-          </Text>
-        </div>
-      </div>
-    </div>
+            {t('auth.register.button')}
+          </Button>
+        </Form.Item>
+      </Form>
+    </AuthLayout>
   );
 };

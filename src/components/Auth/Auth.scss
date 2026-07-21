@@ -1,180 +1,352 @@
 @import '../../styles/variables.scss';
 
-.auth-container {
+// Sign in and register. Two columns, brand on the left, matched to the approved prototype: an
+// even grid, the brand panel with its three zones, and every field labelled -- unlabelled fields
+// are what leave half the screen blank with the form floating.
+.auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   min-height: 100vh;
   background: $background-light;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-md;
-}
 
-.auth-card {
-  background: $background-white;
-  border-radius: $border-radius-lg;
-  padding: $spacing-xl;
-  box-shadow: $shadow-medium;
-  width: 100%;
-  max-width: 400px;
-  position: relative;
-}
+  // -------- brand panel --------
+  // Two rows: identity at the top, the promise centred in the space left. `auto 1fr` with the
+  // promise centred in its row keeps the optical centre independent of the viewport height,
+  // without an empty third zone padding it out.
+  &__brand {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    padding: 48px;
+    color: $background-light;
+    background: linear-gradient(160deg, #2c4430, #{$primary-color-dark});
+  }
 
-.auth-back-btn {
-  position: absolute;
-  top: $spacing-md;
-  left: $spacing-md;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: $text-secondary;
-  padding: $spacing-xs;
-  border-radius: $border-radius-sm;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
+  &__promise {
+    align-self: center;
+    // The width does not grow with the viewport: at 2000 px the slogan would have half the
+    // screen empty to its right, and a headline line longer than this stops reading at a glance.
+    max-width: 30rem;
+  }
+
+  // Very faint diagonal stripes: break the flat gradient without asking for attention.
+  &__veil {
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    background: repeating-linear-gradient(
+      58deg,
+      transparent 0 30px,
+      rgba(255, 255, 255, 0.04) 30px 31px
+    );
+  }
+
+  // The two zones share a box: same width and left edge, centred in the column. Left-aligned,
+  // at 2000 px there are 472 px of empty green to the right of the slogan (the prototype is a fixed
+  // 1180 px window, where that case does not appear). Centred, the block stays in the middle as the
+  // screen grows instead of listing to one side.
+  &__identity,
+  &__promise {
+    position: relative; // above the veil
+    justify-self: center;
+    width: 100%;
+    max-width: 30rem;
+  }
+
+  // The name is cream over the gradient, not the grey of the logo leaf.
+  &__identity .logo__brand {
+    color: $background-light;
+  }
+
+  &__slogan {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: 38px; // off-scale on purpose: the app's only brand headline
+    font-weight: $font-weight-semibold;
+    line-height: 1.13;
+  }
+
+  &__pitch {
+    margin: 16px 0 0;
+    font-size: $font-size-lg;
+    line-height: 1.55;
+    color: rgba(244, 241, 234, 0.8);
+  }
+
+  // -------- form panel --------
+  &__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 60px;
+    background: $background-white;
+  }
+
+  &__lang {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 2;
+  }
+
+  &__back {
+    position: absolute;
+    top: 20px;
+    left: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $touch-target;
+    height: $touch-target;
+    color: $text-secondary;
+    background: none;
+    border: 0;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+
+    &:hover {
+      color: $text-primary;
+      background: $background-cream;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+
+  &__form-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 25rem;
+    margin: 0 auto;
+  }
+
+  &__intro {
+    margin: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
     color: $text-primary;
   }
-}
 
-.auth-header {
-  text-align: center;
-  margin-bottom: $spacing-lg;
-  
-  .logo {
-    justify-content: center;
-    margin-bottom: $spacing-md;
-  }
-}
-
-.auth-title {
-  color: $text-primary;
-  margin: 0 !important;
-  font-weight: 600;
-}
-
-.auth-form {
-  .ant-form-item {
-    margin-bottom: $spacing-md;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
-
-.auth-input {
-  border-radius: $border-radius-md;
-  
-  &.ant-input, 
-  &.ant-input-password {
-    &:focus,
-    &:hover {
-      border-color: $primary-color;
-    }
-  }
-}
-
-.auth-submit-btn {
-  width: 100%;
-  height: 48px;
-  background-color: $primary-color;
-  border-color: $primary-color;
-  border-radius: $border-radius-md;
-  font-weight: 600;
-  font-size: 16px;
-  
-  &:hover {
-    background-color: darken($primary-color, 10%);
-    border-color: darken($primary-color, 10%);
-  }
-}
-
-.auth-footer {
-  text-align: center;
-  margin-top: $spacing-lg;
-  
-  .auth-link,
-  .auth-switch .ant-typography-link {
-    color: $primary-color;
-    font-weight: 500;
-    
-    &:hover {
-      color: darken($primary-color, 10%);
-    }
-  }
-  
-  .auth-switch {
-    margin-top: $spacing-sm;
-    display: block;
+  &__subtitle {
+    margin: 4px 0 0;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
     color: $text-secondary;
   }
-}
 
-// Role selector styles
-.role-selector {
-  width: 100%;
-  height: 40px;
-  
-  .ant-segmented-item {
-    flex: 1;
+  // -------- campos --------
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+
+    // The label above each field: without it the fields are two mute boxes and the form does not
+    // fill its half of the screen.
+    .ant-form-item-label > label {
+      height: auto;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $text-secondary;
+
+      // antd marks required fields with a red asterisk; here they all are, so it would only add
+      // red noise to every label.
+      &::before,
+      &::after {
+        display: none !important;
+      }
+    }
+
+    // Only the OUTER control carries the height: setting it on the inner `<input>` too, the
+    // password field -- which antd wraps to hold the eye toggle -- adds its height plus the
+    // wrapper padding and ends at 60 px against the email's 44.
+    .ant-input-affix-wrapper,
+    .ant-form-item-control-input .ant-input:not(.ant-input-affix-wrapper .ant-input) {
+      min-height: $touch-target;
+      padding: 14px 15px;
+    }
+
+    .ant-input,
+    .ant-input-affix-wrapper {
+      font-size: $font-size-base;
+      border-radius: 12px;
+
+      &:hover,
+      &:focus,
+      &:focus-within {
+        border-color: $primary-color;
+      }
+    }
+  }
+
+  // Password recovery: shown, marked as not yet available, and not clickable. The backend has no
+  // recovery route (no forgot, reset or recover anywhere in the API), so a live link would lead to
+  // a door that does not open. Shown disabled to record that it is planned. Centred under the
+  // button, same weight as the footer: both are secondary exits and neither should compete with
+  // "Sign in".
+  &__forgot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-muted;
+    cursor: not-allowed;
+
+    em {
+      padding: 1px 7px;
+      font-size: $font-size-xs;
+      font-style: normal;
+      color: $status-warning;
+      background: $status-warning-bg;
+      border-radius: $border-radius-pill;
+    }
+  }
+
+  &__submit {
+    width: 100%;
+    height: auto;
+    padding: 15px;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    border-radius: 12px;
+    background-color: $primary-color;
+    border-color: $primary-color;
+
+    &:hover,
+    &:focus {
+      background-color: $primary-color-dark !important;
+      border-color: $primary-color-dark !important;
+    }
+  }
+
+  // -------- footer --------
+  // Right under the button. At the bottom of the screen it sits far from what the user just
+  // looked at.
+  &__footer {
+    margin: 0;
+    font-size: $font-size-base;
+    color: $text-secondary;
     text-align: center;
-    height: 40px;
-    
-    .ant-segmented-item-label {
-      width: 100%;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 0 16px;
-      font-weight: 500;
-      
-      > div {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+  }
+
+  &__link {
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: $font-weight-bold;
+    color: $status-ok;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: $primary-color;
+      text-decoration: underline;
     }
-    
-    &.ant-segmented-item-selected {
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+  }
+
+  // -------- selector de rol (registro) --------
+  &__role {
+    width: 100%;
+
+    .ant-segmented-item {
+      flex: 1;
+      text-align: center;
+    }
+
+    .ant-segmented-item-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: $touch-target;
+      padding: 0 12px;
+      font-weight: $font-weight-medium;
+    }
+
+    .ant-segmented-item-selected {
       background-color: $primary-color;
-      color: white;
-      
+
       .ant-segmented-item-label {
-        color: white;
+        color: $background-light;
       }
     }
   }
 }
 
-// Responsive design
-@media (max-width: 480px) {
-  .auth-container {
-    padding: $spacing-sm;
-  }
-  
-  .auth-card {
-    padding: $spacing-md;
-  }
-  
-  .role-selector {
-    height: 40px;
-    
-    .ant-segmented-item {
-      height: 40px;
-      
-      .ant-segmented-item-label {
-        height: 40px;
-        padding: 0 12px;
-        font-size: 14px;
-        
-        > div {
-          gap: 6px;
-        }
-      }
+// One column. The breakpoint is `AUTH_STACKED` in `hooks/useMediaQuery`, which also decides which
+// panel mounts the language selector: if the two numbers diverge, it lands in the wrong panel
+// between 768 and 900 px.
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+
+    // A strip rather than half the screen: stacked, half a gradient would push the form out of
+    // view. No elastic row, because there is no space to centre.
+    &__brand {
+      grid-template-rows: auto auto;
+      padding: 48px 26px 32px;
+    }
+
+    &__promise {
+      align-self: start;
+      max-width: none;
+    }
+
+    &__slogan {
+      margin-top: 26px;
+      font-size: $font-size-display;
+    }
+
+    &__pitch {
+      margin-top: 10px;
+      font-size: $font-size-base;
+    }
+
+    // Inside the dark strip. On the white panel it floats in a corner with nothing to pair with.
+    &__lang--onBrand {
+      top: 16px;
+      right: 18px;
+    }
+
+    &__panel {
+      padding: 26px 26px 30px;
+    }
+
+    &__form-area {
+      max-width: none;
+      gap: 15px;
+    }
+
+    &__back {
+      top: 16px;
+      left: 12px;
     }
   }
 }
