@@ -1,0 +1,124 @@
+@import '../../styles/variables';
+
+.farm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: $touch-target;
+
+  &__filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  // Filter pill. Neutral at rest on purpose: colouring each chip by its axis would make the
+  // filter row compete with the list's own notices and put terracotta on screen for install work.
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 13px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-pill;
+    background: $background-white;
+    color: $text-secondary;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+    &:hover { border-color: $text-muted; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+
+    // Colour appears ONLY on the active chip, where it informs: it says which slice you are in.
+    &.is-active {
+      background: $primary-color;
+      border-color: $primary-color;
+      color: #fff;
+      font-weight: $font-weight-medium;
+
+      .farm-toolbar__count { color: rgba(255, 255, 255, 0.75); }
+    }
+
+    &.is-crop.is-active { background: $status-alert; border-color: $status-alert; }
+    &.is-device.is-active { background: $status-warning; border-color: $status-warning; }
+    &.is-setup.is-active { background: $status-neutral; border-color: $status-neutral; }
+    &.is-ok.is-active { background: $status-ok; border-color: $status-ok; }
+  }
+
+  &__count {
+    font-family: $font-family-mono;
+    font-size: $font-size-xs;
+    color: $text-muted;
+  }
+
+  &__search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $touch-target;
+    height: $touch-target;
+    flex: none;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    background: $background-white;
+    color: $text-secondary;
+    cursor: pointer;
+
+    &:hover { border-color: $text-muted; color: $text-primary; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+  }
+
+  // Open, it takes the whole row: searching and filtering are not done at once, and sharing the
+  // row would leave the field too narrow for a farm name.
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    height: $touch-target;
+    padding: 0 12px;
+    border: 1px solid $primary-color;
+    border-radius: $border-radius-sm;
+    background: $background-white;
+    color: $text-muted;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: $font-size-base;
+    color: $text-primary;
+
+    // Removes the native `type=search` "x": there is already a close button, and both together
+    // make it unclear which clears the text and which closes the search.
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border: none;
+    border-radius: $border-radius-sm;
+    background: transparent;
+    color: $text-secondary;
+    cursor: pointer;
+
+    &:hover { background: $background-light; color: $text-primary; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 1px; }
+  }
+}

@@ -1,37 +1,47 @@
+import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Hook personalizado para determinar el endpoint correcto de farms basado en el rol del usuario
- * 
- * Lógica de negocio:
- * - Role 1 (Manager): usa /api/v1/farms - puede ver todas las farms del sistema
- * - Role 2 (User): usa /api/v1/users/{id}/farms - solo puede ver sus propias farms
- * 
- * Este hook se usa internamente por useFarms() para determinar el endpoint dinámico
+ * Picks the right farms endpoint for the user's role:
+ * - Role 1 (Manager): /api/v1/farms -- every farm in the system.
+ * - Role 2 (User): /api/v1/users/{id}/farms -- only their own.
+ *
+ * Used internally by useFarms().
  */
 export const useFarmsEndpoint = () => {
   const { user } = useAuth();
 
-  const getFarmsEndpoint = (): string => {
+  /**
+   * `useCallback` is required here, not an optimisation.
+   *
+   * Unmemoized, this function changes identity on every render. `useFarms` uses it as a dependency of
+   * `getFarms`, itself a dependency of the effects that load data: the whole chain invalidates on
+   * every render and the effect re-requests, which causes another render. Observed result: `GET
+   * /farms` in an infinite loop against the backend.
+   *
+   * It was latent because the earlier code used `useEffect(..., [])` with an empty list, which ignores
+   * the instability at the cost of never reacting to changes.
+   */
+  const getFarmsEndpoint = useCallback((): string => {
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    // Role 1 = Manager, puede acceder a todas las farms
+    // Role 1 = Manager, can access every farm.
     if (user.role.id === 1) {
       return '/farms';
     }
-    
-    // Role 2 = User, solo puede acceder a sus farms
+
+    // Role 2 = User, can only access their own farms.
     if (user.role.id === 2) {
       // return `/users/${user.id}/farms`;
       return '/farms';
     }
 
-    // Fallback para otros roles (por defecto usar endpoint de user específico)
+    // Fallback for other roles (default to the user-specific endpoint).
     // return `/users/${user.id}/farms`;
     return '/farms';
-  };
+  }, [user]);
 
   const isManager = user?.role.id === 1;
   const isUser = user?.role.id === 2;

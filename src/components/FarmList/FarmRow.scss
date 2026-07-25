@@ -1,0 +1,150 @@
+@import '../../styles/variables';
+
+.farm-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  // 56 px of usable height: the whole row is the touch target, so no separate button is needed
+  // to open the farm.
+  min-height: 56px;
+  padding: 12px 14px;
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-left: 3px solid transparent;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: $border-color;
+    box-shadow: $shadow-light;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+
+  // The rule and the dot follow the problem's axis. See `statusTokens.ts`.
+  &.is-crop {
+    border-left-color: $status-alert-strong;
+    .farm-row__dot { background: $status-alert-strong; }
+  }
+  &.is-device {
+    border-left-color: $status-warning;
+    .farm-row__dot { background: $status-warning; }
+  }
+  &.is-setup {
+    border-left-color: $device-unassigned;
+    .farm-row__dot { background: $device-unassigned; }
+  }
+  &.is-ok {
+    border-left-color: $status-ok;
+    .farm-row__dot { background: $status-ok; }
+  }
+
+  &__main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: $border-radius-pill;
+    flex: none;
+  }
+
+  &__name {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Wraps rather than truncates. The line ends with "Última lectura: hace 3 días", which says
+  // HOW LONG the equipment has been silent -- exactly the datum that put the farm in this group.
+  //
+  // Three lines, not two: measured on "San Ignacio, Perú · 1450 m · Última lectura: hace 4 días",
+  // the longest line real data produces, two are needed up to 1280 px and three at the minimum
+  // width with two columns. The cap stays so an absurd location cannot stretch the row endlessly.
+  &__detail {
+    margin: 2px 0 0 16px;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__aside {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+  }
+
+  // The state chip moved to `FarmStateChip.scss`, shared with the map card.
+
+  // Action, not notice: no coordinate means no weather and no map, and it can be fixed here.
+  &__locate {
+    height: 32px;
+    padding: 0 14px;
+    border: 1px dashed $status-warning-border;
+    border-radius: $border-radius-pill;
+    background: $status-warning-bg;
+    color: $status-warning;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { background: darken($status-warning-bg, 3%); }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+  }
+
+  &__go {
+    color: $text-muted;
+    flex: none;
+  }
+
+  // Quiet mark for an unlocated farm that also has another problem: does not compete with the
+  // main chip, but records that it is off the map.
+  &__badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: $text-muted;
+    display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .farm-row {
+    // On a narrow screen the detail and the state do not fit on one line.
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    &__aside {
+      justify-content: flex-start;
+      margin-left: 16px;
+    }
+
+    &__go {
+      margin-left: auto;
+    }
+  }
+}

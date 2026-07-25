@@ -2,48 +2,39 @@ import { useCallback } from 'react';
 import { api } from '../services/api.service';
 import { useFarmsEndpoint } from './useFarmsEndpoint';
 
-export interface Farm {
-  id: string;
-  name: string;
-  location: string;
-  altitude: number;
-  healthPercentage: number;
-  status: 'healthy' | 'warning' | 'critical';
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-}
+/*
+ * These types re-export the single definition in `farms.service` instead of duplicating it here word
+ * for word. Two definitions of the same concept mean fixing one leaves the other lying: adding
+ * coordinates to `Farm` had TypeScript flag the Dashboard mixing both.
+ */
+import type { Farm, Section, LocationPrecision } from '../services/farms.service';
+import { geoJsonToRing } from '../utils/geoBoundary';
 
-export interface WeatherData {
-  cityName: string;
-  temperature: number;
-  mainCondition: string;
-  realFeel: number;
-  date: string;
-  location: string;
-  condition: string;
-}
-
-export interface Section {
-  id: string;
-  name: string;
-  farmId: string;
-  type: string; // Backend returns "Plántula", "Floración", etc.
-  growthStage?: 'plantula' | 'vegetativo' | 'floracion' | 'fructificacion' | 'maduracion' | 'cosecha'; // Optional for backwards compatibility
-  size: number; // in hectares or area unit
-  healthPercentage: number;
-  status: 'healthy' | 'warning' | 'critical';
-  lastUpdate: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-}
+export type { Farm, Section, LocationPrecision };
 
 /**
- * Hook personalizado para manejar operaciones de farms con endpoints dinámicos
- * basados en el rol del usuario
+ * The backend sends `id` as a number; the app-wide `Farm` type declares it `string`, and 52 places
+ * treat it as such (`parseInt(farm.id, 10)`, React keys, comparisons).
+ *
+ * Normalising here, at the boundary, keeps the declared type from lying. Without it, `f.id ===
+ * idFromUrl` is `2 === '2'` -> false: what broke the weather's farm selector, which always fell back
+ * to the first, and what would break routing, since URL params are always text.
+ */
+const normalizeFarm = (raw: any): Farm => ({
+  ...raw,
+  id: String(raw.id),
+  // The backend sends it as GeoJSON (text or object); the app wants it as `[lat, lng]`.
+  boundary: geoJsonToRing(raw.boundary)
+});
+const normalizeSection = (raw: any): Section => ({
+  ...raw,
+  id: String(raw.id),
+  farmId: String(raw.farmId)
+});
+
+
+/**
+ * Handles farm operations against endpoints that depend on the user's role.
  */
 export const useFarms = () => {
   const { getFarmsEndpoint, isManager } = useFarmsEndpoint();
@@ -52,7 +43,7 @@ export const useFarms = () => {
     try {
       const endpoint = getFarmsEndpoint();
       const response = await api.get(endpoint);
-      return response.data;
+      return (response.data || []).map(normalizeFarm);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch farms');
     }
@@ -61,7 +52,7 @@ export const useFarms = () => {
   const getFarmsByUser = useCallback(async (userId: string): Promise<Farm[]> => {
     try {
       const response = await api.get(`/users/${userId}/farms`);
-      return response.data;
+      return (response.data || []).map(normalizeFarm);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch user farms');
     }
@@ -70,16 +61,10 @@ export const useFarms = () => {
   const getFarmSections = useCallback(async (farmId: string): Promise<Section[]> => {
     try {
       const response = await api.get(`/farms/${farmId}/sections`);
-      return response.data;
+      return (response.data || []).map(normalizeSection);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch farm sections');
     }
-  }, []);
-
-  const getWeatherData = useCallback(async (): Promise<WeatherData> => {
-    // Use the farms service which now connects to OpenWeatherMap API
-    const { farmsService } = await import('../services/farms.service');
-    return await farmsService.getWeatherData();
   }, []);
 
   const createSection = useCallback(async (
@@ -115,7 +100,6 @@ export const useFarms = () => {
     getFarms,
     getFarmsByUser,
     getFarmSections,
-    getWeatherData,
     createSection,
     isManager,
   };

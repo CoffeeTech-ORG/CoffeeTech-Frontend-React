@@ -1,0 +1,93 @@
+@import '../../styles/variables';
+
+.map-view {
+  position: relative;
+  width: 100%;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+  border: 1px solid $border-color;
+
+  // Contains Leaflet's internal stacking. Its CONTROLS -- attribution and zoom buttons -- go to
+  // z-index 1000, and `.leaflet-container` does not create a stacking context on its own, so those
+  // 1000 competed at the document root: scrolling on mobile drew the attribution over the fixed nav
+  // bar (z-index 90). Measured with `elementFromPoint` over the bar: without this line it returns
+  // `.leaflet-control-attribution`.
+  isolation: isolate;
+
+  &__canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  // Layer switch floating over the map. Top right, where it covers neither the pin nor the
+  // attribution (which is required and sits at the bottom).
+  &__layers {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 500; // above the tiles, below antd's dialogs
+    display: flex;
+    background: $background-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+    box-shadow: $shadow-light;
+  }
+
+  &__layer {
+    border: none;
+    background: transparent;
+    // 32 px and not 44: a secondary control, and space over the map is scarce. The large touch
+    // target is reserved for what decides something (GPS, save).
+    height: 32px;
+    padding: 0 11px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    cursor: pointer;
+
+    &:hover {
+      background: $background-light;
+      color: $text-primary;
+    }
+
+    &.is-active {
+      background: $primary-color;
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// Labels out of painting while the map moves. See `HideLabelsWhileMoving` in `MapView.tsx` for the
+// measurements behind it.
+//
+// Selected by POSITION and not by class because `react-leaflet` does not pass `className` to the
+// layer: checked in the DOM, Leaflet left `class="leaflet-layer "` with the suffix empty, so the rule
+// matched nothing and the fix was pure appearance.
+//
+// The first layer is always the background image -- it mounts before the labels and Leaflet adds the
+// containers in mount order -- and it is the one that must follow the finger: freeze it and it stops
+// looking like you are dragging the map. In street mode there is only one layer, so this selector
+// matches nothing and changes nothing there.
+//
+// `visibility` and not `display`: toggling `display` forces a relayout on every start and stop of the
+// gesture, which is exactly the moment being made cheaper.
+.leaflet-container.is-moving .leaflet-tile-pane .leaflet-layer:not(:first-child) {
+  visibility: hidden;
+}
+
+// Attribution is a licence requirement of OpenStreetMap and Esri: it can be laid out, not
+// hidden.
+.map-view .leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.82);
+
+  a {
+    color: $primary-color;
+  }
+}

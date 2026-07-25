@@ -1,0 +1,201 @@
+@import '../../styles/variables';
+
+// Dedicated surface for drawing the boundary. Above antd's modals (1000) so that, opened from the
+// create/edit farm modal, it sits in front.
+.boundary-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 24, 16, 0.55);
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 960px;
+    height: 100%;
+    max-height: 720px;
+    background: $background-white;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -20px rgba(20, 24, 16, 0.6);
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid $border-subtle;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  &__hint {
+    margin: 4px 0 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__close {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: $border-radius-sm;
+    background: transparent;
+    color: $text-secondary;
+    cursor: pointer;
+
+    &:hover { background: $background-light; color: $text-primary; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: -2px; }
+  }
+
+  // The map takes all the available height: it is where the work happens.
+  &__map {
+    flex: 1;
+    min-height: 0;
+
+    .map-view { height: 100%; }
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-top: 1px solid $border-subtle;
+    flex-wrap: wrap;
+  }
+
+  // The area, large: the reward and the drawing-error detector.
+  &__area {
+    display: flex;
+    flex-direction: column;
+    min-width: 96px;
+  }
+
+  &__area-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: $tracking-overline;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__area-value {
+    font-family: $font-family-display;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  &__tools {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: $touch-target;
+    padding: 0 14px;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    background: $background-white;
+    color: $text-secondary;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { border-color: $text-muted; color: $text-primary; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+    &:disabled { opacity: 0.45; cursor: default; }
+
+    // Closing the polygon is the action that moves the drawing forward, so it takes the brand
+    // green to stand out among the other tools.
+    &.is-finish {
+      border-color: $primary-color;
+      background: $primary-color;
+      color: #fff;
+
+      &:hover { background: $primary-color-dark; border-color: $primary-color-dark; color: #fff; }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: $touch-target;
+    padding: 0 20px;
+    border-radius: $border-radius-sm;
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+
+    &.is-ghost {
+      border: 1px solid $border-color;
+      background: $background-white;
+      color: $text-secondary;
+      &:hover { background: $background-light; }
+    }
+
+    &.is-primary {
+      border: none;
+      background: $primary-color;
+      color: #fff;
+      &:hover:not(:disabled) { background: $primary-color-dark; }
+      &:disabled { opacity: 0.5; cursor: default; }
+    }
+  }
+}
+
+// On the phone, full screen: it is where the finger really draws, and every map pixel counts. No
+// borders or margins, and the controls stacked so they fit.
+@media (max-width: 640px) {
+  .boundary-editor {
+    padding: 0;
+
+    &__panel {
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+    }
+
+    &__foot {
+      gap: 12px;
+    }
+
+    &__actions {
+      width: 100%;
+      margin-left: 0;
+
+      .boundary-editor__btn { flex: 1; justify-content: center; }
+    }
+  }
+}

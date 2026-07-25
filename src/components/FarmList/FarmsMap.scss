@@ -1,0 +1,189 @@
+@import '../../styles/variables';
+
+.farms-map {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  // Fills the fixed column's height so the map uses what the viewport gives. `MapView` gets
+  // `height: 100%` and `min-height: 0` keeps it from overflowing.
+  min-height: 0;
+  height: 100%;
+
+  .map-view {
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  // Collapsed on mobile: the header becomes the button that opens it.
+  &__toggle {
+    width: 100%;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-height: $touch-target;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+
+    .farms-map__missing { margin-left: auto; }
+  }
+
+  &__chevron {
+    flex: none;
+    color: $text-secondary;
+    transition: transform 0.15s ease;
+  }
+
+  &.is-collapsed {
+    height: auto;
+
+    .farms-map__chevron { transform: rotate(-90deg); }
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-base;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  // What the map does NOT show. Dimmed but present: an omission, not an alarm.
+  &__missing {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+
+  // With no map to draw, the notice is its own size: stretched to the column it would be a huge
+  // near-empty box.
+  &--empty {
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 18px;
+    background: $background-white;
+    border: 1px dashed $border-color;
+    border-radius: $border-radius-lg;
+    color: $text-secondary;
+
+    p {
+      margin: 0;
+      font-size: $font-size-base;
+    }
+
+    svg {
+      flex: none;
+      color: $text-muted;
+    }
+  }
+}
+
+// Card opened by tapping a pin. Answers "which one and how is it" BEFORE navigating, instead of
+// hitting the right pin first time and finding out once inside.
+.farm-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  &__name {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+
+    svg { flex: none; color: $text-muted; }
+  }
+
+  &__go {
+    width: 100%;
+    height: 36px;
+    margin-top: 2px;
+    border: none;
+    border-radius: $border-radius-sm;
+    background: $primary-color;
+    color: #fff;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    &:hover { background: $primary-color-dark; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+  }
+}
+
+// Leaflet ships its own popup typography and margins; they are aligned with the app's.
+.leaflet-popup-content-wrapper {
+  border-radius: $border-radius-md;
+}
+
+.leaflet-popup-content {
+  margin: 14px 16px;
+  font-family: $font-family-base;
+
+  // Leaflet forces `.leaflet-popup-content p { margin: 17px 0 }`, whose two selectors BEAT
+  // `.farm-pin__name`'s `margin: 0` and open a gap between name and location. Overriding it here
+  // at the same specificity avoids scattering `!important`.
+  p { margin: 0; }
+}
+
+// Farm name on hover. Dark pill, set off from the pin: against the icon it reads as part of it
+// and covers the very point it marks.
+.leaflet-tooltip.farm-pin-label {
+  padding: 5px 11px;
+  border: none;
+  border-radius: $border-radius-pill;
+  background: $text-primary;
+  color: #fff;
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  box-shadow: $shadow-light;
+  white-space: nowrap;
+
+  // The arrow Leaflet draws toward the icon: tinted the same dark.
+  &.leaflet-tooltip-top::before { border-top-color: $text-primary; }
+  &.leaflet-tooltip-bottom::before { border-bottom-color: $text-primary; }
+  &.leaflet-tooltip-left::before { border-left-color: $text-primary; }
+  &.leaflet-tooltip-right::before { border-right-color: $text-primary; }
+}
+
+// Stacked, the map stops filling a column and takes the fixed height the component gives it.
+// Without this, `flex: 1` stretches it against the container height.
+@media (max-width: 1200px) {
+  .farms-map {
+    height: auto;
+
+    .map-view { flex: none; }
+  }
+}

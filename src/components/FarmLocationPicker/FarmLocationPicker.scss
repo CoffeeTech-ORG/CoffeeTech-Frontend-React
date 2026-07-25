@@ -1,0 +1,136 @@
+@import '../../styles/variables';
+
+.farm-location-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  // Invitation to draw the boundary, discreet: it is optional and must not compete with the main
+  // flow of placing the point. Once there is a boundary, it shows the area as a receipt.
+  &__boundary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    height: $touch-target;
+    padding: 0 16px;
+    border: 1px dashed $border-color;
+    border-radius: $border-radius-sm;
+    background: $background-white;
+    color: $primary-color;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: $background-light; border-color: $primary-color; }
+    &:focus-visible { outline: 2px solid $primary-color; outline-offset: 2px; }
+    &:disabled { opacity: 0.5; cursor: default; }
+  }
+
+  &__or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: $text-secondary;
+    font-size: $font-size-sm;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: $border-color;
+    }
+  }
+
+  // The farmer's path: one tap while standing on the land. Same visual weight as the search box,
+  // not a second-class alternative.
+  &__locate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 44px;
+    border: 1px solid $primary-color;
+    border-radius: 8px;
+    background: transparent;
+    color: $primary-color;
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: rgba(32, 178, 170, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $status-alert;
+  }
+
+  &__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: $font-size-sm;
+    line-height: 1.45;
+
+    svg {
+      flex: none;
+      margin-top: 1px;
+    }
+
+    // Amber, not red: an approximate point is not an error, it is a valid state you can save with.
+    // The weather already works; only the map stays imprecise.
+    &.is-approximate {
+      background: $status-warning-bg;
+      color: $status-warning;
+    }
+
+    &.is-exact {
+      background: $status-ok-bg;
+      color: $status-ok;
+    }
+  }
+
+  &__map {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid $border-color;
+  }
+
+  &__hint,
+  &__empty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__empty svg {
+    flex: none;
+  }
+}

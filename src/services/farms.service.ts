@@ -1,27 +1,54 @@
 import { api } from './api.service';
-import { weatherService } from './weather.service';
+import { ringToGeoJsonString } from '../utils/geoBoundary';
+
+/**
+ * How the farm's coordinate was obtained. Coffee farms rarely have a postal address: a search
+ * reaches the district at best, which can be kilometres from the plot. `APPROXIMATE` is enough for
+ * weather (the grids do not resolve those kilometres) but not for the map, which must warn.
+ */
+export type LocationPrecision = 'NONE' | 'APPROXIMATE' | 'EXACT';
 
 export interface Farm {
   id: string;
   name: string;
   location: string;
-  altitude: number;
-  healthPercentage: number;
-  status: 'healthy' | 'warning' | 'critical';
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
+  /**
+   * Metres above sea level, or `null` while unrecorded. Do NOT substitute 0: the engine picks an
+   * ALTITUDE BAND from this number, and 0 falls in the low band, the maximum-weight profile for
+   * rust and borer. With null the engine does not modulate and says so. Same as `latitude`.
+   */
+  altitude: number | null;
+  /**
+   * `null` means "where it is is not known yet". Do not substitute a default: an invented
+   * coordinate shows as convincingly as a real one.
+   */
+  latitude: number | null;
+  longitude: number | null;
+  locationPrecision: LocationPrecision;
+  /**
+   * Farm boundary as `[lat, lng]` vertices; `null` until drawn. Stored as GeoJSON on the backend
+   * (`[lng, lat]`, reversed), handled in Leaflet's order here. The area in hectares comes from it,
+   * which turns the engine's kg/ha advice into a concrete amount.
+   */
+  boundary: [number, number][] | null;
 }
 
-export interface WeatherData {
-  cityName: string;
-  temperature: number;
-  mainCondition: string;
-  realFeel: number;
-  date: string;
-  location: string;
-  condition: string;
+/*
+ * The backend contract is (Id, Name, Location, Altitude); it returns no health, status or
+ * coordinates field, so the type does not declare them.
+ */
+
+/**
+ * A period during which a hub was installed in a section. Null `removedAt` = open period, the hub
+ * is still there. Moving a hub does not rewrite the row: it closes the period and opens another,
+ * so earlier readings keep belonging to the plot they were taken in.
+ */
+export interface Assignment {
+  id: number;
+  sectionId: number;
+  deviceId: number;
+  installedAt: string;
+  removedAt: string | null;
 }
 
 export interface Section {
@@ -42,7 +69,6 @@ export interface Section {
 
 export interface Device {
   id: number;
-  dataRecordId: number;
   deviceHubId: string;
 }
 
@@ -74,36 +100,29 @@ export const farmsService = {
     }
   },
 
-  async getWeatherData(): Promise<WeatherData> {
-    try {
-      // Usar el servicio de clima real que consume la API de OpenWeatherMap
-      return await weatherService.getCurrentWeather();
-    } catch (error) {
-      console.error('Error fetching weather data, falling back to mock data:', error);
-      // Fallback a datos mock si falla la API
-      return {
-        cityName: 'Lima',
-        temperature: 20,
-        mainCondition: 'Clouds',
-        location: 'Lima, Peru',
-        condition: 'Partly Cloudy',
-        realFeel: 19,
-        date: new Date().toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }),
-      };
+  async updateFarm(
+    id: number,
+    data: {
+      name: string;
+      location: string;
+      altitude: number | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      locationPrecision?: LocationPrecision;
+      boundary?: [number, number][] | null;
     }
-  },
-
-  async updateFarm(id: number, data: { name: string; location: string; altitude: number }): Promise<Farm> {
+  ): Promise<Farm> {
     try {
       const response = await api.put(`/farms/${id}`, {
         id: id,
         name: data.name,
         location: data.location,
-        altitude: data.altitude
+        altitude: data.altitude,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+        locationPrecision: data.locationPrecision ?? 'NONE',
+        // GeoJSON as text, or null if there is no boundary yet.
+        boundary: ringToGeoJsonString(data.boundary)
       });
       return response.data;
     } catch (error: any) {
@@ -185,7 +204,6 @@ export const farmsService = {
       }
 
       const response = await api.post('/devices', {
-        dataRecordId: 0,
         deviceHubId: deviceHubId
       });
       return response.data;
@@ -199,6 +217,19 @@ export const farmsService = {
     }
   },
 
+  /**
+   * Closes an assignment's period: the hub stops measuring that section from now. Does NOT delete
+   * the row -- the backend marks it with `removedAt` so that period's readings keep belonging to
+   * this section; deleting it would orphan them in the reports.
+   */
+  async removeAssignment(assignmentId: number): Promise<void> {
+    try {
+      await api.delete(`/assignments/${assignmentId}`);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'No se pudo quitar el hub');
+    }
+  },
+
   async createAssignment(sectionId: number, deviceId: number): Promise<any> {
     try {
       const response = await api.post('/assignments', {
@@ -208,6 +239,31 @@ export const farmsService = {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to create assignment');
+    }
+  },
+
+  /**
+   * Every hub's install periods. The backend takes no per-device filter (`GET /assignments` and
+   * nothing more), so a hub's history is sliced client-side. At install scale -- a table that grows
+   * a row each time equipment is moved -- that is negligible; if it stops being so, the filter
+   * belongs in `AssignmentsController`, not here.
+   */
+  async listAssignments(): Promise<Assignment[]> {
+    try {
+      const response = await api.get('/assignments');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'No se pudo cargar el historial');
+    }
+  },
+
+  /** Every farm's sections. Used by the "assign to a section" picker. */
+  async listAllSections(): Promise<Section[]> {
+    try {
+      const response = await api.get('/sections');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'No se pudieron cargar las secciones');
     }
   },
 };

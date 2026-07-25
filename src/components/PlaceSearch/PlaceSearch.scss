@@ -1,0 +1,127 @@
+@import '../../styles/variables';
+
+.place-search {
+  position: relative;
+
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: $touch-target;
+    padding: 0 12px;
+    background: $background-white;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+
+    &:focus-within {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(36, 71, 45, 0.12);
+    }
+  }
+
+  &__icon {
+    color: $text-muted;
+    flex: none;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: none;
+    font-family: inherit;
+    font-size: $font-size-base;
+    color: $text-primary;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  &__spinner {
+    color: $text-muted;
+    flex: none;
+    animation: place-search-spin 0.9s linear infinite;
+  }
+
+  &__list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    // 1100 and not 1000: Leaflet's zoom controls (`.leaflet-top`) use exactly 1000, and on a tie
+    // the one later in the DOM wins -- the map. The suggestions ended up below the + and - buttons.
+    z-index: 1100;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-sm;
+    box-shadow: $shadow-medium;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  &__option {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    // 40 px: it is a quick-pick list, and at 44 fewer options fit without scrolling.
+    min-height: 40px;
+    padding: 9px 11px;
+    border: none;
+    border-radius: $border-radius-sm - 4px;
+    background: none;
+    font-family: inherit;
+    font-size: $font-size-base;
+    color: $text-body;
+    cursor: pointer;
+    line-height: 1.35;
+
+    &.is-highlighted {
+      background: $primary-color-soft;
+      color: $text-primary;
+    }
+  }
+
+  &__label {
+    min-width: 0;
+  }
+
+  // Place-size label. Dimmed: it informs to break ties, it does not compete with the name, which
+  // is what the user is reading.
+  &__kind {
+    flex: none;
+    font-size: $font-size-xs;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+  }
+
+  &__empty {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 1100; // same reason as the list
+    margin: 0;
+    padding: 11px;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-sm;
+    box-shadow: $shadow-light;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+}
+
+@keyframes place-search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,37 @@
+@import '../../styles/variables';
+
+// Split from `FarmRow.scss` to share with the map card. The four modifiers follow the axes in
+// `statusTokens.ts`: terracotta only for the crop, amber for the equipment, grey for what is
+// still to install, green for what is fine.
+.farm-state-chip {
+  font-size: $font-size-sm;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-pill;
+  padding: 2px 10px;
+  color: $text-secondary;
+  white-space: nowrap;
+
+  &.is-crop {
+    background: $status-alert-bg;
+    border-color: $status-alert-border;
+    color: $status-alert;
+    font-weight: $font-weight-semibold;
+  }
+  &.is-device {
+    background: $status-warning-bg;
+    border-color: $status-warning-border;
+    color: $status-warning;
+    font-weight: $font-weight-semibold;
+  }
+  // Grey: something left to install is not an alarm.
+  &.is-setup {
+    background: $status-neutral-bg;
+    border-color: $status-neutral-border;
+    color: $status-neutral;
+  }
+  &.is-ok {
+    background: $status-ok-bg;
+    border-color: $status-ok-border;
+    color: $status-ok;
+  }
+}

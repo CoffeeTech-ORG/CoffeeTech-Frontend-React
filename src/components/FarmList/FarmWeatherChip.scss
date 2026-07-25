@@ -1,0 +1,61 @@
+@import '../../styles/variables';
+
+// Neutral label on purpose: weather is CONTEXT, not a judgement on the farm. Green or amber
+// would make it compete with the state chips, which do say whether to act.
+.farm-weather-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+
+  svg {
+    flex: none;
+    color: $text-muted;
+  }
+}
+
+// Farm-header version. Sits over the green gradient, so it inherits the light text colour rather
+// than fixing one, and stays legible if the background changes.
+//
+// On ONE line: the figure and condition stacked lost the datum to hierarchy, not contrast. Only
+// wraps below 420 px, where it no longer fits.
+.farm-weather-hero {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 9px;
+  flex: none;
+  color: inherit;
+
+  &__temp {
+    font-family: $font-family-display;
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__cond {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: $font-size-base;
+    opacity: 0.85;
+
+    svg {
+      flex: none;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .farm-weather-hero {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px 8px;
+  }
+}

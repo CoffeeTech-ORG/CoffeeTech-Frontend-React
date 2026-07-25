@@ -1,0 +1,66 @@
+@import '../../styles/variables';
+
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: $border-radius-lg;
+  color: #fff;
+
+  // One gradient per tone. Terracotta is the only one that shouts, and appears only when the
+  // crop really asks for something.
+  &.is-crop {
+    background: linear-gradient(135deg, $status-alert-strong, $status-alert);
+  }
+
+  &.is-device {
+    background: linear-gradient(135deg, #b8862a, $status-warning);
+  }
+
+  // Grey: pending work, not a fault. A red install banner would read as a reproach.
+  &.is-setup {
+    background: $background-white;
+    color: $text-primary;
+    border: 1px solid $border-subtle;
+  }
+
+  &.is-ok {
+    background: linear-gradient(135deg, #4a9169, $status-ok);
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: $border-radius-md;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  &.is-setup &__icon {
+    background: $status-neutral-bg;
+    color: $text-secondary;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    line-height: 1.2;
+  }
+
+  &__detail {
+    margin: 3px 0 0;
+    font-size: $font-size-sm;
+    opacity: 0.86;
+  }
+
+  &.is-setup &__detail {
+    color: $text-secondary;
+    opacity: 1;
+  }
+}

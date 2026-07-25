@@ -1,0 +1,27 @@
+@import '../../styles/variables';
+
+.altitude-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  // Micro-text under the field: says where the number came from, or why it does not add up. In
+  // the secondary size because it is support, not instruction -- the grower can ignore it and go on.
+  &__hint {
+    margin: 0;
+    font-size: $font-size-sm;
+    line-height: 1.45;
+    color: $text-secondary;
+
+    &--ok {
+      color: $success-color;
+    }
+
+    // Warning, not error: the field stays valid and the form can be submitted. It only says the
+    // coordinate and the altitude do not look like the same point, which is worth a look before
+    // saving and nobody else would notice.
+    &--warn {
+      color: $warning-color;
+    }
+  }
+}
