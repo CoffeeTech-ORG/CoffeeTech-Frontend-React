@@ -1,162 +1,174 @@
+@import '../../../styles/variables';
+
+// A farm's sections. On the tokens in `variables.scss` -- the app's cream background, not a grey
+// of its own, and no loose hex or antd blue -- which is what keeps the visual system coherent.
 .farm-sections {
-  // padding: 20px;
-  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 
-  &__header {
+  // -------- farm header --------
+  // Full-bleed and flush against the top bar, which is also dark: adjacent, they read as one
+  // widening header. As a floating card (radius and margins) they are two dark blocks split by a
+  // cream strip, and the band looks stuck on.
+  //
+  // The green marks WHICH FARM you are in: the only level of the hierarchy that is a place, and in
+  // the field that context signal is what keeps you from getting lost moving in and out of
+  // sections.
+  &__hero {
+    margin: calc(var(--shell-pad-top, 16px) * -1) calc(var(--shell-pad-x, 12px) * -1) 0;
+    background: linear-gradient(160deg, #2c4430, $primary-color-dark);
+    color: $background-light;
+    padding: 14px var(--shell-pad-x, 12px) 20px;
+  }
+
+  &__hero-top {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e8e8e8;
+    gap: 12px;
+  }
 
-    .header-left {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+  // 44 px is a TOUCH target: required on mobile, where a finger aims. With a pointer that height
+  // only opens a near-empty 1180 px band in the header (see the media query).
+  &__back,
+  &__menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: $touch-target;
+    padding: 0;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: rgba(244, 241, 234, 0.85);
+    background: none;
+    border: 0;
+    cursor: pointer;
 
-      .back-btn {
-        align-self: flex-start;
-        color: #666;
-        font-weight: 500;
-        // padding: 4px 8px;
-
-        &:hover {
-          color: #1890ff;
-          background: rgba(24, 144, 255, 0.1);
-        }
-      }
-
-      .farm-info {
-        .farm-name {
-          margin: 0;
-          font-size: 28px;
-          font-weight: 700;
-          color: #262626;
-          margin-bottom: 4px;
-        }
-
-        .farm-location {
-          margin: 0;
-          color: #666;
-          font-size: 16px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-      }
+    &:hover {
+      color: $background-light;
     }
 
-    .header-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: flex-end;
+    &:focus-visible {
+      outline: 2px solid $background-light;
+      outline-offset: 2px;
+      border-radius: $border-radius-sm;
     }
+  }
 
-    .add-section-btn {
-      height: 40px;
-      min-width: 40px;
-      border-radius: 8px;
-      font-weight: 600;
+  &__menu {
+    justify-content: center;
+    width: $touch-target;
+    flex: none;
+  }
+
+  &__hero-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  &__farm {
+    min-width: 0;
+  }
+
+  &__farm-name {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
+    line-height: $line-height-tight;
+    color: $background-light;
+  }
+
+  &__farm-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 0 0;
+    font-size: $font-size-sm;
+    color: rgba(244, 241, 234, 0.72);
+
+    svg {
+      flex: none;
+    }
+  }
+
+  // -------- summary strip --------
+  // Cream and right under the band: it cushions the jump from green to light and returns the state
+  // info -- the part compared at a glance -- to the content plane.
+  &__summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__summary-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    border: 1px solid transparent;
+    border-radius: $border-radius-pill;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+
+    i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex: none;
+    }
+  }
+
+  // No coordinate, no weather: instead of a gap, offer the way out.
+  &__locate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    margin-top: 12px;
+    padding: 7px 13px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $primary-color-dark;
+    background: $status-warning-bg;
+    border: 0;
+    border-radius: $border-radius-pill;
+    cursor: pointer;
+
+    &:hover {
+      background: #f9f2df;
+    }
+  }
+
+  // -------- lista --------
+  &__content {
+    .sections-heading {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
     }
-  }
 
-  &__summary {
-    margin-bottom: 32px;
-
-    .summary-card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-      h3 {
-        margin: 0 0 20px 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #262626;
-      }
-
-      .summary-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 24px;
-        align-items: center;
-
-        .stat {
-          text-align: center;
-
-          .stat-number {
-            display: block;
-            font-size: 32px;
-            font-weight: 700;
-            color: #1890ff;
-            line-height: 1;
-          }
-
-          .stat-label {
-            display: block;
-            font-size: 14px;
-            color: #666;
-            margin-top: 4px;
-          }
-        }
-
-        .health-breakdown {
-          display: flex;
-          justify-content: center;
-          gap: 16px;
-
-          .health-item {
-            text-align: center;
-            padding: 8px 12px;
-            border-radius: 8px;
-            min-width: 60px;
-
-            .health-count {
-              display: block;
-              font-size: 20px;
-              font-weight: 600;
-              line-height: 1;
-            }
-
-            .health-label {
-              display: block;
-              font-size: 12px;
-              margin-top: 2px;
-              font-weight: 500;
-            }
-
-            &.healthy {
-              background: rgba(82, 196, 26, 0.1);
-              color: #52c41a;
-            }
-
-            &.warning {
-              background: rgba(250, 173, 20, 0.1);
-              color: #faad14;
-            }
-
-            &.critical {
-              background: rgba(255, 77, 79, 0.1);
-              color: #ff4d4f;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  &__content {
     .sections-title {
-      margin: 0 0 20px 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #262626;
+      margin: 0;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: $tracking-overline;
+      color: $text-muted;
+    }
+
+    .sections-count {
+      font-weight: $font-weight-bold;
+      color: $text-muted;
     }
 
     .loading-container {
@@ -165,121 +177,139 @@
       align-items: center;
       justify-content: center;
       padding: 60px 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      background: $background-white;
+      border: 1px solid $border-subtle;
+      border-radius: $border-radius-lg;
 
       p {
         margin-top: 16px;
-        color: #666;
-        font-size: 16px;
+        color: $text-secondary;
+        font-size: $font-size-base;
       }
     }
 
     .empty-state {
-      background: white;
-      border-radius: 12px;
-      padding: 60px 40px;
+      background: $background-white;
+      border: 1px solid $border-subtle;
+      border-radius: $border-radius-lg;
+      padding: 40px 24px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
       &__content {
         max-width: 400px;
         margin: 0 auto;
 
         .empty-state__image {
-          width: 390px;
-          height: 200px;
+          width: 100%;
+          max-width: 290px;
+          height: 180px;
           object-fit: contain;
-          //margin-bottom: 24px;
           opacity: 0.7;
-          padding: 0px 50px 0px 50px;
         }
 
         h3 {
-          margin: 0 0 12px 0;
-          font-size: 24px;
-          font-weight: 600;
-          color: #262626;
-          opacity: 0.7;
+          margin: 12px 0;
+          font-size: $font-size-section;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
         }
 
         p {
-          margin: 0 0 32px 0;
-          color: #666;
-          font-size: 16px;
-          line-height: 1.5;
-          opacity: 0.7;
+          margin: 0;
+          color: $text-secondary;
+          font-size: $font-size-base;
+          line-height: $line-height-base;
         }
       }
     }
 
     .sections-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      // `auto-fit` spreads the width across the cards there are; `auto-fill` leaves empty gaps at
+      // the end of the row.
+      grid-template-columns: repeat(auto-fit, minmax(280px, 420px));
+      gap: 12px;
+    }
+  }
+
+  // A pill, not an antd button, which resizes between mobile and desktop and weighs more than the
+  // cards, which are the content.
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    min-height: 38px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $primary-color;
+    background: $primary-color-soft;
+    border: 0;
+    border-radius: $border-radius-pill;
+    cursor: pointer;
+
+    &:hover {
+      background: darken($primary-color-soft, 4%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
     }
   }
 }
 
-@media (max-width: 1024px) {
+// With a pointer the header compacts: the back link and the ⋮ stop reserving a 44 px touch row
+// that at 1180 px wide is almost all empty. From 149 px to ~110 px.
+@media (min-width: 769px) {
   .farm-sections {
-    // padding: 16px;
-
-    &__header {
-      flex-direction: column;
-      gap: 16px;
-      align-items: stretch;
-
-      .header-left {
-        .farm-info .farm-name {
-          font-size: 24px;
-        }
-      }
-
-      .add-section-btn {
-        align-self: flex-end;
-      }
+    &__back,
+    &__menu {
+      min-height: 28px;
     }
 
-    &__summary .summary-card .summary-stats {
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-
-      .health-breakdown {
-        grid-column: 1 / -1;
-        justify-content: center;
-        margin-top: 8px;
-      }
+    &__menu {
+      width: 28px;
     }
 
-    &__content .sections-grid {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
+    &__hero-row {
+      margin-top: 6px;
     }
   }
 }
 
 @media (max-width: 640px) {
   .farm-sections {
-    // padding: 12px;
+    &__hero {
+      padding-top: 10px;
+    }
 
-    &__summary .summary-card {
-      padding: 16px;
-
-      .summary-stats {
-        grid-template-columns: 1fr;
-        gap: 12px;
-
-        .health-breakdown {
-          gap: 12px;
-        }
-      }
+    &__farm-name {
+      font-size: $font-size-section;
     }
 
     &__content .sections-grid {
       grid-template-columns: 1fr;
+    }
+
+    // Just the "+": the label does not fit beside the title at 390 px. The text stays in `title`,
+    // and only the Manager sees this button.
+    &__add {
+      width: $touch-target;
+      height: $touch-target;
+      padding: 0;
+      justify-content: center;
+    }
+
+    &__add-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
   }
 }

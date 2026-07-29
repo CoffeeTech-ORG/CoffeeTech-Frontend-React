@@ -1,46 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Spin, message, Dropdown, MenuProps } from 'antd';
-import { ArrowLeft, Plus, User, Bell, MoreVertical, LogOutIcon } from 'lucide-react';
-import { Sidebar } from '../Sidebar/Sidebar';
-import { SectionCard } from '../SectionCard/SectionCard';
+import { Dropdown, message } from 'antd';
+import type { MenuProps } from 'antd';
+import { ArrowLeft, Map, MapPin, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { SectionCard, SectionCoverage } from '../SectionCard/SectionCard';
+import { SectionCardsSkeleton } from '../../ui/Skeletons';
+import { STATUS_TOKENS } from '../../../styles/statusTokens';
 import { AddSectionModal, AddSectionData } from '../AddSectionModal/AddSectionModal';
-import { AddDeviceModal, AddDeviceData } from '../AddDeviceModal/AddDeviceModal';
-import { AssignDeviceModal, AssignDeviceData } from '../AssignDeviceModal/AssignDeviceModal';
-import { EditSectionModal, EditSectionData } from '../EditSectionModal/EditSectionModal';
-import { DeleteSectionModal } from '../DeleteSectionModal/DeleteSectionModal';
+import { EditFarmModal, EditFarmData } from '../EditFarmModal/EditFarmModal';
+import { DeleteFarmModal } from '../DeleteFarmModal/DeleteFarmModal';
+import { FarmMapModal } from '../FarmMapModal/FarmMapModal';
+import { FarmWeatherChip } from '../../FarmList/FarmWeatherChip';
 import { useFarms, Farm, Section } from '../../../hooks/useFarms';
 import { farmsService } from '../../../services/farms.service';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useI18n } from '../../../contexts/I18nContext';
+import { useSectionCoverage } from '../../../hooks/useSectionCoverage';
 import './FarmSections.scss';
-import '../Dashboard.scss';
-import { LanguageSelector } from '../../LanguageSelector';
 
 interface FarmSectionsProps {
   farm: Farm;
   onBack: () => void;
   onSectionSelect?: (section: Section) => void;
-  onNavigateToSection?: (key: string) => void;
+  /** After editing or deleting the farm, refresh or leave; the mounter decides. */
+  onFarmChanged?: () => void;
+  onFarmDeleted?: () => void;
 }
 
-export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSectionSelect, onNavigateToSection }) => {
+export const FarmSections: React.FC<FarmSectionsProps> = ({
+  farm,
+  onBack,
+  onSectionSelect,
+  onFarmChanged,
+  onFarmDeleted,
+}) => {
+  // Editing and deleting the farm are handled HERE, not in the panel. In a list scrolled quickly,
+  // a delete button per row is an accident waiting to happen; here the user is already looking at
+  // this one farm.
+  const [farmEditOpen, setFarmEditOpen] = useState(false);
+  const [farmDeleteOpen, setFarmDeleteOpen] = useState(false);
+  const [farmMapOpen, setFarmMapOpen] = useState(false);
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
   const [addingSectionLoading, setAddingSectionLoading] = useState(false);
-  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
-  const [addingDeviceLoading, setAddingDeviceLoading] = useState(false);
-  const [isAssignDeviceModalOpen, setIsAssignDeviceModalOpen] = useState(false);
-  const [assigningDeviceLoading, setAssigningDeviceLoading] = useState(false);
-  const [sectionToAssignDevice, setSectionToAssignDevice] = useState<Section | null>(null);
-  const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
-  const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
-  const [isDeleteSectionModalOpen, setIsDeleteSectionModalOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t } = useI18n();
   const { getFarmSections, createSection } = useFarms();
   const isAdmin = user?.role?.id === 1;
+  // A single /devices query for the whole list; see the hook.
+  const { coverage, loading: coverageLoading } = useSectionCoverage(sections.map((sec) => sec.id));
 
   useEffect(() => {
     loadFarmSections();
@@ -68,74 +76,8 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     }
   };
 
-  const handleSectionEdit = (sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (section) {
-      setSectionToEdit(section);
-      setIsEditSectionModalOpen(true);
-    }
-  };
-
-  const handleSectionDelete = (sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (section) {
-      setSectionToDelete(section);
-      setIsDeleteSectionModalOpen(true);
-    }
-  };
-
-  const handleDeleteSectionConfirm = async () => {
-    if (!sectionToDelete) return;
-
-    try {
-      const sectionIdNumber = parseInt(sectionToDelete.id, 10);
-      if (isNaN(sectionIdNumber)) {
-        throw new Error('Invalid section ID');
-      }
-
-      await farmsService.deleteSection(sectionIdNumber);
-      
-      // Remove the section from the local state
-      setSections(prevSections => prevSections.filter(s => s.id !== sectionToDelete.id));
-      
-      message.success(t('sections.success.delete'));
-    } catch (error) {
-      console.error('Error deleting section:', error);
-      message.error(t('sections.error.delete'));
-      throw error; // Re-throw to let the modal handle the loading state
-    }
-  };
-
-  const handleDeleteSectionModalClose = () => {
-    setIsDeleteSectionModalOpen(false);
-    setSectionToDelete(null);
-  };
-
-  const handleEditSectionSubmit = async (data: EditSectionData) => {
-    try {
-      console.log('Updating section with data:', data);
-      
-      await farmsService.updateSection(data.id, {
-        name: data.name,
-        type: data.type
-      });
-      
-      // Reload the sections list to ensure we have the latest data
-      await loadFarmSections();
-      
-      setIsEditSectionModalOpen(false);
-      setSectionToEdit(null);
-      message.success(t('sections.success.update'));
-    } catch (error) {
-      console.error('Error updating section:', error);
-      throw error; // Re-throw to let the modal handle the error display
-    }
-  };
-
-  const handleEditSectionModalClose = () => {
-    setIsEditSectionModalOpen(false);
-    setSectionToEdit(null);
-  };
+  // Edit, delete and assign-hub are not here: they live in the section detail, where the user is
+  // already looking at that one plot. This screen is triage, read-only.
 
   const handleAddSection = () => {
     setIsAddSectionModalOpen(true);
@@ -148,7 +90,20 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
   const handleSubmitAddSection = async (data: AddSectionData) => {
     try {
       setAddingSectionLoading(true);
-      await createSection(farm.id, data);
+      const created = await createSection(farm.id, data);
+
+      // If a hub was chosen, link it in the same step. AFTER creating the section, because the
+      // assignment needs its id; if this fails the section is still created and can be assigned
+      // from the "no hub" chip.
+      if (data.deviceId && created?.id) {
+        try {
+          await farmsService.createAssignment(Number(created.id), data.deviceId);
+        } catch (assignError) {
+          console.error('La sección se creó pero el hub no se pudo enlazar:', assignError);
+          message.warning(t('sections.hub.assignAfterCreateFailed'));
+        }
+      }
+
       await loadFarmSections(); // Reload sections to show the new one
     } catch (error) {
       console.error('Error creating section:', error);
@@ -158,187 +113,198 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
     }
   };
 
-  const handleAddDevice = () => {
-    setIsAddDeviceModalOpen(true);
+  // No manual hub registration: a hub enters the inventory on its first reading, and typing the
+  // MAC by hand was the last vector for duplicates.
+
+  const handleFarmEditSubmit = async (data: EditFarmData) => {
+    await farmsService.updateFarm(data.id, {
+      name: data.name,
+      location: data.location,
+      altitude: data.altitude,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      locationPrecision: data.locationPrecision,
+      boundary: data.boundary,
+    });
+    setFarmEditOpen(false);
+    message.success(t('farm.success.update'));
+    onFarmChanged?.();
   };
 
-  const handleCloseAddDeviceModal = () => {
-    setIsAddDeviceModalOpen(false);
-  };
-
-  const handleSubmitAddDevice = async (data: AddDeviceData) => {
+  const handleFarmDeleteConfirm = async () => {
+    const id = parseInt(farm.id, 10);
+    if (Number.isNaN(id)) throw new Error('Invalid farm ID');
     try {
-      setAddingDeviceLoading(true);
-      await farmsService.createDevice(data.deviceHubId);
-      message.success(t('sensors.add') + ' successfully!');
-      setIsAddDeviceModalOpen(false);
-    } catch (error: any) {
-      console.error('Error creating device:', error);
-      
-      // Check if it's a duplicate MAC address error
-      if (error.message && error.message.includes('already exists')) {
-        message.error('A device with this MAC address already exists. Please use a different MAC address.');
-      } else {
-        message.error('Failed to add device. Please try again.');
-      }
-      
-      throw error; // Re-throw to let the modal handle the error message
-    } finally {
-      setAddingDeviceLoading(false);
-    }
-  };
-
-  const handleAssignDevice = (sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (section) {
-      setSectionToAssignDevice(section);
-      setIsAssignDeviceModalOpen(true);
-    }
-  };
-
-  const handleCloseAssignDeviceModal = () => {
-    setIsAssignDeviceModalOpen(false);
-    setSectionToAssignDevice(null);
-  };
-
-  const handleSubmitAssignDevice = async (data: AssignDeviceData) => {
-    if (!sectionToAssignDevice) return;
-
-    try {
-      setAssigningDeviceLoading(true);
-      const sectionIdNumber = parseInt(sectionToAssignDevice.id, 10);
-      
-      if (isNaN(sectionIdNumber)) {
-        throw new Error('Invalid section ID');
-      }
-
-      await farmsService.createAssignment(sectionIdNumber, data.deviceId);
-      message.success(t('sensors.assign') + ' successfully!');
-      setIsAssignDeviceModalOpen(false);
-      setSectionToAssignDevice(null);
-    } catch (error: any) {
-      console.error('Error assigning device:', error);
-      message.error('Failed to assign device. Please try again.');
-      throw error; // Re-throw to let the modal handle the error message
-    } finally {
-      setAssigningDeviceLoading(false);
+      await farmsService.deleteFarm(id);
+      message.success(t('farm.success.delete'));
+      // Leave the screen: staying on the detail of something that no longer exists makes no
+      // sense, and returning to the panel confirms the delete.
+      (onFarmDeleted ?? onBack)();
+    } catch (error) {
+      message.error(t('farm.error.delete'));
+      throw error;
     }
   };
 
 
-  const handleMenuClick = (key: string) => {
-    if (key === 'dashboard') {
-      onBack();
-    } else if (onNavigateToSection) {
-      onNavigateToSection(key);
-    } else {
-      message.info(`Navigate to ${key}`);
-    }
-  };
 
+
+  const unlocated = farm.latitude == null || farm.longitude == null;
+
+  // Farm coverage summary, on the same axis 2 as each card's chips.
+  const counts = Object.values(coverage).reduce(
+    (acc, c) => {
+      acc[c.kind] += 1;
+      return acc;
+    },
+    { reporting: 0, stale: 0, 'no-hub': 0 } as Record<SectionCoverage['kind'], number>
+  );
+
+  const summaryChips = [
+    { key: 'reporting', n: counts.reporting, token: STATUS_TOKENS.ok, label: 'sections.summary.reporting' },
+    { key: 'stale', n: counts.stale, token: STATUS_TOKENS.warning, label: 'sections.summary.stale' },
+    { key: 'no-hub', n: counts['no-hub'], token: STATUS_TOKENS.neutral, label: 'sections.summary.noHub' },
+  ]
+    .filter((c) => c.n > 0)
+    .map((c) => ({ ...c, text: t(c.label, { n: c.n }) }));
+
+  // The three FARM actions in one menu. Loose, they are three icons competing with the content,
+  // and with the two each card repeats the screen would offer five icon buttons for a view whose
+  // job is to say which plot to look at.
+  const farmMenu: MenuProps['items'] = [
+    {
+      key: 'map',
+      icon: <Map size={15} />,
+      label: t('farm.viewMap'),
+      onClick: () => setFarmMapOpen(true),
+    },
+    ...(isAdmin
+      ? [
+          {
+            key: 'edit',
+            icon: <Pencil size={15} />,
+            label: t('farm.edit'),
+            onClick: () => setFarmEditOpen(true),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <Trash2 size={15} />,
+            label: t('farm.delete'),
+            danger: true,
+            onClick: () => setFarmDeleteOpen(true),
+          },
+        ]
+      : []),
+  ];
+
+  // The frame (top bar, language, session) comes from `AppShell`; this view carries no copy of
+  // its own.
   return (
-    <div className="dashboard">
-      <Sidebar
-        activeKey="dashboard"
-        onMenuClick={handleMenuClick}
-      />
-      
-      <div className="dashboard__main">
-        <header className="dashboard__header">
-          <div className="header-left">
-            <h1>{t('dashboard.title')}</h1>
-          </div>
-          
-          <div className="header-right">
-            <LanguageSelector />
-            <Button
-              type="text"
-              className="header-btn"
-              onClick={logout}
-            >
-              {user?.username}&nbsp;
-              <LogOutIcon size={20} />
-            </Button>
-          </div>
-        </header>
-        
-        <main className="dashboard__content">
           <div className="farm-sections">
-            <div className="farm-sections__header">
-              <div className="header-left">
-                <Button
-                  type="text"
-                  icon={<ArrowLeft size={20} />}
-                  onClick={onBack}
-                  className="back-btn"
-                >
-                  {t('nav.back')} to {t('nav.dashboard')}
-                </Button>
-                <div className="farm-info">
-                  <h1 className="farm-name">{farm.name}</h1>
-                  <p className="farm-location">{farm.location}</p>
-                </div>
-              </div>
-              
-              {isAdmin && (
-                <div className="header-buttons">
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: 'add-section',
-                          label: t('sections.add'),
-                          icon: <Plus size={16} />,
-                          onClick: handleAddSection,
-                        },
-                        {
-                          key: 'add-device',
-                          label: t('sensors.add'),
-                          icon: <Plus size={16} />,
-                          onClick: handleAddDevice,
-                        },
-                      ],
-                    }}
-                    placement="bottomRight"
-                    trigger={['click']}
-                  >
-                    <Button
-                      type="primary"
-                      className="add-section-btn"
-                    >
-                      {<Plus size={20} />}
-                    </Button>
-                  </Dropdown>
-                </div>
-              )}
-            </div>
+            <header className="farm-sections__hero">
+              <div className="farm-sections__hero-top">
+                <button type="button" className="farm-sections__back" onClick={onBack}>
+                  <ArrowLeft size={17} aria-hidden="true" />
+                  {t('nav.dashboard')}
+                </button>
 
-            <div className="farm-sections__summary">
-              <div className="summary-card">
-                <h3>{t('sections.title')} </h3>
-                <div className="summary-stats">
-                  <div className="stat">
-                    <span className="stat-number">{sections.length}</span>
-                    <span className="stat-label">Total {t('sections.title')}</span>
-                  </div>
-                </div>
+                <Dropdown menu={{ items: farmMenu }} trigger={['click']} placement="bottomRight">
+                  <button
+                    type="button"
+                    className="farm-sections__menu"
+                    title={t('farm.actions')}
+                    aria-label={t('farm.actions')}
+                  >
+                    <MoreVertical size={18} />
+                  </button>
+                </Dropdown>
               </div>
-            </div>
+
+              <div className="farm-sections__hero-row">
+                <div className="farm-sections__farm">
+                  <h1 className="farm-sections__farm-name">{farm.name}</h1>
+                  <p className="farm-sections__farm-meta">
+                    <MapPin size={13} aria-hidden="true" />
+                    {[
+                      farm.location,
+                      farm.altitude ? `${Math.round(farm.altitude)} m` : null,
+                      sections.length
+                        ? sections.length === 1
+                          ? t('farm.meta.sections.one')
+                          : t('farm.meta.sections', { n: sections.length })
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+                {/* Sin coordenada no hay clima que dar: en vez de un hueco, la salida. */}
+                {unlocated ? null : <FarmWeatherChip farm={farm} variant="hero" />}
+              </div>
+
+              {unlocated && isAdmin && (
+                <button
+                  type="button"
+                  className="farm-sections__locate"
+                  onClick={() => setFarmEditOpen(true)}
+                >
+                  <MapPin size={13} aria-hidden="true" />
+                  {t('farm.location.missingWeather')}
+                </button>
+              )}
+            </header>
+
+            {/* Tira de resumen: amortigua el salto del verde al crema y devuelve al plano del
+                contenido el estado de la finca. Sólo aparecen los estados que existen — un
+                "0 sin sensor" es ruido, no información. */}
+            {summaryChips.length > 0 && (
+              <div className="farm-sections__summary">
+                {summaryChips.map((chip) => (
+                  <span
+                    key={chip.key}
+                    className="farm-sections__summary-chip"
+                    style={{
+                      color: chip.token.fg,
+                      background: chip.token.bg,
+                      borderColor: chip.token.border,
+                    }}
+                  >
+                    <i aria-hidden="true" />
+                    {chip.text}
+                  </span>
+                ))}
+              </div>
+            )}
 
             <div className="farm-sections__content">
-              <h2 className="sections-title">{t('sections.title')}</h2>
-              
-              {loading ? (
-                <div className="loading-container">
-                  <Spin size="large" />
-                  <p>{t('common.loading')}</p>
-                </div>
+              <div className="sections-heading">
+                <h2 className="sections-title">
+                  {t('sections.title')} <span className="sections-count">· {sections.length}</span>
+                </h2>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="farm-sections__add"
+                    onClick={handleAddSection}
+                    title={t('sections.add')}
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    <span className="farm-sections__add-label">{t('sections.add')}</span>
+                  </button>
+                )}
+              </div>
+
+              {loading || coverageLoading ? (
+                // The skeleton also waits for coverage: without it the cards appear with no chip
+                // or verdict and fill in as the user watches.
+                <SectionCardsSkeleton count={Math.max(sections.length, 2)} />
               ) : sections.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-state__content">
-                    <img 
-                      src="/assets/section_icons/nosectionsfound1.png" 
-                      alt="No sections found" 
+                    <img
+                      src="/assets/section_icons/nosectionsfound1.png"
+                      alt="No sections found"
                       className="empty-state__image"
                     />
                     <h3>{t('sections.empty.title')}</h3>
@@ -351,18 +317,13 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
                     <SectionCard
                       key={section.id}
                       section={section}
+                      coverage={coverage[section.id]}
                       onViewDetails={handleSectionDetails}
-                      onEdit={handleSectionEdit}
-                      onDelete={handleSectionDelete}
-                      onAddDevice={handleAssignDevice}
                     />
                   ))}
                 </div>
               )}
             </div>
-          </div>
-        </main>
-      </div>
 
       <AddSectionModal
         isOpen={isAddSectionModalOpen}
@@ -372,35 +333,38 @@ export const FarmSections: React.FC<FarmSectionsProps> = ({ farm, onBack, onSect
         farmId={farm.id}
       />
 
-      <AddDeviceModal
-        isOpen={isAddDeviceModalOpen}
-        onClose={handleCloseAddDeviceModal}
-        onSubmit={handleSubmitAddDevice}
-        loading={addingDeviceLoading}
-      />
 
-      <AssignDeviceModal
-        isOpen={isAssignDeviceModalOpen}
-        onClose={handleCloseAssignDeviceModal}
-        onSubmit={handleSubmitAssignDevice}
-        sectionId={sectionToAssignDevice?.id || null}
-        sectionName={sectionToAssignDevice?.name || null}
-        loading={assigningDeviceLoading}
-      />
 
-      <EditSectionModal
-        isOpen={isEditSectionModalOpen}
-        onClose={handleEditSectionModalClose}
-        onSubmit={handleEditSectionSubmit}
-        section={sectionToEdit}
-      />
+      {farmEditOpen && (
+        <EditFarmModal
+          isOpen
+          farm={farm}
+          onClose={() => setFarmEditOpen(false)}
+          onSubmit={handleFarmEditSubmit}
+        />
+      )}
 
-      <DeleteSectionModal
-        isOpen={isDeleteSectionModalOpen}
-        onClose={handleDeleteSectionModalClose}
-        onConfirm={handleDeleteSectionConfirm}
-        section={sectionToDelete}
-      />
+      {farmDeleteOpen && (
+        <DeleteFarmModal
+          isOpen
+          farm={farm}
+          onClose={() => setFarmDeleteOpen(false)}
+          onConfirm={handleFarmDeleteConfirm}
+        />
+      )}
+
+      {farmMapOpen && (
+        <FarmMapModal
+          isOpen
+          onClose={() => setFarmMapOpen(false)}
+          farmName={farm.name}
+          location={farm.location}
+          latitude={farm.latitude}
+          longitude={farm.longitude}
+          locationPrecision={farm.locationPrecision}
+          boundary={farm.boundary}
+        />
+      )}
     </div>
   );
 };

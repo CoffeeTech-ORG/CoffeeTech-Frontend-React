@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Modal, Button } from 'antd';
-import { X, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Modal, Button, Input } from 'antd';
+import { Trash2 } from 'lucide-react';
 import { Farm } from '../../../services/farms.service';
 import { useI18n } from '../../../contexts/I18nContext';
 import './DeleteFarmModal.scss';
@@ -12,32 +12,48 @@ interface DeleteFarmModalProps {
   farm: Farm | null;
 }
 
+/**
+ * Delete a farm. Typing the name is required: what goes is not only the farm but its sections, its
+ * readings and the recommendations the engine computed over them, with no undo or trash.
+ *
+ * No destructive action should be one tap from a routine one, and the setting makes it worse: in
+ * the field, in full sun and sometimes gloved, an extra tap is easy. Typing the name forces reading
+ * WHAT is being deleted before it can be deleted.
+ */
 export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  farm
+  farm,
 }) => {
   const { t } = useI18n();
   const [deleting, setDeleting] = useState(false);
+  const [typed, setTyped] = useState('');
+
+  // Opening for another farm the field must start empty, or it stays validated with the previous
+  // name.
+  useEffect(() => {
+    if (isOpen) setTyped('');
+  }, [isOpen, farm?.id]);
+
+  const matches = farm != null && typed.trim() === farm.name.trim();
 
   const handleConfirm = async () => {
+    if (!matches) return;
     try {
       setDeleting(true);
       await onConfirm();
       onClose();
     } catch (error) {
       console.error('Error deleting farm:', error);
-      // Error is already handled in the parent component
+      // The error is already surfaced by the parent component.
     } finally {
       setDeleting(false);
     }
   };
 
   const handleCancel = () => {
-    if (!deleting) {
-      onClose();
-    }
+    if (!deleting) onClose();
   };
 
   if (!farm) return null;
@@ -50,54 +66,51 @@ export const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({
       footer={null}
       width={500}
       className="delete-farm-modal"
-      closable={false}
+      closable={!deleting}
     >
-      <div className="modal-header">
-        <h2 className="modal-title">{t('farm.delete.title')}</h2>
-        <Button
-          type="text"
-          icon={<X size={20} />}
-          onClick={handleCancel}
-          className="close-btn"
-          disabled={deleting}
-        />
+      <div className="delete-farm__head">
+        <span className="delete-farm__icon" aria-hidden="true">
+          <Trash2 size={20} />
+        </span>
+        <h2 className="delete-farm__title">{t('farm.delete.title')}</h2>
       </div>
 
-      <div className="modal-content">
-        <div className="warning-section">
-          <div className="warning-icon">
-            <AlertTriangle size={48} />
-          </div>
-          <div className="warning-text">
-            <p className="warning-message">
-              {t('farm.delete.confirm')} <strong>"{farm.name}"</strong>?
-            </p>
-            <p className="warning-submessage">
-              {t('farm.delete.warning')}
-            </p>
-          </div>
-        </div>
+      {/* Se nombra lo que se pierde. «Eliminará todos los datos asociados» no dice nada: el
+          usuario no sabe qué cuenta como dato asociado. */}
+      <p className="delete-farm__body">
+        {t('farm.delete.lede.before')} <strong>«{farm.name}»</strong>{' '}
+        {t('farm.delete.lede.after')}
+      </p>
 
-        <div className="modal-actions">
-          <Button
-            type="default"
-            size="large"
-            onClick={handleCancel}
-            disabled={deleting}
-            className="cancel-btn"
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleConfirm}
-            loading={deleting}
-            className="delete-btn"
-          >
-            {t('farm.delete.button')}
-          </Button>
-        </div>
+      <label className="delete-farm__confirm">
+        <span className="delete-farm__label">{t('farm.delete.typeName')}</span>
+        <Input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder={farm.name}
+          disabled={deleting}
+          size="large"
+          autoComplete="off"
+          onPressEnter={handleConfirm}
+        />
+      </label>
+
+      <div className="delete-farm__actions">
+        <Button size="large" onClick={handleCancel} disabled={deleting}>
+          {t('common.cancel')}
+        </Button>
+        <Button
+          danger
+          type="primary"
+          size="large"
+          onClick={handleConfirm}
+          loading={deleting}
+          // Disabled, not hidden: the button is visible from the start, so typing the name reads
+          // as what is missing and not a surprise requirement.
+          disabled={!matches || deleting}
+        >
+          {t('farm.delete.button')}
+        </Button>
       </div>
     </Modal>
   );

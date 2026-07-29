@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, InputNumber, App } from 'antd';
+import { Modal, Form, Input, Button, App } from 'antd';
 import { X } from 'lucide-react';
-import { GooglePlacesAutocomplete } from '../../../components/GooglePlacesAutocomplete';
+import {
+  FarmLocationPicker,
+  FarmLocation,
+  EMPTY_FARM_LOCATION
+} from '../../../components/FarmLocationPicker/FarmLocationPicker';
+import { LocationPrecision } from '../../../services/farms.service';
+import {
+  AltitudeField,
+  COFFEE_ALTITUDE_MAX_M,
+  COFFEE_ALTITUDE_MIN_M
+} from '../../AltitudeField/AltitudeField';
 import { useI18n } from '../../../contexts/I18nContext';
 import './AddFarmModal.scss';
 
 export interface AddFarmData {
   name: string;
   location: string;
-  altitude: number;
+  altitude: number | null;
+  // Sent to the backend as-is: `createFarm` propagates the whole object.
+  latitude: number | null;
+  longitude: number | null;
+  locationPrecision: LocationPrecision;
+  // The boundary is `[lat, lng]`; `createFarm` converts it to GeoJSON before sending.
+  boundary: [number, number][] | null;
 }
 
 interface AddFarmModalProps {
@@ -25,13 +41,25 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
 }) => {
   const { t } = useI18n();
   const [form] = Form.useForm();
+  // The altitude is derived from the coordinate the grower just set, so the `location` field is
+  // watched live and not only on submit.
+  const ubicacion: FarmLocation | undefined = Form.useWatch('location', form);
   const [submitting, setSubmitting] = useState(false);
   const { message: messageApi } = App.useApp();
 
-  const handleSubmit = async (values: AddFarmData) => {
+  const handleSubmit = async (values: { name: string; altitude?: number | null; location: FarmLocation }) => {
     try {
       setSubmitting(true);
-      await onSubmit(values);
+      // The `location` field holds the whole object; it is flattened on send.
+      await onSubmit({
+        name: values.name,
+        altitude: values.altitude ?? null,
+        location: values.location.location,
+        latitude: values.location.latitude,
+        longitude: values.location.longitude,
+        locationPrecision: values.location.locationPrecision,
+        boundary: values.location.boundary
+      });
       form.resetFields();
       onClose();
       messageApi.success(t('farm.success.create'));
@@ -91,71 +119,52 @@ export const AddFarmModal: React.FC<AddFarmModalProps> = ({
             />
           </Form.Item>
 
+          {/* El selector sustituye al autocompletado suelto. Antes, Google ya devolvía el
+              `geometry` de cada lugar elegido y este modal lo tiraba: sólo se quedaba con el
+              texto. De ahí que ninguna finca tuviera coordenadas y que el clima acabara
+              mostrando la ciudad del teléfono. */}
+          {/* El picker ES el control del campo: antd le inyecta `value` y `onChange`. Antes
+              se le pasaban a mano y antd los pisaba, dejando `value` en `undefined`. */}
           <Form.Item
             label={t('farm.location')}
             name="location"
+            initialValue={EMPTY_FARM_LOCATION}
             rules={[
-              { required: true, message: t('farm.location.validation') },
-              { min: 2, message: t('farm.location.length.min') },
-              { max: 100, message: t('farm.location.length.max') }
+              {
+                validator: (_, v: FarmLocation) =>
+                  v?.location?.trim()
+                    ? Promise.resolve()
+                    : Promise.reject(new Error(t('farm.location.validation')))
+              }
             ]}
           >
-            <GooglePlacesAutocomplete
-              placeholder={t('farm.location.placeholder')}
-              size="large"
-              className="form-input"
-              onPlaceSelect={(place) => {
-                if (place.formatted_address) {
-                  form.setFieldValue('location', place.formatted_address);
-                  form.validateFields(['location']);
-                }
-              }}
-              onChange={(value) => {
-                // Only update if it's different from current value to avoid loops
-                if (form.getFieldValue('location') !== value) {
-                  form.setFieldValue('location', value);
-                }
-              }}
-            />
+            <FarmLocationPicker />
           </Form.Item>
 
+          {/* Ya no es obligatorio, y ya no se teclea a ciegas: en cuanto hay coordenadas se
+              rellena del modelo de elevación de 90 m —el mismo que usa el motor para corregir la
+              temperatura— y avisa si lo declarado y lo del mapa no parecen el mismo punto. Así se
+              tecleó 1450 en el piloto cuando el hub está a 1823, y esa cifra decide la banda
+              altitudinal, que cambia el peso de cuatro reglas de plaga y enfermedad.
+              Vacío es una respuesta válida: el backend guarda nulo y el motor no modula. */}
           <Form.Item
             label={t('farm.altitude')}
             name="altitude"
             rules={[
-              { required: true, message: t('farm.altitude.validation') },
-              { type: 'number', min: 0, message: t('farm.altitude.positive') },
-              { type: 'number', max: 10000, message: t('farm.altitude.max') }
+              {
+                type: 'number',
+                min: COFFEE_ALTITUDE_MIN_M,
+                max: COFFEE_ALTITUDE_MAX_M,
+                message: t('farm.altitude.range', {
+                  min: COFFEE_ALTITUDE_MIN_M,
+                  max: COFFEE_ALTITUDE_MAX_M
+                })
+              }
             ]}
-            help={t('farm.altitude.range') || 'Mínimo: 0 m - Máximo: 10000 m'}
           >
-            <InputNumber
-              placeholder={t('farm.altitude.placeholder')}
-              size="large"
-              className="form-input"
-              step={1}
-              min={0}
-              max={10000}
-              precision={0}
-              style={{ width: '100%' }}
-              controls={false}
-              maxLength={5}
-              parser={(value) => {
-                // Solo permitir números y limitar a 5 caracteres
-                const parsed = value?.replace(/[^\d]/g, '').slice(0, 5) || '';
-                const numValue = parsed ? Number(parsed) : 0;
-                // Si el valor excede 10000, devolver el valor anterior (no actualizar)
-                if (numValue > 10000) {
-                  return form.getFieldValue('altitude') || 0;
-                }
-                return numValue || '' as any;
-              }}
-              onKeyPress={(e) => {
-                // Bloquear cualquier tecla que no sea número
-                if (!/[0-9]/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
+            <AltitudeField
+              latitude={ubicacion?.latitude ?? null}
+              longitude={ubicacion?.longitude ?? null}
             />
           </Form.Item>
 

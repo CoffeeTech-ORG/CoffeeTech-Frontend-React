@@ -1,0 +1,328 @@
+@import '../../styles/variables.scss';
+
+// Agronomic log: current state (fixed height) + history in a modal.
+//
+// These variables stay -- used forty times and they keep the sheet readable -- but take their
+// values from `variables.scss` rather than declaring their own hex. A parallel palette that nearly
+// matches the system's is exactly what `statusTokens` exists to avoid: if the "up to date" green is
+// one tone here and another on the next card, the colour stops meaning and starts decorating.
+.agro-log {
+  --al-ink: #{$text-primary};
+  --al-ink-soft: #{$text-secondary};
+  --al-ink-faint: #{$text-muted};
+  --al-line: #{$border-subtle};
+  --al-line-soft: #{$border-subtle};
+  --al-brand: #{$status-ok};
+  --al-brand-ink: #{$primary-color};
+  --al-brand-bg: #{$status-ok-bg};
+  --al-warn: #{$status-warning};   --al-warn-bg: #{$status-warning-bg};
+  --al-alert: #{$status-alert};    --al-alert-bg: #{$status-alert-bg};
+  --al-ok: #{$status-ok};          --al-ok-bg: #{$status-ok-bg};
+
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-lg;
+  padding: 20px;
+
+  &__head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    // Same treatment as the app's other card titles (18px/600), so "Bitácora del cultivo" does
+    // not clash next to "Datos del Sensor" or "Dispositivo Asignado".
+    h4 { margin: 0; font-size: $font-size-card-title; font-weight: $font-weight-semibold; color: $text-primary; }
+  }
+  &__intro { flex: 1; min-width: 0; }
+  &__sub { margin: 5px 0 0; font-size: $font-size-base; line-height: 1.45; color: var(--al-ink-soft); }
+  &__add {
+    display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+    font-size: $font-size-base; font-weight: $font-weight-semibold; cursor: pointer;
+    color: $background-white; background: var(--al-brand); border: 0;
+    border-radius: 999px; padding: 8px 15px; min-height: 38px;
+    &:hover { background: var(--al-brand-ink); }
+  }
+
+  // -------- formulario de registro --------
+  &__form {
+    margin-top: 14px; padding: 14px;
+    background: $background-cream; border: 1px solid var(--al-line); border-radius: 10px;
+  }
+  &__types { display: flex; flex-wrap: wrap; gap: 7px; }
+  &__type {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: $font-size-sm; font-weight: $font-weight-semibold; cursor: pointer; min-height: 36px;
+    color: var(--al-ink-soft); background: $background-white;
+    border: 1px solid var(--al-line); border-radius: 999px; padding: 6px 12px;
+    &:hover { border-color: var(--al-ink-faint); }
+    &.is-on { background: var(--al-brand); border-color: var(--al-brand); color: $background-white; }
+  }
+  &__hint { margin: 10px 0 12px; font-size: $font-size-sm; line-height: 1.45; color: var(--al-brand-ink); }
+  &__row {
+    display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+    label {
+      display: flex; flex-direction: column; gap: 5px;
+      font-size: $font-size-sm; font-weight: $font-weight-semibold; color: var(--al-ink-faint);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    input {
+      font-size: $font-size-base; color: var(--al-ink); font-family: inherit;
+      padding: 9px 10px; border: 1px solid var(--al-line); border-radius: 8px; background: $background-white;
+      &:focus { outline: none; border-color: var(--al-brand); }
+    }
+  }
+  &__notes { flex: 1; min-width: 200px; input { width: 100%; } }
+  &__save {
+    font-size: $font-size-base; font-weight: $font-weight-semibold; cursor: pointer; min-height: 40px;
+    color: $background-white; background: var(--al-brand); border: 0;
+    border-radius: 8px; padding: 10px 18px;
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+
+  &__error {
+    margin-top: 12px; padding: 9px 12px; border-radius: 8px;
+    font-size: $font-size-base; color: $status-alert; background: $status-alert-bg;
+  }
+  &__empty {
+    margin-top: 14px; padding: 14px; border-radius: 10px;
+    font-size: $font-size-base; color: var(--al-ink-soft);
+    background: $background-cream; border: 1px dashed var(--al-line);
+  }
+
+  // -------- empty state: shows the value before there is any data --------
+  &__onboard {
+    margin-top: 14px; padding: 16px; border-radius: 10px;
+    background: $background-cream; border: 1px dashed var(--al-line);
+    p { margin: 0 0 12px; font-size: $font-size-base; line-height: 1.5; color: var(--al-ink-soft); }
+    strong { color: var(--al-ink); font-weight: $font-weight-semibold; }
+  }
+  &__onboard-steps {
+    display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px;
+    span { display: flex; align-items: center; gap: 8px; font-size: $font-size-base; color: var(--al-ink); }
+    em { font-style: normal; color: var(--al-ink-faint); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+    .dot.is-flowering { background: var(--al-alert); }
+    .dot.is-harvest { background: var(--al-brand); }
+  }
+
+  // -------- current state: ALWAYS 5 rows, the height does not grow with the history --------
+  &__status {
+    list-style: none; margin: 16px 0 0; padding: 0;
+    li {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 10px 2px; border-bottom: 1px solid var(--al-line-soft);
+      font-size: $font-size-base; color: var(--al-ink);
+      &:last-child { border-bottom: 0; }
+      &.is-missing { .agro-log__label { color: var(--al-ink-faint); } }
+    }
+  }
+  &__icon { display: inline-flex; color: var(--al-brand); flex: 0 0 auto; }
+  &.is-missing &__icon { color: $text-muted; }
+  &__status li.is-missing .agro-log__icon { color: $text-muted; }
+  &__label { font-weight: $font-weight-semibold; min-width: 132px; }
+  &__date {
+    color: var(--al-ink-soft); font-size: $font-size-base;
+    &.is-none { color: var(--al-ink-faint); font-style: italic; }
+  }
+  // Green is reserved for "genuinely up to date"; the informational goes neutral so as not to
+  // wear its meaning out (same rule as the recommendation cards).
+  &__tag {
+    margin-left: auto; font-size: $font-size-sm; font-weight: $font-weight-semibold;
+    border-radius: 6px; padding: 4px 9px; white-space: nowrap;
+    &.tone-ok { color: var(--al-ok); background: var(--al-ok-bg); }
+    &.tone-info { color: var(--al-ink-soft); background: $status-neutral-bg; }
+    &.tone-warn { color: var(--al-warn); background: var(--al-warn-bg); }
+    &.tone-alert { color: var(--al-alert); background: var(--al-alert-bg); }
+    &.tone-muted { color: var(--al-ink-faint); background: $status-neutral-bg; }
+  }
+
+  // -------- pending, grouped apart (not interleaved with the recorded ones) --------
+  &__pending {
+    margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--al-line);
+  }
+  &__pending-title {
+    display: block; margin-bottom: 8px;
+    font-size: $font-size-xs; font-weight: $font-weight-bold; color: var(--al-ink-faint);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  &__pending-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  &__chip {
+    display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    font-size: $font-size-sm; font-weight: $font-weight-semibold; min-height: 34px;
+    color: var(--al-brand-ink); background: var(--al-brand-bg);
+    border: 1px dashed rgba(47, 109, 79, 0.4); border-radius: 999px; padding: 6px 12px;
+    &:hover { background: $status-ok-bg; border-style: solid; }
+    &.is-on { background: var(--al-brand); border-color: var(--al-brand); border-style: solid; color: $background-white; }
+  }
+
+  // -------- quick entry: asks only for the date (the type was chosen on the chip) --------
+  &__quick {
+    display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+    margin-top: 10px; padding: 12px;
+    background: $background-cream; border: 1px solid var(--al-line); border-radius: 10px;
+
+    input[type='date'], input[type='text'] {
+      font-size: $font-size-base; color: var(--al-ink); font-family: inherit;
+      padding: 9px 10px; border: 1px solid var(--al-line); border-radius: 8px; background: $background-white;
+      &:focus { outline: none; border-color: var(--al-brand); }
+    }
+  }
+  &__quick-date {
+    display: flex; flex-direction: column; gap: 5px;
+    font-size: $font-size-sm; font-weight: $font-weight-semibold; color: var(--al-brand-ink);
+  }
+  &__quick-actions { display: flex; align-items: center; gap: 8px; }
+  &__quick-cancel {
+    cursor: pointer; background: none; border: 0; min-height: 40px; padding: 6px 10px;
+    font-size: $font-size-base; font-weight: $font-weight-semibold; color: var(--al-ink-soft); text-decoration: underline;
+  }
+  // Same height and axis as "Save"/"Cancel": the container aligns with flex-end, so centring this
+  // link separately misaligned it against the buttons.
+  &__quick-addnote {
+    cursor: pointer; background: none; border: 0; min-height: 40px; padding: 4px 6px;
+    font-size: $font-size-base; font-weight: $font-weight-semibold; color: var(--al-brand); text-decoration: underline;
+    align-self: flex-end; display: inline-flex; align-items: center;
+  }
+  &__quick-note { flex: 1 1 200px; min-width: 180px; }
+  &__more {
+    margin-top: 14px; cursor: pointer; background: none; border: 0; padding: 6px 0;
+    font-size: $font-size-base; font-weight: $font-weight-semibold; color: var(--al-brand); text-decoration: underline;
+  }
+
+  @media (max-width: 600px) {
+    padding: 16px;
+    // Each row becomes two lines: type + date on top, consequence below the icon.
+    &__status li {
+      align-items: flex-start;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 4px 8px;
+    }
+    &__label { min-width: 0; grid-column: 2; }
+    &__date { grid-column: 3; text-align: right; }
+    &__tag { grid-column: 2 / -1; margin-left: 0; white-space: normal; }
+    &__row { flex-direction: column; align-items: stretch; }
+    &__save { width: 100%; }
+    &__add { width: 100%; justify-content: center; }
+    // In a column, the note field's flex-basis applied to the HEIGHT and made it a huge box, so
+    // it is cancelled. Save and Cancel share a row rather than stacking full-width buttons.
+    &__quick { flex-direction: column; align-items: stretch; gap: 8px; padding: 11px; }
+    &__quick-date input { width: 100%; }
+    &__quick-note { flex: none; width: 100%; min-width: 0; }
+    &__quick-actions { gap: 6px; }
+    &__quick-actions .agro-log__save { flex: 1; }
+    &__quick-addnote { align-self: flex-start; }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+// History modal: a timeline (to understand) plus a chronological list (to act).
+.agro-modal {
+  // A second copy of the same palette, also from the tokens now.
+  --am-ink: #{$text-primary};  --am-ink-soft: #{$text-secondary};  --am-ink-faint: #{$text-muted};
+  --am-line: #{$border-subtle}; --am-line-soft: #{$border-subtle}; --am-brand: #{$status-ok}; --am-brand-ink: #{$primary-color};
+
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+
+  &__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); }
+  &__panel {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 640px; max-height: 86vh; overflow-y: auto;
+    background: $background-white; border-radius: 14px; padding: 20px 22px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  &__head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    h4 { margin: 0; font-size: $font-size-card-title; font-weight: $font-weight-semibold; color: $text-primary; }
+    p { margin: 3px 0 0; font-size: $font-size-sm; color: var(--am-ink-soft); }
+  }
+  &__close {
+    flex: 0 0 auto; cursor: pointer; background: none; border: 0; color: var(--am-ink-faint);
+    padding: 8px; border-radius: 8px; display: inline-flex; min-width: 40px; min-height: 40px;
+    align-items: center; justify-content: center;
+    &:hover { background: $status-neutral-bg; color: var(--am-ink); }
+  }
+  &__caption {
+    font-size: $font-size-xs; font-weight: $font-weight-bold; color: var(--am-ink-faint);
+    text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 7px;
+  }
+
+  // -------- VERTICAL timeline (holds up with 1 event or 20) --------
+  &__cycle {
+    background: $background-cream; border: 1px solid var(--am-line); border-radius: 10px; padding: 13px;
+  }
+  &__always {
+    font-size: $font-size-sm; color: var(--am-brand-ink);
+    background: $status-ok-bg; border: 1px solid $status-ok-border;
+    border-radius: 6px; padding: 5px 9px; margin-bottom: 12px;
+  }
+  &__timeline { position: relative; padding-left: 18px;
+    &::before {
+      content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px;
+      width: 2px; background: var(--am-line);
+    }
+  }
+  &__milestone { position: relative; & + & { margin-top: 14px; } }
+  &__dot {
+    position: absolute; left: -18px; top: 4px; width: 10px; height: 10px; border-radius: 50%;
+    &.is-flowering { background: $status-alert; }
+    &.is-harvest_end { background: var(--am-brand); }
+  }
+  &__ms-label { font-size: $font-size-base; font-weight: $font-weight-semibold; color: var(--am-ink); }
+  &__ms-date { font-size: $font-size-sm; color: var(--am-ink-soft); }
+  &__ms-win {
+    display: inline-block; margin-top: 5px;
+    font-size: $font-size-sm; border-radius: 6px; padding: 4px 9px;
+    &.tone-alert { color: $status-alert; background: $status-alert-bg; }
+    &.tone-warn { color: $status-warning; background: $status-warning-bg; }
+  }
+
+  // -------- chronological list with its own scroll --------
+  &__list {
+    list-style: none; margin: 0; padding: 0;
+    border: 1px solid var(--am-line-soft); border-radius: 10px;
+    max-height: 240px; overflow-y: auto;
+    li {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 10px 12px; border-bottom: 1px solid var(--am-line-soft);
+      font-size: $font-size-base; color: var(--am-ink);
+      &:last-child { border-bottom: 0; }
+      &.is-confirming { background: $status-alert-bg; }
+    }
+  }
+  &__icon { display: inline-flex; color: var(--am-brand); flex: 0 0 auto; }
+  &__label { font-weight: $font-weight-semibold; min-width: 118px; }
+  &__date { color: var(--am-ink-soft); }
+  &__ago { font-size: $font-size-sm; color: var(--am-ink-faint); }
+  &__note {
+    flex: 1; min-width: 0; font-size: $font-size-sm; font-style: italic; color: var(--am-ink-faint);
+  }
+  &__del {
+    margin-left: auto; flex: 0 0 auto; cursor: pointer;
+    color: var(--am-ink-faint); background: none; border: 0; border-radius: 6px;
+    // A comfortable touch area even with a small icon.
+    min-width: 40px; min-height: 40px; display: inline-flex;
+    align-items: center; justify-content: center;
+    &:hover { color: $status-alert; background: $status-alert-bg; }
+  }
+  &__confirm {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: $font-size-sm; color: $status-alert; font-weight: $font-weight-semibold;
+  }
+  &__yes, &__no {
+    font-size: $font-size-sm; font-weight: $font-weight-semibold; cursor: pointer; min-height: 36px;
+    border-radius: 6px; padding: 6px 12px; border: 1px solid transparent;
+  }
+  &__yes { color: $background-white; background: $status-alert; &:hover { background: $status-alert; } }
+  &__no {
+    color: var(--am-ink-soft); background: $background-white; border-color: var(--am-line);
+    &:hover { border-color: var(--am-ink-faint); }
+  }
+
+  @media (max-width: 600px) {
+    padding: 12px;
+    &__panel { max-height: 92vh; padding: 16px; }
+    &__label { min-width: 0; }
+    &__note { flex-basis: 100%; }
+  }
+}

@@ -1,187 +1,208 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import api, { setAuthToken } from '../services/api.client';
 import API_ENDPOINTS from '../services/api.endpoints';
-import { Assignment, Device, DataRecordRaw, DataRecord, Recommendation } from '../types/api.types';
+import { sensorService } from '../services/sensor.service';
+import { Sensor } from '../types/sensor.types';
+import { DataRecordRaw, DataRecord, Recommendation } from '../types/api.types';
+
+/**
+ * How often the sensor is re-read. In the field the hub reports every ~2 min, so polling faster
+ * would only spend phone battery and mobile data.
+ */
+export const REFRESH_INTERVAL_MS = 120_000;
 
 export interface SectionDataState {
+  /** Initial load (or a section change) only. The periodic poll does NOT set it. */
   loading: boolean;
+  /** A request is in flight over data already on screen. */
+  refreshing: boolean;
   error?: Error | null;
-  assignments: Assignment[];
-  selectedAssignment?: Assignment | null;
-  device?: Device | null;
+  /** The hub measuring this section NOW, or null if none is installed. */
+  hub: Sensor | null;
   dataRecord?: DataRecord | null;
   recommendations: Recommendation[];
+  /** When (epoch ms) the next poll runs, for the panel's countdown. */
+  nextRefreshAt: number | null;
   refresh: () => Promise<void>;
   setToken: (token: string | null) => void;
-  selectAssignment: (assignmentId: string | number) => void;
 }
 
-export function useSectionData(initialToken: string | null, sectionId: string | number): SectionDataState {
-  const [loading, setLoading] = useState(false);
+const normalizeDataRecord = (raw: DataRecordRaw | null): DataRecord | null => {
+  if (!raw) return null;
+  const getNumber = (v: any): number | null => {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return Number.isNaN(n) ? null : n;
+  };
+
+  return {
+    id: raw.id,
+    airHumidityPercent: getNumber(raw.airHumidityPercent),
+    celciusGradeTemperature: getNumber(raw.celciusGradeTemperature ?? null),
+    soilHumidityPercent: getNumber(raw.soilHumidityPercent),
+    // precipitationDetected: keep the backend value as-is (0 or 1 or boolean)
+    precipitationDetected: raw.precipitationDetected,
+    nitrogen: getNumber(raw.nitrogen),
+    phosphorus: getNumber(raw.phosphorus),
+    potassium: getNumber(raw.potassium),
+    timestamp: raw.timestamp ?? null,
+    updatedAt: raw.updatedAt ?? null,
+  };
+};
+
+/**
+ * Live section data: which hub measures it, its last reading and the engine diagnosis.
+ *
+ * The hub comes from `/devices`, not `/assignments`. `/assignments` returns ALL of the section's
+ * assignments, including closed ones, and its resource does not expose `removedAt`, so the front
+ * end cannot tell today's hub from one removed in March; taking the first would show the wrong
+ * hub's readings in a section that changed equipment. `/devices` resolves the open period on the
+ * server (`RemovedAt == null`), so each hub's `sectionId` is where it is installed NOW.
+ */
+export function useSectionData(
+  initialToken: string | null,
+  sectionId: string | number
+): SectionDataState {
+  // Starts `true` because a fetch ALWAYS runs on mount. At `false` the first frame has
+  // `hub = null` and the view paints "this plot is not measured yet" before asking: an invented
+  // answer for 300 ms, worse than a gap.
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [device, setDevice] = useState<Device | null>(null);
+  const [hub, setHub] = useState<Sensor | null>(null);
   const [dataRecord, setDataRecord] = useState<DataRecord | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  // token state is intentionally not stored locally beyond setting it on the client
+  const [nextRefreshAt, setNextRefreshAt] = useState<number | null>(null);
+
+  /** The current hub, so the poll need not resolve it again. */
+  const hubIdRef = useRef<string | null>(null);
+
   const setToken = useCallback((t: string | null) => {
     setAuthToken(t);
   }, []);
 
-  // apply initial token to client when hook mounts or when initialToken changes
   useEffect(() => {
     if (initialToken) setAuthToken(initialToken);
   }, [initialToken]);
 
-  const normalizeDataRecord = (raw: DataRecordRaw | null): DataRecord | null => {
-    if (!raw) return null;
-    const getNumber = (v: any): number | null => {
-      if (v === null || v === undefined || v === '') return null;
-      const n = Number(v);
-      return Number.isNaN(n) ? null : n;
-    };
+  /** The hub's last reading + diagnosis. The only thing that changes between polls. */
+  const fetchLive = useCallback(async (hubId: string) => {
+    const [record, recs] = await Promise.all([
+      api
+        .get<DataRecordRaw>(`${API_ENDPOINTS.DATA_RECORDS}/latest/${encodeURIComponent(hubId)}`)
+        .then((r) => normalizeDataRecord(r.data as DataRecordRaw))
+        // 404 = the hub has not reported anything yet; not a failure.
+        .catch(() => null),
+      api
+        .get<Recommendation[]>(API_ENDPOINTS.RECOMMENDATIONS)
+        .then((r) => (r.data || []).filter((x) => String(x.deviceHubId) === String(hubId)))
+        .catch(() => [] as Recommendation[]),
+    ]);
 
-    // handle misspelling
-    const temp = raw.celciusGradeTemperature ?? null;
+    setDataRecord(record);
+    setRecommendations(recs);
+  }, []);
 
-    return {
-      id: raw.id,
-      airHumidityPercent: getNumber(raw.airHumidityPercent),
-      celciusGradeTemperature: getNumber(temp),
-      soilHumidityPercent: getNumber(raw.soilHumidityPercent),
-      // precipitationDetected: mantener el valor del backend tal cual (0 o 1 o boolean)
-      precipitationDetected: raw.precipitationDetected,
-      nitrogen: getNumber(raw.nitrogen),
-      phosphorus: getNumber(raw.phosphorus),
-      potassium: getNumber(raw.potassium),
-      timestamp: raw.timestamp ?? null,
-      updatedAt: raw.updatedAt ?? null
-    };
-  };
+  /**
+   * Full load: installed hub -> reading and diagnosis. `silent` is what makes polling possible:
+   * clearing all state before fetching would flash the screen blank every two minutes on
+   * auto-refresh, so in silent mode it writes over what is already shown.
+   */
+  const fetchAll = useCallback(
+    async (silent = false) => {
+      if (silent) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setAssignments([]);
-    setSelectedAssignment(null);
-    setDevice(null);
-    setDataRecord(null);
-    setRecommendations([]);
+      try {
+        const hubs = await sensorService.getAllSensors();
+        const mine = hubs.find((h) => String(h.sectionId) === String(sectionId)) ?? null;
+        setHub(mine);
+        hubIdRef.current = mine?.deviceHubId ?? null;
 
-    try {
-      // assignments
-  const assignmentsRes = await api.get<Assignment[]>(API_ENDPOINTS.ASSIGNMENTS);
-      const allAssignments = assignmentsRes.data || [];
-      // filter by sectionId (no server-side filter assumed)
-      const filtered = allAssignments.filter(a => String(a.sectionId) === String(sectionId));
-      setAssignments(filtered);
-
-      const useAssignment = filtered[0] ?? null;
-      setSelectedAssignment(useAssignment);
-      if (!useAssignment) {
+        if (mine?.deviceHubId) {
+          await fetchLive(mine.deviceHubId);
+        } else {
+          setDataRecord(null);
+          setRecommendations([]);
+        }
+      } catch (err: any) {
+        // In a silent poll the error does not wipe what the user is looking at: a passing
+        // network failure must not turn a useful screen into an error one.
+        if (!silent) setError(err);
+        else console.warn('No se pudo actualizar la sección', err);
+      } finally {
         setLoading(false);
-        return;
+        setRefreshing(false);
+        setNextRefreshAt(Date.now() + REFRESH_INTERVAL_MS);
       }
+    },
+    [sectionId, fetchLive]
+  );
 
-      // device
-  const deviceRes = await api.get<Device>(`${API_ENDPOINTS.DEVICES}/${useAssignment.deviceId}`);
-      const d = deviceRes.data as Device;
-      setDevice(d);
+  const refresh = useCallback(async () => {
+    await fetchAll(true);
+  }, [fetchAll]);
 
-      // data record
-      if (d?.dataRecordId) {
-        try {
-          const drRes = await api.get<DataRecordRaw>(`${API_ENDPOINTS.DATA_RECORDS}/${d.dataRecordId}`);
-          const normalized = normalizeDataRecord(drRes.data as DataRecordRaw);
-          setDataRecord(normalized);
-        } catch (err) {
-          // ignore individual data record error but surface a warning
-          console.warn('Failed to load data record', err);
-        }
-      }
-
-      // recommendations
-      if (d?.deviceHubId) {
-        try {
-          const recRes = await api.get<Recommendation[]>(API_ENDPOINTS.RECOMMENDATIONS);
-          const all = recRes.data || [];
-          const filteredRec = all.filter(r => String(r.deviceHubId) === String(d.deviceHubId));
-          setRecommendations(filteredRec);
-        } catch (err) {
-          console.warn('Failed to load recommendations', err);
-        }
-      }
-    } catch (err: any) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
+  // Initial load and section change.
+  useEffect(() => {
+    fetchAll(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionId]);
 
-  const refresh = async () => {
-    await fetchAll();
-  };
+  /**
+   * Polls every 2 minutes. Stops while the tab is backgrounded (battery and mobile data in the
+   * field) and fetches immediately on return, which is when the user wants the current state.
+   */
+  useEffect(() => {
+    let timer: number | undefined;
 
-  const selectAssignment = (assignmentId: string | number) => {
-    const found = assignments.find(a => String(a.id) === String(assignmentId)) ?? null;
-    setSelectedAssignment(found);
-    // when selecting a different assignment, re-run fetch for device and data
-    if (found) {
-      (async () => {
-        setLoading(true);
-        try {
-          const deviceRes = await api.get<Device>(`${API_ENDPOINTS.DEVICES}/${found.deviceId}`);
-          const d = deviceRes.data as Device;
-          setDevice(d);
-          if (d?.dataRecordId) {
-            try {
-              const drRes = await api.get<DataRecordRaw>(`${API_ENDPOINTS.DATA_RECORDS}/${d.dataRecordId}`);
-              setDataRecord(normalizeDataRecord(drRes.data as DataRecordRaw));
-            } catch (err) {
-              setDataRecord(null);
-            }
-          } else {
-            setDataRecord(null);
-          }
+    const poll = () => {
+      if (document.hidden) return;
+      const hubId = hubIdRef.current;
+      if (!hubId) return;
+      setRefreshing(true);
+      fetchLive(hubId)
+        .catch((err) => console.warn('Sondeo del sensor fallido', err))
+        .finally(() => {
+          setRefreshing(false);
+          setNextRefreshAt(Date.now() + REFRESH_INTERVAL_MS);
+        });
+    };
 
-          if (d?.deviceHubId) {
-            try {
-              const recRes = await api.get<Recommendation[]>(API_ENDPOINTS.RECOMMENDATIONS);
-              const all = recRes.data || [];
-              setRecommendations(all.filter(r => String(r.deviceHubId) === String(d.deviceHubId)));
-            } catch (err) {
-              setRecommendations([]);
-            }
-          } else {
-            setRecommendations([]);
-          }
+    const start = () => {
+      window.clearInterval(timer);
+      timer = window.setInterval(poll, REFRESH_INTERVAL_MS);
+    };
 
-        } catch (err) {
-          setError(err as Error);
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-  };
+    const onVisibility = () => {
+      if (document.hidden) {
+        window.clearInterval(timer);
+        setNextRefreshAt(null);
+      } else {
+        poll();
+        start();
+      }
+    };
 
-  // initial fetch and re-fetch when sectionId changes
-  // Note: consumers can still call refresh() manually; we auto-run on mount and when sectionId changes
-  useEffect(() => { 
-    fetchAll(); 
-  }, [sectionId]); // Solo depende de sectionId, no de fetchAll
+    start();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [fetchLive]);
 
   return {
     loading,
+    refreshing,
     error,
-    assignments,
-    selectedAssignment,
-    device,
+    hub,
     dataRecord,
     recommendations,
+    nextRefreshAt,
     refresh,
     setToken,
-    selectAssignment
   };
 }

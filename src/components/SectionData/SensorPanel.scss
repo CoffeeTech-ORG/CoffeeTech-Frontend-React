@@ -1,0 +1,189 @@
+@import '../../styles/variables.scss';
+
+// Live sensor panel. Each cell carries its verdict: the number alone says nothing to whoever has
+// to decide whether to fertilise.
+.sensor-panel {
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-lg;
+  padding: 16px;
+
+  // It is the control that collapses the whole panel on mobile, so it meets the touch target.
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: $touch-target;
+    padding: 0;
+    background: none;
+    border: 0;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 4px;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: $font-size-card-title;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  // "Live" dot: the only signal that the screen updates on its own.
+  &__live {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: none;
+    background: $status-ok;
+    animation: sensor-live-pulse 2.4s ease-in-out infinite;
+  }
+
+  &__countdown {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $status-ok;
+    white-space: nowrap;
+  }
+
+  &__chev {
+    color: $text-muted;
+    flex: none;
+    transition: transform 0.18s ease;
+  }
+
+  &.is-open &__chev {
+    transform: rotate(180deg);
+  }
+
+  &__cadence {
+    margin: 6px 0 0;
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 14px;
+  }
+
+  &__note {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    background: $status-neutral-bg;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-sm;
+    line-height: 1.45;
+    color: $text-body;
+  }
+
+  &__empty {
+    margin: 8px 0 0;
+    font-size: $font-size-base;
+    color: $text-secondary;
+  }
+
+  &__refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    min-height: $touch-target;
+    margin-top: 12px;
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $text-body;
+    background: $background-cream;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: $border-color;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.sensor-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  background: $background-cream;
+
+  &.is-plain {
+    color: $text-body;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  &__value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: $font-size-card-title;
+    font-weight: $font-weight-black;
+    color: inherit;
+
+    &--text {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  &__unit {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    opacity: 0.75;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: inherit;
+  }
+}
+
+@keyframes sensor-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

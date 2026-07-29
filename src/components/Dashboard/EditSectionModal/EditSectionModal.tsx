@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, message } from 'antd';
 import { X } from 'lucide-react';
-import { Section } from '../../../services/farms.service';
+import { Section, farmsService } from '../../../services/farms.service';
+import { sensorService } from '../../../services/sensor.service';
+import { Sensor } from '../../../types/sensor.types';
 import { useI18n } from '../../../contexts/I18nContext';
+import { GROWTH_STAGES, stageImage } from '../../../utils/growthStage';
 import './EditSectionModal.scss';
 
 const { Option } = Select;
@@ -31,14 +34,79 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
-  const growthStageOptions = [
-    { value: 'plantula', label: t('sectionType.plantula'), icon: '🌱' },
-    { value: 'vegetativo', label: t('sectionType.vegetativo'), icon: '🌿' },
-    { value: 'floracion', label: t('sectionType.floracion'), icon: '🌸' },
-    { value: 'fructificacion', label: t('sectionType.fructificacion'), icon: '🍃' },
-    { value: 'maduracion', label: t('sectionType.maduracion'), icon: '🟡' },
-    { value: 'cosecha', label: t('sectionType.cosecha'), icon: '☕' }
-  ];
+  /**
+   * The hub measuring this section is managed here, not in a separate card button. To the user the
+   * hub is an ATTRIBUTE of the plot -- "what equipment measures it?" -- like its name and stage; a
+   * separate icon would split the same task across two places.
+   */
+  const [hubs, setHubs] = useState<Sensor[]>([]);
+  const [hubsLoading, setHubsLoading] = useState(false);
+  const [pendingHubId, setPendingHubId] = useState<number | null>(null);
+
+  const currentHub = section
+    ? hubs.find((h) => String(h.sectionId) === String(section.id))
+    : undefined;
+
+  // Only UNASSIGNED hubs are offered: one already installed in another plot would leave that one
+  // without data, and that must not happen by accident from a dropdown.
+  const availableHubs = hubs.filter((h) => h.sectionId == null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setHubsLoading(true);
+    setPendingHubId(null);
+    sensorService
+      .getAllSensors()
+      .then((list) => !cancelled && setHubs(list))
+      .catch(() => !cancelled && setHubs([]))
+      .finally(() => !cancelled && setHubsLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  const handleRemoveHub = async () => {
+    if (!currentHub?.assignmentId) return;
+    try {
+      setSubmitting(true);
+      await farmsService.removeAssignment(currentHub.assignmentId);
+      message.success(t('sections.hub.removed'));
+      setHubs((prev) =>
+        prev.map((h) =>
+          h.id === currentHub.id ? { ...h, sectionId: null, assignmentId: null } : h
+        )
+      );
+    } catch (error: any) {
+      message.error(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAssignHub = async () => {
+    if (!section || pendingHubId == null) return;
+    try {
+      setSubmitting(true);
+      await farmsService.createAssignment(Number(section.id), pendingHubId);
+      message.success(t('sections.hub.assigned'));
+      setHubs((prev) =>
+        prev.map((h) => (h.id === pendingHubId ? { ...h, sectionId: Number(section.id) } : h))
+      );
+      setPendingHubId(null);
+    } catch (error: any) {
+      message.error(error.message || t('sections.hub.assignError'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // The project images, not emoji: the same seen on entering the section.
+  const growthStageOptions = GROWTH_STAGES.map((key) => ({
+    value: key,
+    label: t(`sectionType.${key}`),
+    image: stageImage(key),
+  }));
 
   // Helper function to convert display name to internal value
   const getValueFromDisplayName = (displayName: string) => {
@@ -160,13 +228,70 @@ export const EditSectionModal: React.FC<EditSectionModalProps> = ({
               {growthStageOptions.map((option) => (
                 <Option key={option.value} value={option.value}>
                   <div className="select-option">
-                    <span className="option-icon">{option.icon}</span>
+                    <img className="option-icon" src={option.image ?? ''} alt="" aria-hidden="true" />
                     <span className="option-label">{option.label}</span>
                   </div>
                 </Option>
               ))}
             </Select>
           </Form.Item>
+
+          {/* Separado del formulario: cambiar el hub tiene efecto inmediato, no espera a
+              "Actualizar sección". Mezclarlo con los campos haría creer que se guarda junto. */}
+          <div className="hub-section">
+            <div className="hub-section__label">{t('sections.hub.label')}</div>
+
+            {hubsLoading ? (
+              <div className="hub-section__empty">{t('common.loading')}</div>
+            ) : currentHub ? (
+              <>
+                <div className="hub-section__current">
+                  <span className="hub-mac">{currentHub.deviceHubId}</span>
+                  <Button type="link" danger size="small" onClick={handleRemoveHub} disabled={submitting}>
+                    {t('sections.hub.remove')}
+                  </Button>
+                </div>
+                {currentHub.installedAt && (
+                  <div className="hub-section__hint">
+                    {t('sections.hub.installedSince', {
+                      date: new Date(currentHub.installedAt).toLocaleDateString('es-PE', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      }),
+                    })}
+                  </div>
+                )}
+              </>
+            ) : availableHubs.length === 0 ? (
+              <div className="hub-section__empty">{t('sections.hub.noneAvailable')}</div>
+            ) : (
+              <div className="hub-section__assign">
+                {/* Desplegable de los hubs que YA reportaron: nadie teclea una MAC, que era
+                    de donde salían los duplicados por error de tipeo. */}
+                <Select
+                  value={pendingHubId ?? undefined}
+                  onChange={setPendingHubId}
+                  placeholder={t('sections.hub.selectPlaceholder')}
+                  className="hub-select"
+                  size="large"
+                >
+                  {availableHubs.map((hub) => (
+                    <Option key={hub.id} value={hub.id}>
+                      {hub.deviceHubId}
+                    </Option>
+                  ))}
+                </Select>
+                <Button
+                  type="primary"
+                  onClick={handleAssignHub}
+                  disabled={pendingHubId == null || submitting}
+                >
+                  {t('sections.hub.assign')}
+                </Button>
+              </div>
+            )}
+          </div>
 
           <div className="modal-actions">
             <Button

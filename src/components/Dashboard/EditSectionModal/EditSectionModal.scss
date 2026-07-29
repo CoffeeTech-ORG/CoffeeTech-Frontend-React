@@ -1,31 +1,33 @@
+@import '../../../styles/variables';
+
 .edit-section-modal {
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid $border-subtle;
   }
   .modal-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
     margin: 0;
   }
   .close-btn {
     background: none;
     border: none;
     cursor: pointer;
-    color: #888;
+    color: $text-muted;
     transition: color 0.2s;
     &:hover {
-      color: #d32f2f;
+      color: $status-alert;
     }
   }
   .modal-content {
     padding-top: 24px;
   }
   .form-input {
-    font-size: 1rem;
+    font-size: $font-size-base;
     border-radius: 8px;
   }
   
@@ -33,7 +35,7 @@
   .form-select {
     .ant-select-selector {
       border-radius: 8px !important;
-      border: 1px solid #d1d5db !important;
+      border: 1px solid $border-color !important;
       padding: 8px 12px !important;
       height: auto !important;
       min-height: 48px !important;
@@ -42,25 +44,25 @@
       transition: all 0.2s ease;
 
       &:hover {
-        border-color: #9ca3af !important;
+        border-color: $text-muted !important;
       }
     }
 
     &.ant-select-focused {
       .ant-select-selector {
-        border-color: #3b82f6 !important;
+        border-color: $primary-color !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
       }
     }
 
     .ant-select-selection-placeholder {
-      color: #9ca3af;
-      font-size: 14px;
+      color: $text-muted;
+      font-size: $font-size-sm;
       line-height: 1.5;
     }
 
     .ant-select-selection-item {
-      font-size: 14px;
+      font-size: $font-size-sm;
       line-height: 1.5;
     }
   }
@@ -72,19 +74,20 @@
     margin-top: 24px;
   }
   .cancel-btn {
-    background: #f5f5f5;
-    color: #333;
+    background: $background-cream;
+    color: $text-body;
     border-radius: 8px;
     &:hover {
-      background: #e0e0e0;
+      background: $border-color;
     }
   }
   .submit-btn {
-    background: #1e293b;
-    color: #fff;
+    // Navy by scaffold inheritance, not by decision.
+    background: $primary-color;
+    color: $background-white;
     border-radius: 8px;
     &:hover {
-      background: #334155;
+      background: darken($primary-color, 8%);
     }
   }
 }
@@ -97,21 +100,21 @@
   padding: 4px 0;
 
   .option-icon {
-    font-size: 16px;
+    font-size: $font-size-base;
     width: 20px;
     text-align: center;
   }
 
   .option-label {
-    font-size: 14px;
-    color: #374151;
+    font-size: $font-size-sm;
+    color: $text-body;
   }
 }
 
 // Ant Design Select dropdown customization
 .ant-select-dropdown {
   border-radius: 8px !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid $border-subtle !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 
   .ant-select-item {
@@ -120,12 +123,81 @@
     padding: 8px 12px !important;
 
     &:hover {
-      background-color: #f3f4f6 !important;
+      background-color: $background-cream !important;
     }
 
     &.ant-select-item-option-selected {
-      background-color: #dbeafe !important;
-      color: #1e40af !important;
+      background-color: $primary-color-soft !important;
+      color: $primary-color !important;
     }
   }
+}
+// The hub that measures the section. Split from the form by a divider because it applies at once,
+// not on "Update section": mixed with the fields it would read as a change pending save.
+.hub-section {
+  border-top: 1px solid $border-color;
+  padding-top: 14px;
+  margin-bottom: 18px;
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-secondary;
+    margin-bottom: 6px;
+  }
+
+  &__current {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    padding: 8px 12px;
+
+    .hub-mac {
+      // The same monospace stack as the rest of the app's MACs, not the system generic.
+      font-family: $font-family-mono;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__assign {
+    display: flex;
+    gap: 8px;
+
+    .hub-select {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__hint,
+  &__empty {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 480px) {
+    &__assign {
+      flex-direction: column;
+    }
+  }
+}
+
+// The stage is shown with the project images, the same as in the section detail. Fixed size
+// because they do not share a common aspect ratio.
+.select-option img.option-icon,
+.ant-select-item-option-content img.option-icon {
+  // 30 px: the dropdown rows have room to spare, and this is where the user CHOOSES the stage, so
+  // where telling them apart matters most.
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex: none;
+  margin-right: 8px;
+  vertical-align: middle;
 }

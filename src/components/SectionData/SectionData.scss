@@ -1,166 +1,194 @@
+@import '../../styles/variables.scss';
+
+// Section detail.
+//
+// No card frame on mobile: the view is already inside the app container, and a full-width white
+// card groups nothing against nothing, only spending 16 % of the width. The pieces inside (verdict,
+// sensor, log) are the visual units.
 .section-data {
-  padding: 24px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-  
-  .section-data__header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e8e8e8;
-    
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .section-icon {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-      }
-      
-      .section-info {
-        h3 {
-          margin: 0;
-          color: #333;
-          font-size: 24px;
-          font-weight: 600;
-        }
-        
-        .section-type {
-          color: #666;
-          font-size: 14px;
-          margin: 4px 0 0 0;
-        }
-      }
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid $border-subtle;
+  }
+
+  &__stage-img {
+    width: 52px;
+    height: 52px;
+    flex: none;
+    object-fit: contain;
+  }
+
+  &__id {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    line-height: $line-height-tight;
+    color: $text-primary;
+  }
+
+  // The stage is categorical (axis 3): a neutral label, no judgement colour.
+  &__stage {
+    margin: 3px 0 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__chip {
+    flex: none;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: $border-radius-pill;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
+  }
+
+  &__menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $touch-target;
+    height: $touch-target;
+    flex: none;
+    color: $text-secondary;
+    background: none;
+    border: 0;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+
+    &:hover {
+      background: $background-cream;
+      color: $text-primary;
     }
-    
-    .header-right {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      
-      .refresh-btn {
-        background: #20B2AA;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.3s;
-        
-        &:hover {
-          background: #1b8f89;
-        }
-        
-        &:disabled {
-          background: #d9d9d9;
-          cursor: not-allowed;
-        }
-      }
-      
-      .close-btn {
-        background: #ff4d4f;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.3s;
-        
-        &:hover {
-          background: #cf1322;
-        }
-      }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: -2px;
     }
   }
-  
-  .loading-state {
+
+  &__loading,
+  &__error {
+    padding: 24px 16px;
     text-align: center;
-    padding: 40px 20px;
-    color: #666;
-    font-size: 16px;
+    font-size: $font-size-base;
+    color: $text-secondary;
+    background: $background-cream;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
   }
-  
-  .error-state {
-    background: #fff2f0;
-    border: 1px solid #ffccc7;
-    border-radius: 6px;
-    padding: 16px;
-    margin-bottom: 20px;
-    
-    .error-message {
-      color: #ff4d4f;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
+
+  &__error {
+    color: $status-alert;
+    background: $status-alert-bg;
+    border-color: $status-alert-border;
   }
-  
-  .section-content {
-    display: grid;
-    gap: 24px;
-    
-    .content-section {
-      background: #fafafa;
-      border-radius: 8px;
-      padding: 20px;
-      
-      h4 {
-        margin: 0 0 16px 0;
-        color: #333;
-        font-size: 18px;
-        font-weight: 600;
+
+  &__stack,
+  &__grid,
+  &__main,
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  // -------- density switch (Manager only) --------
+  &__density {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__density-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  &__density-seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: $background-canvas;
+    border-radius: $border-radius-pill;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 6px 14px;
+      font-family: inherit;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-bold;
+      color: $text-secondary;
+      background: none;
+      border: 0;
+      border-radius: $border-radius-pill;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+
+      &.is-on {
+        color: $background-light;
+        background: $primary-color;
       }
-      
-      &.assignments-section {
-        .no-device {
-          color: #faad14;
-          font-style: italic;
-        }
-        
-        .device-info {
-          color: #666;
-          font-weight: 500;
-        }
-        
-        .assignment-selector {
-          select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            
-            &:focus {
-              border-color: #40a9ff;
-              outline: none;
-              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-            }
-          }
-        }
+
+      &:focus-visible {
+        outline: 2px solid $primary-color;
+        outline-offset: 2px;
       }
     }
   }
 }
 
-@media (max-width: 1024px) {
-    .section-data {
-      padding: 12px !important;
-        .section-data__header {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-        }
-    }
-    .section-content .content-section {
-        background: none !important;
-        padding: 0px !important;
-    }
+// On the phone, in the field with dirty hands, everything tappable rises to 44 px. On desktop it
+// stays compact: there the target is the pointer, not the finger.
+@media (max-width: 767px) {
+  .section-data__density-seg button {
+    min-height: $touch-target;
+  }
+}
+
+// On desktop, two columns: the decision on the left and the evidence on the right, which stays
+// fixed while the recommendations are scrolled. On mobile the same source order stacks on its own,
+// nothing reordered.
+@media (min-width: 1024px) {
+  .section-data__grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: start;
+    gap: 18px;
+  }
+
+  .section-data__aside {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+// Spins while reloading: without a "Loading…" label, another signal that something is happening
+// was needed.
+.is-spinning {
+  animation: section-data-spin 0.9s linear infinite;
+}
+
+@keyframes section-data-spin {
+  to { transform: rotate(360deg); }
 }

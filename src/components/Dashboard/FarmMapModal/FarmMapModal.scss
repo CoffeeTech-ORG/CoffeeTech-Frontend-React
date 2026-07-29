@@ -1,3 +1,5 @@
+@import '../../../styles/variables';
+
 .farm-map-modal {
   .ant-modal-content {
     padding: 0;
@@ -14,8 +16,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid #f0f0f0;
-    background: #fff;
+    border-bottom: 1px solid $border-subtle;
+    background: $background-white;
 
     .modal-title-section {
       display: flex;
@@ -23,22 +25,24 @@
       gap: 12px;
 
       .modal-icon {
-        color: #20B2AA;
+        color: $primary-color;
         flex-shrink: 0;
       }
 
+      // The title colour and the header background must not be the same token, or the title is
+      // invisible. Named tokens make that visible where a pair of identical hex values does not.
       .modal-title {
         margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #fff;
+        font-size: $font-size-lg;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
         line-height: 1.2;
       }
 
       .modal-subtitle {
         margin: 0;
-        font-size: 14px;
-        color: #8c8c8c;
+        font-size: $font-size-sm;
+        color: $text-muted;
         line-height: 1.2;
       }
     }
@@ -50,15 +54,15 @@
       width: 32px;
       height: 32px;
       border: none;
-      background: #f5f5f5;
+      background: $background-cream;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
-      color: #595959;
+      color: $text-secondary;
 
       &:hover {
-        background: #e6f7ff;
-        color: #20B2AA;
+        background: $primary-color-soft;
+        color: $primary-color;
       }
     }
   }
@@ -73,25 +77,25 @@
       justify-content: center;
       height: 400px;
       gap: 16px;
-      background: #fafafa;
+      background: $background-cream;
 
       p {
         margin: 0;
-        color: #8c8c8c;
-        font-size: 14px;
+        color: $text-muted;
+        font-size: $font-size-sm;
       }
     }
 
     .map-container {
       position: relative;
-      background: #f5f5f5;
+      background: $background-cream;
       
-      // Estilos para los controles de Google Maps
+      // Styles for the Google Maps controls
       .gm-style {
         border-radius: 0 0 12px 12px;
       }
 
-      // Personalizar los controles de Google Maps
+      // Customise the Google Maps controls
       .gm-style-cc {
         display: none !important;
       }
@@ -118,11 +122,11 @@
         gap: 10px;
 
         .modal-title {
-          font-size: 16px;
+          font-size: $font-size-base;
         }
 
         .modal-subtitle {
-          font-size: 13px;
+          font-size: $font-size-sm;
         }
       }
 
@@ -148,40 +152,7 @@
   }
 }
 
-// Dark theme support
-@media (prefers-color-scheme: dark) {
-  .farm-map-modal {
-    .modal-header {
-      background: #1f1f1f;
-      border-bottom-color: #303030;
-
-      .modal-title {
-        color: #fff;
-      }
-
-      .modal-subtitle {
-        color: #bfbfbf;
-      }
-
-      .close-btn {
-        background: #303030;
-        color: #bfbfbf;
-
-        &:hover {
-          background: #20B2AA;
-          color: #fff;
-        }
-      }
-    }
-
-    .modal-content {
-      .loading-container {
-        background: #1f1f1f;
-
-        p {
-          color: #bfbfbf;
-        }
-      }
-    }
-  }
-}
+// No `@media (prefers-color-scheme: dark)` here. The project has NO dark theme, by decision (see
+// `statusTokens.ts` and `variables.scss`); a dark block here would paint only THIS modal's header
+// dark while the rest of the app stays cream, reading as a load failure. If a dark theme is ever
+// done, it is done whole and from the tokens, not modal by modal.

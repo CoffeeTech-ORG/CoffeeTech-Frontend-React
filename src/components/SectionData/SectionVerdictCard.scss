@@ -1,0 +1,215 @@
+@import '../../styles/variables.scss';
+
+// The section verdict. Read first, so it is serif and more spaced than the rest: the decider looks
+// at this card and, if there is nothing, does not scroll on.
+.verdict {
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-xl;
+  padding: 20px;
+  box-shadow: $shadow-light;
+
+  &--attention {
+    // The colour comes from the component, from the engine severity (axis 1).
+    border-left: 5px solid $status-neutral;
+  }
+
+  &__overline {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  &__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: none;
+  }
+
+  &__headline {
+    font-family: $font-family-display;
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    line-height: $line-height-tight;
+    color: $text-primary;
+    margin: 9px 0 0;
+  }
+
+  &__body {
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $text-body;
+    margin: 8px 0 0;
+  }
+
+  // -------- CTA + paso a paso --------
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: $touch-target;
+    margin-top: 14px;
+    padding: 12px 18px;
+    font-family: inherit;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $background-light;
+    background: $primary-color;
+    border: 0;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+
+    &:hover {
+      background: $primary-color-dark;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+
+    svg {
+      transition: transform 0.18s ease;
+
+      &.is-open {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  &__steps {
+    margin-top: 12px;
+    padding: 14px 16px;
+    background: $background-cream;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-md;
+
+    .verdict__overline {
+      color: $primary-color;
+    }
+
+    ol {
+      margin: 9px 0 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: $font-size-base;
+      line-height: 1.45;
+      color: $text-primary;
+    }
+  }
+
+  &__hint {
+    margin: 10px 0 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  // The steps exist, but something has to be confirmed first. Warning amber, not terracotta: not
+  // a greater urgency, a precondition.
+  &__contingency {
+    margin: 9px 0 0;
+    padding: 8px 11px;
+    font-size: $font-size-sm;
+    line-height: 1.45;
+    color: $status-warning;
+    background: $status-warning-bg;
+    border-radius: $border-radius-sm;
+
+    strong {
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  // -------- calm state --------
+  &--allgood {
+    text-align: center;
+  }
+
+  &__check {
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    margin: 4px auto 0;
+    border-radius: 50%;
+    color: $status-ok;
+    background: $status-ok-bg;
+    border: 2px solid $status-ok-border;
+  }
+
+  &--allgood &__headline {
+    margin-top: 14px;
+    font-size: $font-size-page-title;
+  }
+
+  &__seen {
+    margin: 8px 0 0;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+    text-align: left;
+  }
+
+  &__stage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: $background-cream;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
+
+    img {
+      width: 56px;
+      height: 56px;
+      flex: none;
+      object-fit: contain;
+    }
+  }
+
+  &__stage-name {
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  &__next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: $background-cream;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
+  }
+
+  &__next-name {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    text-align: right;
+  }
+
+  &--empty {
+    .verdict__body {
+      margin: 0;
+    }
+  }
+}

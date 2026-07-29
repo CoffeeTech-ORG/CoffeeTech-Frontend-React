@@ -1,161 +1,263 @@
-.recommendation-list {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  border: 1px solid #e8e8e8;
-  
-  h4 {
-    margin: 0 0 16px 0;
-    color: #333;
-    font-size: 18px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    &::before {
-      content: '💡';
-      font-size: 20px;
-    }
-  }
-  
-  .recommendations {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    
-    .recommendation-item {
-      background: #f6f6f6;
-      border-radius: 6px;
-      padding: 16px;
-      border-left: 4px solid #faad14;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      position: relative;
-      
-      &:hover {
-        background: #f0f0f0;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-      
-      .recommendation-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .recommendation-title {
-          font-weight: 600;
-          color: #333;
-          font-size: 16px;
-          flex: 1;
-        }
-        
-        .expand-indicator {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 18px;
-          color: #666;
-          border: 1px solid #ddd;
-          transition: all 0.3s ease;
-        }
-      }
-      
-      .recommendation-description {
-        margin-top: 12px;
-        color: #666;
-        font-size: 14px;
-        line-height: 1.6;
-        white-space: pre-line;
-        animation: fadeIn 0.3s ease-in-out;
-      }
-      
-      &.expanded {
-        .expand-indicator {
-          line-height: 1.5px;
-          background: #20B2AA;
-          color: white;
-          border-color: #20B2AA;
-        }
-      }
-      
-      &.collapsed {
-        .expand-indicator {
-          line-height: 1.5px;
-          background: #fff;
-          color: #666;
-        }
-      }
-      
-      &.priority-high {
-        border-left-color: #ff4d4f;
-        
-        .recommendation-title {
-          color: #ff4d4f;
-        }
-        
-        &::before {
-          content: '🚨';
-          position: absolute;
-          top: 12px;
-          right: 50px;
-        }
-      }
-      
-      &.priority-medium {
-        border-left-color: #faad14;
-        
-        .recommendation-title {
-          color: #faad14;
-        }
-        
-        &::before {
-          content: '⚠️';
-          position: absolute;
-          top: 12px;
-          right: 50px;
-        }
-      }
-      
-      &.priority-low {
-        border-left-color: #52c41a;
-        
-        .recommendation-title {
-          color: #52c41a;
-        }
-        
-        &::before {
-          content: 'ℹ️';
-          position: absolute;
-          top: 12px;
-          right: 50px;
-        }
-      }
-    }
-  }
-  
-  .no-recommendations {
-    text-align: center;
-    padding: 40px 20px;
-    color: #bfbfbf;
-    font-style: italic;
-    
-    &::before {
-      content: '💡';
-      font-size: 48px;
-      display: block;
-      margin-bottom: 16px;
-    }
-  }
-}
+@import '../../styles/variables.scss';
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+// Recommendations panel -- cards by severity/type, filtered by role.
+//
+// The local variables ALIAS the system tokens (`variables.scss`, mirror of `statusTokens.ts`),
+// not a palette of their own: a slightly different green, amber and red here would paint the same
+// "this is fine" in two greens depending on the screen.
+.recommendation-list {
+  --rl-surface: #{$background-white};
+  --rl-surface-2: #{$background-cream};
+  --rl-ink: #{$text-primary};
+  --rl-ink-soft: #{$text-secondary};
+  --rl-ink-faint: #{$text-muted};
+  --rl-line: #{$border-subtle};
+  --rl-line-soft: #{$border-subtle};
+  --rl-brand: #{$primary-color};
+  --rl-brand-ink: #{$primary-color-dark};
+  --rl-brand-bg: #{$primary-color-soft};
+
+  // Axis 1 · severity. `critical` shares its tone with `alert` (terracotta) and is told apart by
+  // order and label: two adjacent reds do not read as different degrees of urgency.
+  --sev-crit: #{$status-alert};   --sev-crit-bg: #{$status-alert-bg};
+  --sev-alert: #{$status-alert};  --sev-alert-bg: #{$status-alert-bg};
+  --sev-warn: #{$status-warning}; --sev-warn-bg: #{$status-warning-bg};
+  --sev-info: #{$status-ok};      --sev-info-bg: #{$status-ok-bg};
+
+  background: var(--rl-surface);
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-lg;
+  padding: 20px;
+
+  // Card title: same treatment as the rest of the app (18px/600), with the weight set rather than
+  // inherited so it does not differ from the bar title.
+  h4 { margin: 0; font-size: $font-size-card-title; font-weight: $font-weight-semibold; color: $text-primary; }
+
+  .no-recommendations {
+    padding: 14px 16px;
+    color: var(--rl-ink-soft);
+    background: var(--rl-surface-2);
+    border: 1px solid var(--rl-line);
+    border-radius: 12px;
+    font-size: $font-size-base;
+  }
+
+  .rec-legacy {
+    white-space: pre-wrap;
+    font-size: $font-size-base;
+    line-height: 1.5;
+    color: var(--rl-ink-soft);
+    background: var(--rl-surface-2);
+    border: 1px solid var(--rl-line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+
+  // -------- top bar with a per-severity summary --------
+  .rec-topbar {
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+    align-items: center; justify-content: space-between; margin-bottom: 14px;
+    h4 { margin: 0; font-size: $font-size-card-title; font-weight: $font-weight-semibold; color: $text-primary; }
+  }
+  .rec-counts { display: flex; gap: 7px; flex-wrap: wrap; }
+  .rec-count {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 32px;
+    font-size: $font-size-sm; font-weight: $font-weight-semibold;
+    padding: 4px 10px 4px 8px; border-radius: 999px;
+    border: 1px solid var(--rl-line); color: var(--rl-ink-soft);
+    background: none; cursor: pointer;
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    &.sev-critical i { background: var(--sev-crit); }
+    &.sev-alert i { background: var(--sev-alert); }
+    &.sev-warning i { background: var(--sev-warn); }
+    &.sev-info i { background: var(--sev-info); }
+    &:hover { border-color: var(--rl-ink-faint); }
+    &.is-active { border-color: var(--rl-brand); background: var(--rl-brand-bg); color: var(--rl-brand-ink); }
+    &.is-dim { opacity: 0.45; }
+  }
+
+  // The freshness pill and the view toggle live in the view (`SectionData`), where they also
+  // govern the verdict and the sensor panel. Inside this list they would tie to one of the three
+  // pieces that depend on them.
+
+  // -------- tarjetas --------
+  .rec-cards { display: flex; flex-direction: column; gap: 12px; }
+
+  .rec-card {
+    position: relative;
+    background: var(--rl-surface);
+    border: 1px solid var(--rl-line);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(30, 40, 20, 0.05), 0 6px 18px rgba(30, 40, 20, 0.05);
+    padding: 14px 16px 14px 19px;
+    overflow: hidden;
+
+    &::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    }
+    &.sev-critical::before { background: var(--sev-crit); }
+    &.sev-alert::before { background: var(--sev-alert); }
+    &.sev-warning::before { background: var(--sev-warn); }
+    &.sev-info::before { background: var(--sev-info); }
+
+    &.is-saving { background: #f7fbf8; }
+    // "All in order": the card dims so triage prioritises the actionable.
+    &.is-quiet { box-shadow: none; background: var(--rl-surface-2); border-color: var(--rl-line-soft);
+      .rec-card__type { color: var(--rl-ink-soft); font-weight: $font-weight-semibold; }
+      .rec-card__msg { color: var(--rl-ink-soft); }
+    }
+
+    &__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    &__icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: grid; place-items: center; flex: 0 0 auto;
+    }
+    &__type { font-size: $font-size-lg; font-weight: $font-weight-semibold; color: var(--rl-ink); }
+    &__pill {
+      font-size: $font-size-xs; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 3px 9px; border-radius: 999px; margin-left: auto;
+    }
+    &__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    &__msg {
+      margin: 11px 0 0; font-size: $font-size-lg; line-height: 1.5; color: var(--rl-ink);
+    }
+
+    &.sev-critical { .rec-card__icon { background: var(--sev-crit-bg); color: var(--sev-crit); } .rec-card__pill { background: var(--sev-crit-bg); color: var(--sev-crit); } }
+    &.sev-alert { .rec-card__icon { background: var(--sev-alert-bg); color: var(--sev-alert); } .rec-card__pill { background: var(--sev-alert-bg); color: var(--sev-alert); } }
+    &.sev-warning { .rec-card__icon { background: var(--sev-warn-bg); color: var(--sev-warn); } .rec-card__pill { background: var(--sev-warn-bg); color: var(--sev-warn); } }
+    &.sev-info { .rec-card__icon { background: var(--sev-info-bg); color: var(--sev-info); } .rec-card__pill { background: var(--sev-info-bg); color: var(--sev-info); } }
+  }
+
+  // -------- chips (actionability, saving, forecast) --------
+  .rec-chip {
+    font-size: $font-size-xs; font-weight: $font-weight-semibold;
+    padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--rl-line); color: var(--rl-ink-soft);
+    display: inline-flex; gap: 4px; align-items: center; white-space: nowrap;
+
+    &.act-direct { color: var(--sev-info); border-color: rgba(51, 121, 91, 0.35); background: var(--sev-info-bg); }
+    &.act-verify { color: var(--sev-warn); border-color: rgba(156, 122, 16, 0.35); background: var(--sev-warn-bg); }
+    &.act-consult { color: var(--sev-alert); border-color: rgba(193, 99, 27, 0.35); background: var(--sev-alert-bg); }
+    // Background measure (long term): a sober tone, not urgent but not "do it now" either.
+    &.act-structural { color: #5a5340; border-color: rgba(90, 83, 64, 0.3); background: #f3f1e8; }
+    // Watch and wait: neutral/muted, no immediate input.
+    &.act-monitor { color: var(--rl-ink-soft); border-color: var(--rl-line); background: var(--rl-surface-2); }
+    // All in order: very faint, does not compete with the actionable.
+    &.act-none { color: var(--rl-ink-faint); border-color: var(--rl-line-soft); background: var(--rl-surface-2); }
+    &.saving { color: var(--rl-brand-ink); border-color: rgba(47, 109, 79, 0.4); background: var(--rl-brand-bg); font-weight: $font-weight-bold; }
+    &.fore { color: var(--rl-brand-ink); border-color: rgba(47, 109, 79, 0.35); background: rgba(47, 109, 79, 0.06); }
+  }
+
+  // -------- structured action (Manager only) --------
+  // Header ('ACCIÓN' left + badge right) and a full-width grid below: the badge modifies the whole
+  // ACTION without being orphaned or clashing with long product names.
+  .rec-action {
+    display: flex; flex-direction: column; gap: 9px;
+    margin-top: 12px; padding: 11px 13px;
+    background: var(--rl-surface-2); border: 1px solid var(--rl-line-soft); border-radius: 10px;
+
+    &__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    &__lead {
+      font-size: $font-size-xs; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--rl-brand-ink); flex: 0 0 auto;
+    }
+    // Highlighted badge (non-firm dose): to the right of the header.
+    &__tag {
+      font-size: $font-size-xs; font-weight: $font-weight-bold; letter-spacing: 0.01em; text-transform: none;
+      color: var(--sev-alert); background: var(--sev-alert-bg);
+      border: 1px solid rgba(193, 99, 27, 0.32); border-radius: 999px; padding: 2px 9px;
+      white-space: nowrap;
+    }
+    &__grid { margin: 0; display: flex; flex-direction: column; gap: 5px; min-width: 0;
+      > div { display: flex; gap: 8px; }
+      dt {
+        flex: 0 0 auto; width: 66px;
+        font-size: $font-size-xs; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.04em;
+        color: var(--rl-ink-faint); padding-top: 2px;
+      }
+      dd { margin: 0; font-size: $font-size-base; line-height: 1.4; color: var(--rl-ink); }
+      dt + dd { font-weight: $font-weight-medium; }
+      > div:first-child dd { font-weight: $font-weight-semibold; } // Producto en negrita
+    }
+
+    // Contingent action (provisional, or needs confirming/coordinating): no stripes; the badge
+    // carries the signal and the background is barely tinted to tell it from a firm dose.
+    &.is-contingent {
+      background: #fdf7ee;
+      border-color: rgba(193, 99, 27, 0.22);
+    }
+  }
+
+  // -------- collapsible technical detail (Manager only) --------
+  .rec-tech {
+    margin-top: 10px; border-top: 1px solid var(--rl-line-soft); padding-top: 2px;
+    &__toggle {
+      cursor: pointer; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: var(--rl-ink-soft);
+      background: none; border: 0; padding: 7px 0 3px; display: flex; align-items: center; gap: 6px;
+    }
+    &__chev { color: var(--rl-ink-faint); transition: transform 0.18s ease; }
+    &.open &__chev { transform: rotate(180deg); }
+    &__body {
+      font-size: $font-size-base; line-height: 1.55; color: var(--rl-ink-soft);
+      padding: 4px 0 4px; display: flex; flex-direction: column; gap: 9px;
+    }
+    &__row { display: flex; gap: 10px; }
+    &__lab {
+      flex: 0 0 auto; font-weight: $font-weight-bold; color: var(--rl-ink-faint);
+      text-transform: uppercase; font-size: $font-size-xs; letter-spacing: 0.05em;
+      padding-top: 3px; width: 74px;
+    }
+  }
+
+  // -------- message when a filter leaves no cards visible --------
+  .rec-emptyfilter {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 14px; font-size: $font-size-base; color: var(--rl-ink-soft);
+    background: var(--rl-surface-2); border: 1px dashed var(--rl-line); border-radius: 12px;
+    button {
+      background: none; border: 0; cursor: pointer; padding: 0;
+      color: var(--rl-brand); font-weight: $font-weight-semibold; font-size: $font-size-base; text-decoration: underline;
+    }
+  }
+
+  // -------- resumen "todo bien" (Farmer) --------
+  .rec-allgood {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 12px; padding: 9px 13px;
+    font-size: $font-size-base; color: var(--sev-info);
+    background: var(--sev-info-bg); border-radius: 10px;
+  }
+
+  // -------- reminders section (static) --------
+  .rec-reminders {
+    margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--rl-line);
+    &__toggle {
+      cursor: pointer; font-size: $font-size-base; font-weight: $font-weight-semibold; color: var(--rl-ink-soft);
+      background: none; border: 0; padding: 2px 0; display: flex; align-items: center; gap: 6px;
+    }
+    &__chev { color: var(--rl-ink-faint); transition: transform 0.18s ease; }
+    &.open &__chev { transform: rotate(180deg); }
+    &__list {
+      list-style: none; margin: 10px 0 0; padding: 0;
+      display: flex; flex-direction: column; gap: 9px;
+      li {
+        display: flex; gap: 8px; align-items: flex-start;
+        font-size: $font-size-base; line-height: 1.5; color: var(--rl-ink-soft);
+        svg { flex: 0 0 auto; margin-top: 2px; color: var(--rl-ink-faint); }
+      }
+    }
+  }
+
+  // On the phone everything tappable reaches 44 px: used in the field, in full sun, with dirty
+  // hands. On desktop they stay compact, where the target is the pointer.
+  @media (max-width: 767px) {
+    .rec-count,
+    .rec-tech__toggle,
+    .rec-reminders__toggle {
+      min-height: $touch-target;
+    }
+  }
+
 }
