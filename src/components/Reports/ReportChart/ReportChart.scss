@@ -1,0 +1,154 @@
+@import '../../../styles/variables';
+
+// The canvas gets its measured width and cannot push the page, but between the window narrowing and
+// the `ResizeObserver` firing there is a frame with the old width. The clip prevents it.
+.metric-row {
+  overflow-x: hidden;
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+  }
+
+  &__name {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  // The colour comes from the engine's verdict; the shape, from this class.
+  &__verdict {
+    padding: 2px 10px;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    border: 1px solid transparent;
+    border-radius: $border-radius-pill;
+  }
+
+  &__last,
+  &__coverage {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__note {
+    color: $text-muted;
+    cursor: help;
+  }
+
+  // The engine's sentence under the pill. The colour comes from the verdict, like the pill: so it
+  // reads as part of it and not as a loose paragraph.
+  &__why {
+    margin: 4px 0 0;
+    font-size: $font-size-sm;
+    line-height: 1.4;
+  }
+
+  &__nodata {
+    padding: 48px 24px;
+    text-align: center;
+    font-size: $font-size-base;
+    color: $text-secondary;
+  }
+
+  // The two evidence lines: a fixed label on the left, content to its right. The row does NOT wrap;
+  // the body does, so the label always heads the first line instead of dropping below.
+  &__fact {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 3px 0 0;
+    font-size: $font-size-sm;
+    line-height: 1.5;
+    color: $text-muted;
+
+    &:last-of-type {
+      margin-bottom: 6px;
+    }
+
+    b {
+      color: $text-primary;
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  // A common minimum width, roomy for the longest label in either language ("REFERENCIA" needs
+  // 84 px). With a shorter minimum each label takes its word's width and a metric's two lines stop
+  // starting at the same place.
+  &__fact-tag {
+    flex: none;
+    min-width: 86px;
+    padding: 1px 8px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $text-secondary;
+    background: $background-canvas;
+    border-radius: $border-radius-pill;
+
+    // Green only for the model's: what the sensor measured and what the model accepts are still
+    // different things, and the colour is what says so without reading.
+    &.is-model {
+      color: $status-ok;
+      background: $status-ok-bg;
+    }
+  }
+
+  &__fact-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 5px;
+    min-width: 0;
+  }
+
+  // Each value whole or on the next line, never split in half.
+  &__chunk {
+    white-space: nowrap;
+
+    // The engine's sentence does wrap: it is prose, not a value.
+    &.is-prose {
+      white-space: normal;
+    }
+  }
+
+  // How many readings are being drawn and how to zoom in. A footnote, not a control: same weight as
+  // the legend.
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid $border-subtle;
+    font-size: $font-size-sm;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__hint {
+    color: $text-muted;
+  }
+
+  &__reset {
+    padding: 4px 12px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $primary-color;
+    background: none;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-pill;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $primary-color;
+    }
+  }
+}

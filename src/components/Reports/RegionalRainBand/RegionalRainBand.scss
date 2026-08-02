@@ -1,0 +1,87 @@
+@import '../../../styles/variables';
+
+// Bars in GREY, not the measured-rain blue, with a rule above separating it from the block above.
+// Not decoration: painted the same blue as `RainStrip`, the model's millimetres would read as a plot
+// measurement at first glance, and they are not.
+.regional-rain {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid $border-color;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  &__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    color: $text-secondary;
+  }
+
+  &__dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    background: $text-muted;
+  }
+
+  &__meta {
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+
+  // Bars of varying height: here there is a magnitude to show, unlike the measured strip, where the
+  // answer is yes or no.
+  &__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 52px;
+  }
+
+  &__col {
+    display: flex;
+    align-items: flex-end;
+    flex: 1 1 10px;
+    min-width: 6px;
+    max-width: 22px;
+    height: 100%;
+    cursor: help;
+  }
+
+  &__bar {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    background: rgba($text-muted, 0.55);
+  }
+
+  &__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: $font-size-xs;
+    color: $text-muted;
+  }
+
+  // The notice is NOT fine-print disclaimer: it says which cell these millimetres come from and how
+  // much they move by product. Without it, a regional number reads as if it were exact.
+  &__caveat,
+  &__empty {
+    margin: 10px 0 0;
+    font-size: $font-size-sm;
+    line-height: 1.5;
+    color: $text-muted;
+  }
+
+  &__empty {
+    margin: 0;
+  }
+}

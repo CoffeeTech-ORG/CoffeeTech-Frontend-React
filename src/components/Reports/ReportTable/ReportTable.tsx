@@ -1,44 +1,51 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Space, Typography, Input } from 'antd';
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { Card, Table, Typography, Input } from 'antd';
+// lucide, like the rest of the app. antd's `Search` is the search input, so the icon is imported
+// under an alias so two things with the same name do not collide.
+import { Search as SearchIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useI18n } from '../../../contexts/I18nContext';
+import { useIsMobile } from '../../../hooks/useMediaQuery';
 import { ReportData } from '../../../types/report.types';
+import { ReferenceRanges } from '../../../services/reference.service';
+import { judgeValue, verdictTokens, chipLabel } from '../ReportChart/referenceHelpers';
+import './ReportTable.scss';
 
 const { Title } = Typography;
 const { Search } = Input;
 
 interface ReportTableProps {
   data: ReportData[];
+  /** The engine's bands. Without them the table shows the numbers without judging them. */
+  reference?: ReferenceRanges | null;
   style?: React.CSSProperties;
 }
 
-export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
+export const ReportTable: React.FC<ReportTableProps> = ({ data, reference, style }) => {
   const { t } = useI18n();
   const [filteredData, setFilteredData] = useState<ReportData[]>(data);
-  const [pageSize, setPageSize] = useState(10);
+  const [, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
-  const [searchClicked, setSearchClicked] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
+  const [, setSearchClicked] = useState(false);
+  const isMobile = useIsMobile();
+
+  /**
+   * On the phone the table starts collapsed.
+   *
+   * Whoever looks at the history from mobile comes to see the trend, and 711 rows of nine columns
+   * ahead of the chart are a wall. It is not hidden -- the raw data backs everything else -- but it is
+   * asked for.
+   */
+  const [abierta, setAbierta] = useState(!isMobile);
+  React.useEffect(() => setAbierta(!isMobile), [isMobile]);
+
   const pageSizes = [10, 25, 50, 100];
   const total = filteredData.length;
 
   React.useEffect(() => {
     setFilteredData(data);
   }, [data]);
-
-  // Check if mobile for responsive design
-  React.useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
   const handleSearch = (value: string) => {
     if (!value) {
@@ -53,20 +60,42 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
     }
   };
 
-  const getTemperatureColor = (temp: number | null | undefined): string => {
-    if (temp === null || temp === undefined) return '';
-    if (temp < 15) return '#1890ff'; // Blue for cold
-    if (temp > 30) return '#ff4d4f'; // Red for hot
-    if (temp >= 18 && temp <= 25) return '#52c41a'; // Green for optimal
-    return '#faad14'; // Orange for suboptimal
-  };
+  /**
+   * A measured cell, judged against the SAME band the engine applies.
+   *
+   * This table had its own ranges table: optimal temperature 18-25 °C and humidities 70-80 / 50-70.
+   * The engine, for this stage, gives 15-23 °C. So a 24 °C came out GREEN in the table and OUT OF BAND
+   * in the chart above, on the same screen.
+   *
+   * With no model reference it is not coloured: a number without judgement is honest; one with the
+   * wrong judgement is not.
+   */
+  const celda = (
+    value: number | null | undefined,
+    metricKey: keyof NonNullable<typeof reference>['metrics'],
+    digits = 1,
+    suffix = ''
+  ) => {
+    if (value === null || value === undefined) {
+      return <span className="report-table__empty">--</span>;
+    }
 
-  const getHumidityColor = (humidity: number | null | undefined, isAir: boolean = true): string => {
-    if (humidity === null || humidity === undefined) return '';
-    const optimalRange = isAir ? [70, 80] : [50, 70];
-    if (humidity >= optimalRange[0] && humidity <= optimalRange[1]) return '#52c41a';
-    if (humidity >= optimalRange[0] - 10 && humidity <= optimalRange[1] + 10) return '#faad14';
-    return '#ff4d4f';
+    const texto = `${value.toFixed(digits)}${suffix}`;
+    const verdict = reference ? judgeValue(reference.metrics[metricKey], value) : null;
+    if (!verdict) return <span className="report-table__plain">{texto}</span>;
+
+    const tone = verdictTokens(verdict);
+    return (
+      <span
+        className="report-table__cell"
+        style={{ color: tone.fg, background: tone.bg, borderColor: tone.border }}
+        // With the engine's explanation when there is one: "Wet leaf" alone does not say what is
+        // wrong with 92 %.
+        title={chipLabel(verdict.explanation ?? verdict.label)}
+      >
+        {texto}
+      </span>
+    );
   };
 
   const columns: ColumnsType<ReportData> = [
@@ -99,11 +128,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'temperature',
       width: isMobile ? 70 : 100,
       align: 'center',
-      render: (temp) => temp !== null && temp !== undefined ? (
-        <Tag color={getTemperatureColor(temp)}>
-          {temp.toFixed(1)}°{isMobile ? '' : 'C'}
-        </Tag>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      render: (temp) => celda(temp, 'temperature', 1, isMobile ? '°' : ' °C'),
       sorter: (a, b) => {
         const tempA = (a as any).celsiusGradeTemperature ?? a.celciusGradeTemperature ?? 0;
         const tempB = (b as any).celsiusGradeTemperature ?? b.celciusGradeTemperature ?? 0;
@@ -116,11 +141,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'airHumidity',
       width: isMobile ? 70 : 110,
       align: 'center',
-      render: (humidity) => humidity !== null && humidity !== undefined ? (
-        <Tag color={getHumidityColor(humidity, true)}>
-          {humidity.toFixed(1)}%
-        </Tag>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      render: (humidity) => celda(humidity, 'air_humidity', 1, ' %'),
       sorter: (a, b) => (a.airHumidityPercent || 0) - (b.airHumidityPercent || 0),
     },
     {
@@ -129,11 +150,9 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'soilHumidity',
       width: isMobile ? 70 : 110,
       align: 'center',
-      render: (humidity) => humidity !== null && humidity !== undefined ? (
-        <Tag color={getHumidityColor(humidity, false)}>
-          {humidity.toFixed(1)}%
-        </Tag>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      // Soil moisture is shown WITHOUT judgement on purpose: the engine gives it no absolute band,
+      // it derives its threshold from each plot's wet-dry envelope.
+      render: (humidity) => celda(humidity, 'soil_humidity', 1, ' %'),
       sorter: (a, b) => (a.soilHumidityPercent || 0) - (b.soilHumidityPercent || 0),
     },
     {
@@ -143,26 +162,27 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       width: isMobile ? 60 : 100,
       align: 'center',
       render: (precipitation) => {
-        // precipitationDetected: 0 = Sí llovió, 1 = No llovió
-        const hasRained = precipitation === 0 || precipitation === false || precipitation === '0';
+        // precipitationDetected: 1 = rained, 0 = did not rain
+        const hasRained = precipitation === 1 || precipitation === true || precipitation === '1';
         return (
-          <Tag color={hasRained ? '#1890ff' : '#f5f5f5'} style={{ color: hasRained ? '#fff' : '#999' }}>
+          // Yes/no, no severity: rain is neither good nor bad, it is a fact of the weather.
+          <span className={`report-table__rain${hasRained ? ' is-rain' : ''}`}>
             {hasRained ? t('common.yes') : t('common.no')}
-          </Tag>
+          </span>
         );
       },
       filters: [
-        { text: t('common.yes'), value: 0 }, // 0 = Sí llovió
-        { text: t('common.no'), value: 1 },  // 1 = No llovió
+        { text: t('common.yes'), value: 1 }, // 1 = rained
+        { text: t('common.no'), value: 0 },  // 0 = did not rain
       ],
       onFilter: (value, record) => {
         const precipValue = record.precipitationDetected;
-        if (value === 0) {
-          // Filtrar por "Sí llovió" (0, false, '0')
-          return precipValue === 0 || precipValue === false || precipValue === '0';
-        } else {
-          // Filtrar por "No llovió" (1, true, '1')
+        if (value === 1) {
+          // Filter by "rained" (1, true, '1')
           return precipValue === 1 || precipValue === true || precipValue === '1';
+        } else {
+          // Filter by "did not rain" (0, false, '0')
+          return precipValue === 0 || precipValue === false || precipValue === '0';
         }
       },
     },
@@ -172,11 +192,9 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'nitrogen',
       width: isMobile ? 50 : 80,
       align: 'center',
-      render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#1890ff', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
-          {value.toFixed(1)}
-        </span>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      // Nutrients are judged like everything else, not coloured by identity: in a table, green and
+      // amber read as severity, not as "this column is N/P/K". Different axes (see `statusTokens`).
+      render: (value) => celda(value, 'N', 0),
       sorter: (a, b) => (a.nitrogen || 0) - (b.nitrogen || 0),
     },
     {
@@ -185,11 +203,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'phosphorus',
       width: isMobile ? 50 : 80,
       align: 'center',
-      render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#52c41a', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
-          {value.toFixed(1)}
-        </span>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      render: (value) => celda(value, 'P', 0),
       sorter: (a, b) => (a.phosphorus || 0) - (b.phosphorus || 0),
     },
     {
@@ -198,11 +212,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
       key: 'potassium',
       width: isMobile ? 50 : 80,
       align: 'center',
-      render: (value) => value !== null && value !== undefined ? (
-        <span style={{ color: '#faad14', fontWeight: 'bold', fontSize: isMobile ? '10px' : 'inherit' }}>
-          {value.toFixed(1)}
-        </span>
-      ) : <span style={{ color: '#d9d9d9' }}>--</span>,
+      render: (value) => celda(value, 'K', 0),
       sorter: (a, b) => (a.potassium || 0) - (b.potassium || 0),
     },
   ];
@@ -211,78 +221,72 @@ export const ReportTable: React.FC<ReportTableProps> = ({ data, style }) => {
     <Card
       className="report-table-container"
       title={
-        <div 
-          style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: isMobile ? 'flex-start' : 'center',
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: isMobile ? '12px' : '0'
-          }}
-        >
-          <Title level={4} style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
+        <div className="report-table__head">
+          <Title level={4} style={{ margin: 0 }}>
             {t('reports.table.title')}
           </Title>
-          <Space 
-            direction={isMobile ? 'vertical' : 'horizontal'} 
-            size="small"
-            style={{ width: isMobile ? '100%' : 'auto' }}
-          >
+          {/* La búsqueda sólo cuando hay tabla que buscar. */}
+          {abierta && (
             <Search
+              className="report-table__search"
               placeholder={isMobile ? t('reports.table.searchShort') : t('reports.table.searchPlaceholder')}
               allowClear
-              enterButton={<SearchOutlined />}
-              size={isMobile ? "small" : "middle"}
+              enterButton={<SearchIcon size={15} />}
+              size={isMobile ? 'small' : 'middle'}
               onSearch={handleSearch}
               onChange={(e) => !e.target.value && handleSearch('')}
-              style={{ width: isMobile ? '100%' : 250 }}
             />
-            <Button 
-              icon={<FilterOutlined />} 
-              size={isMobile ? "small" : "middle"}
-              style={{ width: isMobile ? '100%' : 'auto' }}
-            >
-              {t('reports.table.filters')}
-            </Button>
-          </Space>
+          )}
         </div>
       }
-      style={{ 
-        ...style, 
-        maxWidth: '100%', 
-        margin: '0 auto'
-      }}
+      // No `margin: 0 auto`: inside a column flex container that CANCELS the stretch, so the card
+      // shrank to its content (~880 px) and sat centred with a gap on each side. The spacing above and
+      // below comes from `.reports`' `gap`.
+      style={style}
     >
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        rowKey={(record) => `${record.id}_${record.timestamp}`}
-        pagination={{
-          className: "custom-pagination",
-          pageSizeOptions: isMobile ? [5, 10, 25] : pageSizes,
-          showSizeChanger: !isMobile,
-          size: isMobile ? 'small' : 'default',
-          defaultPageSize: isMobile ? 5 : pageSizes[0],
-          locale: { items_per_page: '/ pages' },
-          defaultCurrent: page,
-          showTotal: (total) => `${t('reports.table.total')}: ${total}`,
-          onShowSizeChange: (current, size) => {
-            setSearchClicked(true)
-            setPageSize(size)
-          },
-          current: page,
-          onChange: (page, pageSize) => {
-            setSearchClicked(true)
-            setPage(page)
-          },
-          total: total,
-          simple: isMobile,
-          // showQuickJumper: !isMobile,
-        }}
-        scroll={{ x: 'max-content' }}
-        size={isMobile ? "small" : "middle"}
-        bordered={!isMobile}
-      />
+      {isMobile && (
+        <button
+          type="button"
+          className="report-table__disclose"
+          aria-expanded={abierta}
+          onClick={() => setAbierta((v) => !v)}
+        >
+          {abierta ? t('reports.table.hide') : t('reports.table.reveal', { n: String(total) })}
+          {abierta ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      )}
+
+      {abierta && (
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey={(record) => `${record.id}_${record.timestamp}`}
+          pagination={{
+            className: 'custom-pagination',
+            pageSizeOptions: isMobile ? [5, 10, 25] : pageSizes,
+            showSizeChanger: !isMobile,
+            size: isMobile ? 'small' : 'default',
+            defaultPageSize: isMobile ? 5 : pageSizes[0],
+            locale: { items_per_page: t('reports.table.perPage') },
+            defaultCurrent: page,
+            showTotal: (total) => `${t('reports.table.total')}: ${total}`,
+            onShowSizeChange: (_current, size) => {
+              setSearchClicked(true);
+              setPageSize(size);
+            },
+            current: page,
+            onChange: (page, _pageSize) => {
+              setSearchClicked(true);
+              setPage(page);
+            },
+            total: total,
+            simple: isMobile,
+          }}
+          scroll={{ x: 'max-content' }}
+          size={isMobile ? 'small' : 'middle'}
+          bordered={!isMobile}
+        />
+      )}
     </Card>
   );
 };

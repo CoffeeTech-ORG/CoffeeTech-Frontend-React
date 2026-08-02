@@ -1,720 +1,286 @@
 @import '../../styles/variables.scss';
 
-.reports-container {
-  background: $background-white;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: $shadow-light;
-  min-height: calc(100vh - 130px);
+// Reports.
+//
+// Everything here comes from the scale and the tokens; whatever needs an exception carries a comment.
+// No literal sizes and no inline styles that beat every rule -- the same title dropping to 20, 18 and
+// 16 px across three media queries is how the sizes drifted before.
+.reports {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
-  .reports-header {
+  &__intro {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  // -------- empty states --------
+  &__empty {
+    margin: 0;
+    padding: 40px 24px;
+    text-align: center;
+    font-size: $font-size-base;
+    color: $text-secondary;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  // -------- real-range notice --------
+  // Amber: not a fault, a reading caveat. In terracotta it would look like the crop is asking for
+  // something, which is another axis.
+  &__range-notice {
     display: flex;
     align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 11px 15px;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $text-body;
+    background: $status-warning-bg;
+    border: 1px solid $status-warning-border;
+    border-radius: $border-radius-md;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $status-warning;
+    }
+  }
+
+  // -------- leyenda --------
+  &__legend {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: $font-weight-semibold;
+  }
+
+  &__legend-hint {
+    margin-left: auto;
+    color: $text-muted;
+  }
+
+  &__swatch {
+    flex: none;
+
+    &--line {
+      width: 16px;
+      height: 3px;
+      border-radius: 2px;
+      background: $text-primary;
+    }
+
+    &--band {
+      width: 15px;
+      height: 11px;
+      border-radius: 2px;
+      background: rgba(58, 125, 82, 0.18);
+      border-top: 1px dashed $status-ok;
+      border-bottom: 1px dashed $status-ok;
+    }
+
+    // Risk threshold: a dashed line alone, no fill. It is what tells it apart from the band -- which
+    // does have an interior -- and what is drawn for metrics the engine publishes with no optimum.
+    &--threshold {
+      width: 16px;
+      height: 0;
+      border-top: 2px dashed $text-secondary;
+    }
+
+    &--rain {
+      width: 11px;
+      height: 11px;
+      border-radius: 2px;
+      background: $series-rain;
+      opacity: 0.55;
+    }
+  }
+
+  // -------- paneles --------
+  &__panels {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
+  }
+
+  // -------- artefact note --------
+  &__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-lg;
+  }
+
+  &__note-tag {
+    flex: none;
+    padding: 4px 10px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-black;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $status-warning;
+    background: $status-warning-bg;
+    border-radius: $border-radius-pill;
+  }
+
+  &__note-title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  // No max width: the card already sets its padding. With `max-width: 920px` the paragraph cut off
+  // mid-line leaving a gap on its right, which reads as a layout fault.
+  &__note-body {
+    margin: 6px 0 0;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $text-secondary;
+  }
+
+  // -------- export --------
+  &__export {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 2rem;
-
-    .header-title {
-      h2 {
-        font-size: 24px;
-        font-weight: 600;
-        color: $text-primary;
-        margin: 0 0 0.5rem 0;
-      }
-
-      .ant-typography {
-        font-size: 16px;
-        color: $text-secondary;
-        margin: 0;
-      }
-    }
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+    color: $background-light;
+    background: $primary-color-dark;
+    border-radius: $border-radius-lg;
   }
 
-  // Filter Card Styles
-  .ant-card {
+  &__export-title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+  }
+
+  &__export-meta {
+    margin: 2px 0 0;
+    font-size: $font-size-sm;
+    color: rgba(244, 241, 234, 0.7);
+  }
+
+  &__export-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__export-csv {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: $touch-target;
+    padding: 11px 17px;
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    color: $primary-color;
+    background: $background-light;
+    border: 0;
     border-radius: $border-radius-md;
-    box-shadow: $shadow-light;
-    border: 1px solid $border-color;
-
-    .ant-card-head {
-      border-bottom: 1px solid $border-color;
-      background: $background-white;
-      
-      .ant-card-head-title {
-        color: $text-primary;
-        font-weight: 600;
-        font-size: 16px;
-      }
-    }
-
-    .ant-card-body {
-      padding: $spacing-md;
-    }
-  }
-
-  // Filter highlight section
-  .filter-highlight {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 1px solid #0ea5e9;
-    border-radius: $border-radius-sm;
-    padding: $spacing-sm;
-    margin-top: $spacing-sm;
-    box-shadow: inset 0 1px 3px rgba(14, 165, 233, 0.1);
-    
-    .ant-typography {
-      margin: 0;
-      color: $text-primary;
-      
-      &.ant-typography-secondary {
-        color: $text-secondary;
-      }
-    }
-  }
-
-  // Report stat cards
-  .report-stat-card {
-    height: 100%;
-    transition: all 0.3s ease;
-    border-radius: $border-radius-md;
-    border: 1px solid $border-color;
+    cursor: pointer;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: $shadow-medium;
+      background: $background-cream;
     }
 
-    .ant-card-body {
-      padding: $spacing-sm;
-    }
-
-    .ant-statistic-title {
-      font-size: 12px;
-      font-weight: 500;
-      color: $text-secondary;
-      margin-bottom: 4px;
-    }
-
-    .ant-statistic-content {
-      .ant-statistic-content-value {
-        font-weight: 600;
-        color: $text-primary;
-      }
-
-      .ant-statistic-content-prefix {
-        margin-right: 4px;
-        opacity: 0.7;
-      }
+    &:focus-visible {
+      outline: 2px solid $background-light;
+      outline-offset: 2px;
     }
   }
 
-  // Nutrients grid
-  .nutrients-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: 8px;
-
-    .nutrient-item {
-      text-align: center;
-      padding: 8px;
-      background: $background-light;
-      border-radius: $border-radius-sm;
-      border: 1px solid $border-color;
-
-      .nutrient-value {
-        font-weight: 600;
-        font-size: 14px;
-        color: $text-primary;
-      }
-
-      .nutrient-label {
-        font-size: 10px;
-        color: $text-secondary;
-        margin-top: 2px;
-      }
-    }
-  }
-
-  // Loading and empty states
-  .loading-container, .no-data-container {
-    display: flex;
-    justify-content: center;
+  // Disabled and visible: the backend returns disguised CSV, so offering it would promise a file
+  // that does not exist -- and hiding it would erase the plan.
+  &__export-soon {
+    display: inline-flex;
     align-items: center;
-    padding: $spacing-xl;
-    background: $background-white;
+    gap: 8px;
+    padding: 11px 15px;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: rgba(244, 241, 234, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: $border-radius-md;
-    border: 2px dashed $border-color;
-    
-    .ant-typography {
-      color: $text-secondary;
-      font-size: 16px;
-    }
-  }
 
-  // Export actions
-  .export-actions {
-    .ant-btn {
-      margin-left: 8px;
-      box-shadow: $shadow-light;
-      border-radius: $border-radius-sm;
-      
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: $shadow-medium;
-      }
-
-      &.ant-btn-primary {
-        background-color: $primary-color;
-        border-color: $primary-color;
-
-        &:hover {
-          background-color: darken($primary-color, 8%);
-          border-color: darken($primary-color, 8%);
-        }
-      }
-    }
-  }
-
-  // Table specific styles to match existing app style
-  .report-table-container {
-    .ant-card-head {
-      background: $background-white;
-      
-      .ant-card-head-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: $text-primary;
-      }
-    }
-
-    // Improved table scroll for mobile
-    .ant-table-wrapper {
-      -webkit-overflow-scrolling: touch;
-      width: 100%;
-      max-width: 100%;
-      
-      &::-webkit-scrollbar {
-        height: 6px;
-      }
-      
-      &::-webkit-scrollbar-track {
-        background: #f0f0f0;
-        border-radius: 3px;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background: #bfbfbf;
-        border-radius: 3px;
-        
-        &:hover {
-          background: #999;
-        }
-      }
-
-      .ant-table-container {
-        width: 100%;
-        
-        .ant-table-body {
-          overflow-x: visible;
-        }
-      }
-    }
-
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background: $background-light;
-        border-bottom: 2px solid $border-color;
-        color: $text-primary;
-        font-weight: 600;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .ant-table-tbody > tr > td {
-        border-bottom: 1px solid lighten($border-color, 5%);
-        color: $text-primary;
-      }
-
-      .ant-table-tbody > tr:hover > td {
-        background: lighten($primary-color, 45%);
-      }
-
-      .ant-table-tbody > tr:nth-child(2n) > td {
-        background: lighten($background-light, 2%);
-      }
-
-      .ant-table-tbody > tr:nth-child(2n):hover > td {
-        background: lighten($primary-color, 45%);
-      }
-
-      // Tag styles
-      .ant-tag {
-        border-radius: $border-radius-sm;
-        font-weight: 500;
-        font-size: 11px;
-        padding: 2px 8px;
-      }
-    }
-
-    .ant-table-pagination {
-      margin: $spacing-md 0 0 0;
-      
-      .ant-pagination-item {
-        border-radius: $border-radius-sm;
-      }
-
-      .ant-pagination-item-active {
-        background-color: $primary-color;
-        border-color: $primary-color;
-      }
+    em {
+      padding: 2px 7px;
+      font-size: $font-size-xs;
+      font-style: normal;
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: $border-radius-pill;
     }
   }
 }
 
-.custom-pagination .ant-select-selector input {
-  display: none;
-}
-
-.custom-pagination .ant-select-selector a {
-  cursor: pointer;
-}
-
-.ant-select-show-search:where(.css-dev-only-do-not-override-imrp2p).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-  cursor: pointer;
-}
-
-.custom-pagination .ant-select-arrow {
-  display: none;
-}
-
-.custom-pagination .anticon-search{
-  display: none;
-}
-
-.custom-pagination .ant-pagination-options-size-changer .ant-select-selection-item::after {
-  content: '\FE65';
-  position: absolute;
-  top: -0.6px;
-  right: -6.5px;
-  color: rgba(0,0,0,.25) ;
-  transform: rotate(90deg) scaleY(1) scaleX(0.9);
-  font-size: 21px;
-  display: inline-block;
-  align-items: center;
-  justify-content: center;
-  vertical-align: top;
-}
-
-.ant-pagination-competence.custom-pagination 
-.ant-pagination-options-size-changer 
-.ant-select-selection-item::after {
-    right: -3px;
-}
-
-
-.ant-pagination .ant-pagination-item-active a {
-  color: #fff !important;
-}
-
-// Responsive design
 @media (max-width: 768px) {
-  .reports-container {
-    padding: $spacing-sm;
-    border-radius: $border-radius-sm;
-
-    .reports-header {
-      flex-direction: column;
-      gap: $spacing-sm;
-
-      .header-title h2 {
-        font-size: 20px;
-      }
+  .reports {
+    &__title {
+      font-size: $font-size-section;
     }
 
-    .ant-col {
-      margin-bottom: $spacing-sm;
-    }
-
-    .filter-highlight {
-      padding: $spacing-xs;
-      font-size: 12px;
-    }
-
-    .nutrients-grid {
-      gap: 4px;
-
-      .nutrient-item {
-        padding: 4px;
-        
-        .nutrient-value {
-          font-size: 12px;
-        }
-        
-        .nutrient-label {
-          font-size: 9px;
-        }
-      }
-    }
-
-    .export-actions {
-      .ant-btn {
-        margin: 4px 0;
-        width: 100%;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .reports-container {
-    padding: $spacing-xs;
-
-    .reports-header .header-title h2 {
-      font-size: 18px;
-    }
-
-    .ant-card {
-      .ant-card-head .ant-card-head-title {
-        font-size: 16px;
-      }
-
-      .ant-card-body {
-        padding: $spacing-sm;
-      }
-    }
-
-    .ant-col {
-      &.ant-col-xs-24 {
-        margin-bottom: $spacing-xs;
-      }
-    }
-
-    .ant-select,
-    .ant-picker,
-    .ant-btn {
-      height: 36px;
-      font-size: 14px;
-    }
-
-    .filter-highlight {
-      padding: $spacing-xs;
-      font-size: 11px;
-      
-      .ant-typography {
-        font-size: 11px;
-      }
-    }
-  }
-}
-
-@media (min-width: 0px) and (max-width: 768px) {
-  .reports-container {
-    background: none;
-    box-shadow: none;
-    padding: 0px;
-    margin: 0;
-    border-radius: 8px;
-
-    .reports-header {
-      margin-bottom: 1rem;
-
-      .header-title {
-        h2 {
-          font-size: 16px;
-          margin-bottom: 4px;
-        }
-
-        .ant-typography {
-          font-size: 13px;
-        }
-      }
-    }
-
-    .report-table-container {
-      margin: 0 -8px;
-
-      .ant-card-body {
-        padding: 2px;
-      }
-
-      .ant-table-wrapper {
-        margin: 0 -2px;
-        
-        &::-webkit-scrollbar {
-          height: 3px;
-        }
-
-        .ant-table {
-          width: calc(100vw - 130px) !important;
-          
-          .ant-table-thead > tr > th {
-            font-size: 9px;
-            padding: 4px 2px;
-            min-width: 50px;
-            line-height: 1.2;
-          }
-
-          .ant-table-tbody > tr > td {
-            font-size: 9px;
-            padding: 3px 2px;
-            line-height: 1.3;
-            
-            .ant-tag {
-              display: inline-block;
-              min-width: auto;
-            }
-          }
-        }
-      }
-    }
-
-    .ant-card {
-      margin-bottom: 16px;
-      border-radius: 8px;
-
-      .ant-card-head {
-        padding: 12px 16px;
-        min-height: auto;
-
-        .ant-card-head-title {
-          font-size: 14px;
-          line-height: 1.4;
-        }
-
-        .ant-card-extra {
-          .ant-btn {
-            padding: 4px 8px;
-            height: 32px;
-            font-size: 12px;
-            
-            .anticon {
-              font-size: 12px;
-            }
-          }
-        }
-      }
-
-      .ant-card-body {
-        padding: 12px 16px;
-      }
-    }
-
-    // Ultra compact form elements
-    .ant-select,
-    .ant-picker {
-      height: 32px;
-      font-size: 12px;
-
-      .ant-select-selector,
-      .ant-picker-input input {
-        font-size: 12px;
-        line-height: 30px;
-      }
-    }
-
-    .ant-btn {
-      height: 32px;
-      padding: 4px 8px;
-      font-size: 12px;
-      
-      &.ant-btn-sm {
-        height: 28px;
-        padding: 2px 6px;
-        font-size: 11px;
-      }
-    }
-
-    // Form labels
-    .ant-typography {
-      font-size: 12px;
-      
-      &.ant-typography-secondary {
-        font-size: 11px;
-      }
-    }
-
-    // Row and column adjustments
-    .ant-row {
-      margin-left: -4px;
-      margin-right: -4px;
-
-      .ant-col {
-        padding-left: 4px;
-        padding-right: 4px;
-        margin-bottom: 8px;
-      }
-    }
-
-    // Filter highlight ultra compact
-    .filter-highlight {
-      padding: 6px 8px;
-      margin-top: 8px;
-      font-size: 10px;
-      line-height: 1.3;
-
-      .ant-typography {
-        font-size: 10px;
-        margin: 0;
-      }
-    }
-
-    // Export actions stack vertically
-    .ant-space {
-      display: flex;
-      flex-direction: column;
+    &__legend-hint {
+      margin-left: 0;
       width: 100%;
-
-      .ant-space-item {
-        width: 100%;
-
-        .ant-btn {
-          width: 100%;
-          justify-content: center;
-        }
-      }
     }
 
-    // Loading and no data states
-    .loading-container,
-    .no-data-container {
-      padding: 24px 12px;
-
-      .ant-typography {
-        font-size: 13px;
-        text-align: center;
-      }
+    &__panels {
+      padding: 14px;
     }
 
-    // Table responsiveness
-    .report-table-container {
-      .ant-table-wrapper {
-        .ant-table {
-          font-size: 11px;
-
-          .ant-table-thead > tr > th {
-            font-size: 10px;
-            padding: 8px 4px;
-          }
-
-          .ant-table-tbody > tr > td {
-            padding: 6px 4px;
-            font-size: 11px;
-          }
-        }
-
-        .ant-table-pagination {
-          margin: 12px 0 0 0;
-          
-          .ant-pagination-item,
-          .ant-pagination-prev,
-          .ant-pagination-next {
-            min-width: 28px;
-            height: 28px;
-            line-height: 26px;
-            font-size: 11px;
-          }
-        }
-      }
-    }
-
-    // Nutrients grid ultra compact
-    .nutrients-grid {
-      gap: 2px;
-      grid-template-columns: repeat(3, 1fr);
-
-      .nutrient-item {
-        padding: 4px 2px;
-        
-        .nutrient-value {
-          font-size: 10px;
-        }
-        
-        .nutrient-label {
-          font-size: 8px;
-          margin-top: 1px;
-        }
-      }
-    }
-
-    // Report stat cards
-    .report-stat-card {
-      .ant-card-body {
-        padding: 8px 12px;
-      }
-
-      .ant-statistic-title {
-        font-size: 10px;
-        margin-bottom: 2px;
-      }
-
-      .ant-statistic-content {
-        .ant-statistic-content-value {
-          font-size: 14px;
-        }
-      }
-    }
-
-    // Date Range Picker Mobile Styles
-    .ant-picker-dropdown {
-      max-width: 95vw !important;
-      
-      .ant-picker-panels {
-        flex-direction: column !important;
-        
-        .ant-picker-panel {
-          width: 100% !important;
-          border-right: none !important;
-          border-bottom: 1px solid #f0f0f0;
-          
-          &:last-child {
-            border-bottom: none;
-          }
-        }
-      }
-      
-      .ant-picker-panel-container {
-        overflow-x: hidden !important;
-      }
-      
-      .ant-picker-date-panel,
-      .ant-picker-month-panel,
-      .ant-picker-year-panel {
-        width: 100% !important;
-      }
-    }
-  }
-}
-
-// Global Date Picker Mobile Styles
-@media (max-width: 768px) {
-  .ant-picker-dropdown {
-    .ant-picker-panels {
-      flex-direction: column !important;
-      
-      > * {
-        width: 100% !important;
-        border-right: none !important;
-        border-bottom: 1px solid #f0f0f0;
-        
-        &:last-child {
-          border-bottom: none;
-        }
-      }
-    }
-    
-    .ant-picker-panel-container {
-      overflow-x: auto !important;
-    }
-    
-    .ant-picker-footer {
-      .ant-picker-ranges {
-        flex-direction: column;
-        
-        .ant-btn {
-          width: 100%;
-          margin-bottom: 4px;
-        }
-      }
+    &__export {
+      align-items: flex-start;
+      flex-direction: column;
     }
   }
 }

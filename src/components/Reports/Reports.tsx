@@ -1,151 +1,190 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import { Card, Select, DatePicker, Button, Row, Col, Spin, message, Typography, Space } from 'antd';
-import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
+import { App as AntdApp } from 'antd';
+import { Download, Info } from 'lucide-react';
 import { useReports } from '../../hooks/useReports';
 import { useI18n } from '../../contexts/I18nContext';
 import { Farm, Section } from '../../hooks/useFarms';
-import { ReportFilters, ReportData, ReportSummary } from '../../types/report.types';
+import { ReportFilters as ReportFiltersType, ReportData } from '../../types/report.types';
 import { ReportChart } from './ReportChart/ReportChart';
-import { ReportSummaryComponent } from './ReportSummary/ReportSummary';
 import { ReportTable } from './ReportTable/ReportTable';
-
+import {
+  ReportFilters,
+  RangePreset,
+  DataType,
+  PRESET_DAYS,
+  rangeForPreset,
+} from './ReportFilters/ReportFilters';
+import { ReportStats } from './ReportStats/ReportStats';
+import { RainStrip } from './RainStrip/RainStrip';
+import { RegionalRainBand } from './RegionalRainBand/RegionalRainBand';
+import { Skeleton } from '../ui/Skeleton';
+import { normalizeGrowthStage, referenceService, ReferenceRanges } from '../../services/reference.service';
+import { sensorService } from '../../services/sensor.service';
+import { countAlertsInRange } from '../../services/diagnosis.service';
 import './Reports.scss';
 
-const { Option } = Select;
-const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+/** Wait before querying after a filter change. */
+const DEBOUNCE_MS = 350;
 
 export const Reports: React.FC = () => {
   const { t } = useI18n();
+  const { message } = AntdApp.useApp();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>();
   const [selectedSectionId, setSelectedSectionId] = useState<string | undefined>();
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().subtract(30, 'day'),
-    dayjs()
-  ]);
-  const [dataType, setDataType] = useState<'all' | 'environmental' | 'soil' | 'nutrients'>('all');
+  const [preset, setPreset] = useState<RangePreset>('30d');
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>(rangeForPreset('30d'));
+  const [dataType, setDataType] = useState<DataType>('all');
   const [reportData, setReportData] = useState<ReportData[]>([]);
-  const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [consultando, setConsultando] = useState(false);
+  const [reference, setReference] = useState<ReferenceRanges | null>(null);
+  const [alertas, setAlertas] = useState<number | null>(null);
 
-  const { 
-    loading, 
-    getFarms, 
-    getSectionsByFarm, 
-    generateReport, 
-    getReportSummary,
-    generateReportSummary,
-    prepareChartData 
-  } = useReports();
+  const { loading, getFarms, getSectionsByFarm, generateReport, prepareChartData } = useReports();
+
+  // The chosen farm carries coordinates and altitude, which the regional rain band needs to request
+  // the right cell and apply the downscaling.
+  const fincaElegida = farms.find((f) => f.id === selectedFarmId);
 
   useEffect(() => {
-    loadFarms();
+    getFarms()
+      .then(setFarms)
+      .catch(() => message.error(t('reports.error.loadingFarms')));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (selectedFarmId) {
-      loadSections(selectedFarmId);
-    } else {
+    if (!selectedFarmId) {
       setSections([]);
       setSelectedSectionId(undefined);
+      return;
     }
+    getSectionsByFarm(selectedFarmId)
+      .then((data) => {
+        setSections(data);
+        setSelectedSectionId(undefined);
+      })
+      .catch(() => message.error(t('reports.error.loadingSections')));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFarmId]);
 
-  // Check if screen is mobile size
+  const selectedSection = sections.find((s) => s.id === selectedSectionId);
+
+  // The engine tightens some bands by stage (K in filling/ripening), so the reference is requested
+  // for the chosen section's stage. With "all sections" the stage is ambiguous: it is left unset and
+  // the engine returns its base reading.
+  const stage = selectedSection
+    ? selectedSection.growthStage ?? normalizeGrowthStage(selectedSection.type)
+    : undefined;
+
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
+    let cancelado = false;
+    referenceService.getReferenceRanges(stage).then((r) => {
+      if (!cancelado) setReference(r);
+    });
+    return () => {
+      cancelado = true;
     };
+  }, [stage]);
 
-    // Check initially
-    checkScreenSize();
-
-    // Add resize listener
-    window.addEventListener('resize', checkScreenSize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  const loadFarms = async () => {
-    try {
-      const farmsData = await getFarms();
-      setFarms(farmsData);
-    } catch (error) {
-      message.error(t('reports.error.loadingFarms'));
-    }
-  };
-
-  const loadSections = async (farmId: string) => {
-    try {
-      const sectionsData = await getSectionsByFarm(farmId);
-      setSections(sectionsData);
-      setSelectedSectionId(undefined); // Reset section selection
-    } catch (error) {
-      message.error(t('reports.error.loadingSections'));
-    }
-  };
-
-  const handleGenerateReport = async () => {
+  /**
+   * Queries the report with the current filters.
+   *
+   * It fires on any of them changing, so there is no "Generate Report" step -- one no other screen
+   * asks for, that left doubt about whether the screen matched the filters set.
+   *
+   * `dataType` does NOT belong here. Each sensor reading carries the six metrics in the same row, so
+   * asking for "environmental" saves no rows: it only empties columns. With the data type among the
+   * dependencies, switching tab re-requested exactly the same thing from the backend and the skeleton
+   * flashed back for a few milliseconds. The data type decides WHICH series are drawn, and that is
+   * resolved on the client from what is already in memory.
+   */
+  const consultar = useCallback(async () => {
     if (!selectedFarmId) {
-      message.warning(t('reports.warning.selectFarm'));
+      setReportData([]);
+      setAlertas(null);
       return;
     }
 
-    setIsGenerating(true);
-    
+    setConsultando(true);
     try {
-      const filters: ReportFilters = {
+      const filters: ReportFiltersType = {
         farmId: selectedFarmId,
         sectionId: selectedSectionId,
         startDate: dateRange[0],
         endDate: dateRange[1],
-        dataType
+        dataType: 'all',
       };
-
       const data = await generateReport(filters);
-      const summary = await getReportSummary(filters);
-      
       setReportData(data);
-      setReportSummary(summary);
-      setHasGenerated(true);
-      
-      message.success(t('reports.success.generated'));
+
+      // Period alerts: the farm's hubs (or the chosen section's) are needed to filter the engine's
+      // history. Kept apart because its failure must not take down the report.
+      try {
+        const hubs = await sensorService.getAllSensors();
+        const idsSeccion = selectedSectionId
+          ? [Number(selectedSectionId)]
+          : sections.map((s) => Number(s.id));
+        const míos = hubs
+          .filter((h) => h.sectionId != null && idsSeccion.includes(h.sectionId))
+          .map((h) => h.deviceHubId);
+        setAlertas(
+          await countAlertsInRange(míos, dateRange[0].toDate(), dateRange[1].endOf('day').toDate())
+        );
+      } catch {
+        setAlertas(null);
+      }
     } catch (error: any) {
       console.error('Error generating report:', error);
-      
-      // Show specific error message
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data || 
-                          error.message || 
-                          t('reports.error.generating');
-      
-      message.error(`${t('reports.error.failed')}: ${errorMessage}`);
-      
-      // Reset states on error
+      message.error(
+        `${t('reports.error.failed')}: ${
+          error?.response?.data?.message ?? error?.message ?? t('reports.error.generating')
+        }`
+      );
       setReportData([]);
-      setReportSummary(null);
-      setHasGenerated(false);
+      setAlertas(null);
     } finally {
-      setIsGenerating(false);
+      setConsultando(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFarmId, selectedSectionId, dateRange, sections]);
 
-  const handleExportReport = (format: 'csv' | 'excel' | 'pdf') => {
-    if (format === 'csv' && reportData.length > 0) {
-      exportToCSV();
-    } else {
-      message.info(`${t('reports.export.comingSoon')} ${format.toUpperCase()}`);
-    }
-  };
+  // One filter change = one query, not one per calendar keystroke.
+  const timer = useRef<number>();
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(consultar, DEBOUNCE_MS);
+    return () => window.clearTimeout(timer.current);
+  }, [consultar]);
 
-  const exportToCSV = () => {
-    const csvHeaders = [
+  const chartData = useMemo(() => prepareChartData(reportData), [reportData, prepareChartData]);
+
+  /** The range the readings actually cover, which can be much shorter than the requested one. */
+  const rangoReal = useMemo(() => {
+    const stamps = reportData
+      .map((row) => dayjs(row.timestamp))
+      .filter((d) => d.isValid())
+      .sort((a, b) => a.valueOf() - b.valueOf());
+    if (stamps.length === 0) return null;
+    return { desde: stamps[0], hasta: stamps[stamps.length - 1] };
+  }, [reportData]);
+
+  const fmtDia = (d: Dayjs) => d.format('DD MMM YYYY');
+
+  // The notice only appears when period is really missing: if the data covers what was asked, saying
+  // so would be noise. A day of margin on each side avoids warning over the sampling's natural gap.
+  const faltaPeriodo =
+    rangoReal !== null &&
+    (rangoReal.desde.diff(dateRange[0], 'day') > 1 || dateRange[1].diff(rangoReal.hasta, 'day') > 1);
+
+  const diasPedidos =
+    preset === 'custom' ? Math.max(1, dateRange[1].diff(dateRange[0], 'day') + 1) : PRESET_DAYS[preset];
+
+  const exportarCSV = () => {
+    if (reportData.length === 0) return;
+    const headers = [
       'Timestamp',
       'Farm Name',
       'Section Name',
@@ -153,18 +192,20 @@ export const Reports: React.FC = () => {
       'Air Humidity (%)',
       'Soil Humidity (%)',
       'Precipitation',
-      'Nitrogen (mg/L)',
-      'Phosphorus (mg/L)',
-      'Potassium (mg/L)'
+      // mg/kg, not mg/L: the sensor measures over soil, like the engine's bands.
+      'Nitrogen (mg/kg)',
+      'Phosphorus (mg/kg)',
+      'Potassium (mg/kg)',
     ];
 
-    const csvRows = [
-      csvHeaders.join(','),
-      ...reportData.map(row => {
-        // Support both spelling variants from backend
+    const filas = [
+      headers.join(','),
+      ...reportData.map((row) => {
         const temperature = (row as any).celsiusGradeTemperature ?? row.celciusGradeTemperature;
-        // precipitationDetected: 0 = Sí llovió, 1 = No llovió
-        const hasRained = row.precipitationDetected === 0 || row.precipitationDetected === false || row.precipitationDetected === '0';
+        const llovio =
+          row.precipitationDetected === 1 ||
+          row.precipitationDetected === true ||
+          row.precipitationDetected === '1';
         return [
           dayjs(row.timestamp).format('YYYY-MM-DD HH:mm:ss'),
           `"${row.farmName}"`,
@@ -172,268 +213,172 @@ export const Reports: React.FC = () => {
           temperature?.toFixed(2) || '',
           row.airHumidityPercent?.toFixed(2) || '',
           row.soilHumidityPercent?.toFixed(2) || '',
-          hasRained ? 'Yes' : 'No',
+          llovio ? 'Yes' : 'No',
           row.nitrogen?.toFixed(2) || '',
           row.phosphorus?.toFixed(2) || '',
-          row.potassium?.toFixed(2) || ''
+          row.potassium?.toFixed(2) || '',
         ].join(',');
-      })
+      }),
     ];
 
-    // Add BOM for better Excel compatibility with UTF-8
-    const csvContent = '\uFEFF' + csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // BOM so Excel recognises the UTF-8.
+    const blob = new Blob(['﻿' + filas.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `coffee_report_${dayjs().format('YYYY-MM-DD')}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      message.success(t('reports.export.success'));
-    }
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `coffeetech_${dayjs().format('YYYY-MM-DD')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    message.success(t('reports.export.success'));
   };
 
-  const handleDateRangeChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
-    if (dates && dates[0] && dates[1]) {
-      setDateRange([dates[0], dates[1]]);
-    }
-  };
-
-  const selectedFarm = farms.find(f => f.id === selectedFarmId);
-  const selectedSection = sections.find(s => s.id === selectedSectionId);
+  const hayDatos = reportData.length > 0;
+  const diasConLluvia = reportData.some(
+    (r) =>
+      r.precipitationDetected === 1 ||
+      r.precipitationDetected === true ||
+      r.precipitationDetected === '1'
+  );
 
   return (
-    <div className="reports-container">
-      <div className="reports-header">
-        <div className="header-title">
-          <Title level={2} style={{ marginBottom: '8px', color: '#262626', fontSize: '24px' }}>
-            {t('reports.title')}
-          </Title>
-          <Text type="secondary">
-            {t('reports.description')}
-          </Text>
+    <div className="reports">
+      <header className="reports__intro">
+        <p className="reports__eyebrow">{t('reports.eyebrow')}</p>
+        <h1 className="reports__title">{t('reports.title')}</h1>
+      </header>
+
+      <ReportFilters
+        farms={farms}
+        sections={sections}
+        farmId={selectedFarmId}
+        sectionId={selectedSectionId}
+        preset={preset}
+        dateRange={dateRange}
+        dataType={dataType}
+        loadingFarms={loading}
+        onFarm={setSelectedFarmId}
+        onSection={setSelectedSectionId}
+        onPreset={(p) => {
+          setPreset(p);
+          if (p !== 'custom') setDateRange(rangeForPreset(p));
+        }}
+        onDateRange={setDateRange}
+        onDataType={setDataType}
+      />
+
+      {!selectedFarmId ? (
+        <p className="reports__empty">{t('reports.pickFarm')}</p>
+      ) : consultando ? (
+        <div className="reports__loading">
+          <Skeleton variant="block" height={96} />
+          <Skeleton variant="block" height={320} />
         </div>
-      </div>
-
-      {/* Filters Card */}
-      <Card 
-        title={t('reports.dateRange')} 
-        style={{ marginBottom: '24px' }}
-        extra={
-          <Button 
-            type="primary" 
-            icon={<ReloadOutlined />}
-            onClick={handleGenerateReport}
-            loading={isGenerating}
-            disabled={!selectedFarmId}
-            size="middle"
-          >
-            {t('reports.generate')}
-          </Button>
-        }
-      >
-        <Row gutter={[8, 8]}>
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong>{t('reports.farmFilter')} *</Text>
-              <Select
-                style={{ width: '100%', marginTop: '4px' }}
-                placeholder={t('reports.placeholders.selectFarm')}
-                value={selectedFarmId}
-                onChange={setSelectedFarmId}
-                loading={loading}
-                size="middle"
-              >
-                {farms.map(farm => (
-                  <Option key={farm.id} value={farm.id}>
-                    {farm.name}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          </Col>
-
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong>{t('reports.sectionFilter')}</Text>
-              <Select
-                style={{ width: '100%', marginTop: '4px' }}
-                placeholder={t('reports.placeholders.allSections')}
-                value={selectedSectionId}
-                onChange={setSelectedSectionId}
-                allowClear
-                disabled={!selectedFarmId}
-                size="middle"
-              >
-                {sections.map(section => (
-                  <Option key={section.id} value={section.id}>
-                    {section.name}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          </Col>
-
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong>{t('reports.dateRange')}</Text>
-              <RangePicker
-                style={{ width: '100%', marginTop: '4px' }}
-                value={dateRange}
-                onChange={handleDateRangeChange}
-                format="YYYY-MM-DD"
-                allowClear={false}
-                size="middle"
-                placement={isMobile ? 'bottomLeft' : 'bottomLeft'}
-                getPopupContainer={(trigger) => trigger.parentElement || document.body}
-                panelRender={(panelNode) => (
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: isMobile ? 'column' : 'row',
-                    maxWidth: isMobile ? '100vw' : 'auto'
-                  }}>
-                    {panelNode}
-                  </div>
-                )}
-              />
-            </div>
-          </Col>
-
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong>{t('reports.dataType')}</Text>
-              <Select
-                style={{ width: '100%', marginTop: '4px' }}
-                value={dataType}
-                onChange={setDataType}
-                size="middle"
-              >
-                <Option value="all">{t('reports.dataTypes.all')}</Option>
-                <Option value="environmental">{t('reports.dataTypes.environmental')}</Option>
-                <Option value="soil">{t('reports.dataTypes.soil')}</Option>
-                <Option value="nutrients">{t('reports.dataTypes.nutrients')}</Option>
-              </Select>
-            </div>
-          </Col>
-        </Row>
-
-        {selectedFarm && (
-          <div className="filter-highlight">
-            <Text strong>{t('reports.selected')}: </Text>
-            <Text>{selectedFarm.name}</Text>
-            {selectedSection && (
-              <>
-                <Text> → </Text>
-                <Text>{selectedSection.name}</Text>
-              </>
-            )}
-            <Text> | </Text>
-            <Text>{dateRange[0].format('MMM DD, YYYY')} - {dateRange[1].format('MMM DD, YYYY')}</Text>
-          </div>
-        )}
-      </Card>
-
-      {/* Loading State */}
-      {isGenerating && (
-        <Card>
-          <div style={{ textAlign: 'center', padding: '48px' }}>
-            <Spin size="large" />
-            <div style={{ marginTop: '16px' }}>
-              <Text>{t('reports.generating')}</Text>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Report Results */}
-      {hasGenerated && !isGenerating && (
+      ) : !hayDatos ? (
+        <p className="reports__empty">{t('reports.noData')}</p>
+      ) : (
         <>
-          {/* Export Actions */}
-          <Card style={{ marginBottom: '24px' }}>
-            <Row justify="space-between" align="middle" gutter={[8, 8]}>
-              <Col xs={24} sm={12}>
-                <Title level={4} style={{ margin: 0 }}>
-                  {t('reports.results')}
-                </Title>
-                <Text type="secondary">
-                  {reportData.length} {t('reports.dataPointsFound')}
-                </Text>
-              </Col>
-              <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                  <Button 
-                    icon={<DownloadOutlined />}
-                    onClick={() => handleExportReport('csv')}
-                    size="middle"
-                    style={{ width: '100%' }}
-                  >
-                    {t('reports.export.csv')}
-                  </Button>
-                  {/* <Button 
-                    icon={<DownloadOutlined />}
-                    onClick={() => handleExportReport('excel')}
-                    size="middle"
-                    style={{ width: '100%' }}
-                  >
-                    Export Excel
-                  </Button>
-                  <Button 
-                    icon={<DownloadOutlined />}
-                    onClick={() => handleExportReport('pdf')}
-                    size="middle"
-                    style={{ width: '100%' }}
-                  >
-                    Export PDF
-                  </Button> */}
-                </Space>
-              </Col>
-            </Row>
-          </Card>
-
-          {reportData.length > 0 ? (
-            <>
-              {/* Summary */}
-              {/* {reportSummary && (
-                <ReportSummaryComponent summary={reportSummary} style={{ marginBottom: '24px' }} />
-              )} */}
-
-              {/* Charts - Hidden on mobile */}
-              {!isMobile && (
-                <ReportChart 
-                  data={prepareChartData(reportData)} 
-                  dataType={dataType}
-                  style={{ marginBottom: '24px' }}
-                />
-              )}
-
-              {/* Data Table */}
-              <ReportTable data={reportData} />
-            </>
-          ) : (
-            <Card>
-              <div style={{ textAlign: 'center', padding: '48px' }}>
-                <Text type="secondary" style={{ fontSize: '16px' }}>
-                  {t('reports.noDataFound')}
-                </Text>
-              </div>
-            </Card>
+          {/* El filtro puede pedir un mes y los datos cubrir dos días: anunciar el rango pedido
+              hacía creer que se estaba viendo el periodo completo. */}
+          {faltaPeriodo && rangoReal && (
+            <p className="reports__range-notice">
+              <Info size={16} aria-hidden="true" />
+              <span>
+                {t('reports.rangeNotice', {
+                  requested: `${fmtDia(dateRange[0])} → ${fmtDia(dateRange[1])}`,
+                  actual: `${fmtDia(rangoReal.desde)} → ${fmtDia(rangoReal.hasta)}`,
+                })}
+              </span>
+            </p>
           )}
-        </>
-      )}
 
-      {/* Initial State */}
-      {!hasGenerated && !isGenerating && (
-        <Card>
-          <div style={{ textAlign: 'center', padding: '48px' }}>
-            <Text type="secondary" style={{ fontSize: '16px' }}>
-              {t('reports.initialState')}
-            </Text>
+          <ReportStats
+            data={reportData}
+            chartData={chartData}
+            reference={reference}
+            daysRequested={diasPedidos}
+            alerts={alertas}
+          />
+
+          <div className="reports__legend">
+            <span className="reports__legend-item">
+              <i className="reports__swatch reports__swatch--line" aria-hidden="true" />
+              {t('reports.legend.measured')}
+            </span>
+            <span className="reports__legend-item">
+              <i className="reports__swatch reports__swatch--band" aria-hidden="true" />
+              {t('reports.legend.band')}
+            </span>
+            {/* La cuarta que faltaba. Humedad del aire dibuja dos líneas punteadas —el motor la
+                publica con umbrales de riesgo y sin banda— y hasta ahora nada las presentaba. */}
+            <span className="reports__legend-item">
+              <i className="reports__swatch reports__swatch--threshold" aria-hidden="true" />
+              {t('reports.legend.threshold')}
+            </span>
+            <span className="reports__legend-item">
+              <i className="reports__swatch reports__swatch--rain" aria-hidden="true" />
+              {t('reports.legend.rain')}
+            </span>
+            <span className="reports__legend-hint">{t('reports.legend.hint')}</span>
           </div>
-        </Card>
+
+          <div className="reports__panels">
+            <ReportChart data={chartData} dataType={dataType} growthStage={stage} />
+            <RainStrip data={reportData} />
+            {/* Los milimetros van DEBAJO y aparte: el sensor no los mide —su lluvia es un
+                binario— asi que salen del reanalisis regional, que es otra fuente y otra
+                escala. Juntarlos con la tira medida los haria pasar por medicion de la
+                parcela. Deliberadamente NO entran en `ReportStats` ni en la exportacion. */}
+            <RegionalRainBand
+              latitude={fincaElegida?.latitude ?? null}
+              longitude={fincaElegida?.longitude ?? null}
+              altitude={fincaElegida?.altitude ?? null}
+              range={dateRange}
+            />
+          </div>
+
+          {/* Sólo cuando hubo lluvia en el periodo: sin ella, la nota explica un fenómeno que
+              no está en pantalla. */}
+          {diasConLluvia && (
+            <aside className="reports__note">
+              <span className="reports__note-tag">{t('reports.note.tag')}</span>
+              <div>
+                <p className="reports__note-title">{t('reports.note.title')}</p>
+                <p className="reports__note-body">{t('reports.note.body')}</p>
+              </div>
+            </aside>
+          )}
+
+          <ReportTable data={reportData} reference={reference} />
+
+          <section className="reports__export">
+            <div>
+              <p className="reports__export-title">{t('reports.export.title')}</p>
+              <p className="reports__export-meta">
+                {t('reports.stats.readings')}: {reportData.length}
+                {rangoReal && ` · ${fmtDia(rangoReal.desde)} → ${fmtDia(rangoReal.hasta)}`}
+              </p>
+            </div>
+            <div className="reports__export-actions">
+              <button type="button" className="reports__export-csv" onClick={exportarCSV}>
+                <Download size={16} aria-hidden="true" />
+                CSV
+              </button>
+              {/* PDF y Excel se enseñan deshabilitados y no ocultos: en el backend son *stubs*
+                  que devuelven CSV y texto plano, así que ofrecerlos sería prometer un archivo
+                  que no existe; esconderlos, en cambio, borraría el plan. */}
+              {['PDF', 'Excel'].map((f) => (
+                <span key={f} className="reports__export-soon">
+                  <Download size={16} aria-hidden="true" />
+                  {f}
+                  <em>{t('reports.export.soon')}</em>
+                </span>
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

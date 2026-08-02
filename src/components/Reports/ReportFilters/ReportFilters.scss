@@ -1,0 +1,149 @@
+@import '../../../styles/variables';
+
+// Filter bar on cream: it reads as the query's controls, apart from the result, which sits on
+// white.
+.report-filters {
+  padding: 15px 17px;
+  background: $background-cream;
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-lg;
+
+  // Flexible row with the fields sized by what they are, not by an even split.
+  //
+  // The data-type field's `margin-left: auto` is what threw the bar off: it pinned the field to the
+  // right edge of whatever row it fell in, so as soon as something wrapped an uneven gap opened in the
+  // middle. Without it the fields lay out left to right and wrap when they must.
+  //
+  // A grid of equal columns does not work here: it would give 290 px to each field on a 1280 screen,
+  // and the segmented ones need about 330 for their single row -- they would wrap with room to
+  // spare.
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+
+    // The selects absorb the leftover space...
+    &--select {
+      flex: 1 1 200px;
+    }
+
+    // ...and the segmented ones too, so no line is left half used. Sized to their content, at
+    // 900 px the data-type group dropped alone onto its line and left 427 px empty on the right: the
+    // same mess as on mobile, only higher up.
+    &--seg {
+      flex: 1 1 300px;
+    }
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  // Fills its grid column. With a fixed `min-width` it fell short and left a gap on the right inside
+  // its own cell.
+  &__select {
+    width: 100%;
+  }
+
+  // Segmented: the same control as the section detail's density switch, so "choose among a few
+  // fixed options" looks the same across the app.
+  //
+  // Wraps instead of splitting the width evenly. Split by force, at 390 px in Spanish the text ran a
+  // pixel wider than its box and spilled out of the pill -- not in English, where the labels are
+  // shorter, which is why it took a while to show. Wrapping, each button takes its text's width and
+  // moves to the next row when it does not fit: nothing is hidden and the labels read whole, the point
+  // of writing them unabbreviated.
+  // Equal cells, none narrower than its longest word: with `minmax(0, 1fr)` the columns could shrink
+  // below "Personalizado", a single word with nowhere to break, which spilled out of the button. With
+  // the floor at `min-content` the group prefers its own line -- where it has room -- over squeezing
+  // its cells.
+  &__seg {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(min-content, 1fr));
+    gap: 2px;
+    padding: 3px;
+    background: $background-canvas;
+    border-radius: $border-radius-sm;
+
+    button {
+      min-height: 34px;
+      padding: 7px 10px;
+      font-family: inherit;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-bold;
+      color: $text-secondary;
+      background: none;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      // The label may wrap inside its button. With equal cells they all grow together, so the block
+      // stays rectangular; with `nowrap` the text spilled out of the pill, the original bug at 390 px
+      // in Spanish.
+      white-space: normal;
+      transition: background 0.15s ease, color 0.15s ease;
+
+      &:hover:not(.is-on) {
+        color: $text-primary;
+      }
+
+      &.is-on {
+        color: $background-light;
+        background: $primary-color;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $primary-color;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  &__custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid $border-subtle;
+  }
+}
+
+// Below this width the fields already stack one per line, and that is where free wrapping looked
+// off: measured at 390 px, the dates box came to 301 px and the data-type box to 330 -- right edges
+// that did not line up -- and "Nutrientes" dropped alone leaving 238 px empty. A 2x2 grid of equal
+// cells removes both at once, and since the selects above are already full width, the whole block
+// aligns.
+@media (max-width: 768px) {
+  .report-filters {
+    &__row {
+      gap: 12px;
+    }
+
+    &__field--seg {
+      flex: 1 1 100%;
+    }
+
+    // Four cells on a phone leave about 70 px per button and long labels break into three lines. Two
+    // columns is what fits while staying readable.
+    &__seg {
+      grid-template-columns: repeat(2, minmax(min-content, 1fr));
+
+      button {
+        min-height: $touch-target;
+      }
+    }
+  }
+}

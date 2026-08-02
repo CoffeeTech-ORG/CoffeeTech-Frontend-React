@@ -1,0 +1,78 @@
+@import '../../../../styles/variables';
+
+// The plot area: two stacked canvases, with the text in HTML on top.
+.metric-canvas {
+  position: relative;
+  width: 100%;
+  // The pointer is read across the whole block, not just over the line: needing to hit a
+  // specific pixel for the cursor would be a game of aim.
+  cursor: crosshair;
+  touch-action: pan-y; // the page's vertical scroll stays the browser's
+
+  &__layer {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  // The cursor layer does not intercept the pointer; the container collects the events.
+  &__layer--cursor {
+    pointer-events: none;
+  }
+
+  &__ytick,
+  &__xtick {
+    position: absolute;
+    font-size: $font-size-xs;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  &__ytick {
+    left: 0;
+    text-align: right;
+    // Centred on its tick: `top` points at the line, not at the text height.
+    transform: translateY(-50%);
+  }
+
+  &__xtick {
+    bottom: 0;
+  }
+
+  // Value box. Follows the cursor and flips at the right half so it does not overflow.
+  &__tip {
+    position: absolute;
+    top: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-left: 8px;
+    padding: 5px 9px;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-sm;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 2;
+
+    &.is-left {
+      margin-left: 0;
+      transform: translateX(calc(-100% - 8px));
+    }
+  }
+
+  &__tip-when {
+    font-size: $font-size-xs;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__tip-value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    font-variant-numeric: tabular-nums;
+  }
+}

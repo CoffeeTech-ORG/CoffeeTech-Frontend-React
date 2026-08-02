@@ -1,0 +1,139 @@
+@import '../../../styles/variables';
+
+// The period mini-map. A control, so it has to look like one: its own background, borders and a
+// window with visible handles. The drag gesture over the chart was invisible, so it was removed.
+.period-nav {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid $border-subtle;
+  // Dragging over the bar must not select text or start the browser's native drag. When it did, the
+  // native drag kept the pointer and the window froze.
+  user-select: none;
+  -webkit-user-select: none;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  &__hint {
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+
+  &__reset {
+    padding: 4px 12px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $primary-color;
+    background: none;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-pill;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $primary-color;
+    }
+  }
+
+  &__track {
+    position: relative;
+    height: 44px;
+    background: $background-canvas;
+    border: 1px solid $border-subtle;
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: none; // the horizontal drag is ours, not the page scroll's
+    overflow: hidden;
+
+    &.is-grabbing {
+      cursor: grabbing;
+    }
+  }
+
+  // One column per slice of the period, height by how many readings fell there. The blanks are hub
+  // silence: absence of data, not a measured zero.
+  &__density {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    padding: 0 1px;
+    pointer-events: none;
+
+    i {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: $text-muted;
+      opacity: 0.32;
+      border-radius: 1px 1px 0 0;
+      // Neither the columns nor the handle are draggable objects: if the browser treats them as
+      // such, it takes the pointer and the mini-map stops responding.
+      -webkit-user-drag: none;
+    }
+  }
+
+  &__window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 8px;
+    background: rgba($primary-color, 0.12);
+    border: 1px solid $primary-color;
+    border-radius: 4px;
+    cursor: grab;
+
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
+    }
+  }
+
+  // Wide grab handles: a 1 px edge is impossible to hit with the mouse.
+  &__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 9px;
+    background: $primary-color;
+    cursor: ew-resize;
+
+    &--from {
+      left: -1px;
+      border-radius: 4px 0 0 4px;
+    }
+
+    &--to {
+      right: -1px;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  &__axis {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: $font-size-xs;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__current {
+    color: $text-secondary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+@media (max-width: 768px) {
+  .period-nav__axis span:first-child,
+  .period-nav__axis span:last-child {
+    display: none;
+  }
+}

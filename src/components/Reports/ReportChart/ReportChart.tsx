@@ -1,694 +1,434 @@
-import React, { useState } from 'react';
-import { Card, Radio, Row, Col, Typography, Space } from 'antd';
-import { 
-  LineChart, 
-  Line, 
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  ComposedChart,
-  ReferenceLine,
-  ReferenceArea
-} from 'recharts';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import dayjs from 'dayjs';
+import { Card, Radio, Row, Col, Typography, Space, Switch, Tooltip as AntTooltip } from 'antd';
 import { useI18n } from '../../../contexts/I18nContext';
 import { ChartDataPoint } from '../../../types/report.types';
+import {
+  referenceService,
+  GrowthStage,
+  ReferenceRanges,
+} from '../../../services/reference.service';
+import { axisDomainFor, rainSpans } from './referenceHelpers';
+import { SERIES_COLORS } from '../../../styles/statusTokens';
+import {
+  breakGaps,
+  downsampleLTTB,
+  gapRatio,
+  sensorRhythm,
+  sliceByTime,
+} from '../../../utils/downsample';
+import { useIsMobile } from '../../../hooks/useMediaQuery';
+import { MetricRow, MetricSeries } from './MetricRow';
+import { PeriodNavigator } from './PeriodNavigator';
+import './ReportChart.scss';
 
 const { Title } = Typography;
-
-type GrowthStage = 'plantula' | 'vegetativo' | 'floracion' | 'fructificacion' | 'maduracion' | 'cosecha' | 'default';
-
-interface OptimalParams {
-  N: [number, number];
-  P: [number, number];
-  K: [number, number];
-  soil_hum: [number, number];
-  temp: [number, number];
-}
-
-// Rangos óptimos por etapa de crecimiento
-const STAGE_OPTIMAL_PARAMS: Record<GrowthStage, OptimalParams> = {
-  plantula: { N: [30, 40], P: [20, 30], K: [25, 35], soil_hum: [70, 80], temp: [18, 25] },
-  vegetativo: { N: [40, 60], P: [25, 35], K: [35, 50], soil_hum: [65, 75], temp: [18, 25] },
-  floracion: { N: [40, 50], P: [35, 45], K: [50, 60], soil_hum: [65, 70], temp: [18, 25] },
-  fructificacion: { N: [40, 50], P: [30, 40], K: [60, 80], soil_hum: [70, 75], temp: [17, 23] },
-  maduracion: { N: [30, 40], P: [25, 35], K: [70, 90], soil_hum: [60, 70], temp: [17, 23] },
-  cosecha: { N: [30, 40], P: [20, 30], K: [50, 70], soil_hum: [60, 70], temp: [18, 22] },
-  default: { N: [35, 55], P: [20, 40], K: [40, 70], soil_hum: [60, 75], temp: [17, 26] },
-};
 
 interface ReportChartProps {
   data: ChartDataPoint[];
   dataType: 'all' | 'environmental' | 'soil' | 'nutrients';
+  /** Crop stage: the engine tightens some bands with it (K during maduracion). */
   growthStage?: GrowthStage;
   style?: React.CSSProperties;
 }
 
-type ChartType = 'line' | 'area' | 'bar' | 'composed';
+// Line only, for every data type. Bars need a 0 baseline, and 0 means nothing for temperature
+// or for a soil concentration that never reads 0 mg/kg. From the reference instead, the bar
+// heights misstate the ratio: 20 °C and 22 °C differ by 10 %, their bars by 30 %.
 type NutrientFilter = 'all' | 'nitrogen' | 'phosphorus' | 'potassium';
 type EnvironmentalFilter = 'all' | 'temperature' | 'airHumidity';
 
-export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growthStage = 'default', style }) => {
+/**
+ * Colour comes from `SERIES_COLORS`, never from a literal. Green, amber and terracotta are
+ * reserved for state (the verdict chips), so a series must not use them.
+ */
+const NUTRIENT_SERIES: readonly MetricSeries[] = [
+  { filter: 'nitrogen', dataKey: 'nitrogen', refKey: 'N', color: SERIES_COLORS.N, labelKey: 'reports.chart.nitrogen' },
+  { filter: 'phosphorus', dataKey: 'phosphorus', refKey: 'P', color: SERIES_COLORS.P, labelKey: 'reports.chart.phosphorus' },
+  { filter: 'potassium', dataKey: 'potassium', refKey: 'K', color: SERIES_COLORS.K, labelKey: 'reports.chart.potassium' },
+];
+
+const ENVIRONMENTAL_SERIES: readonly MetricSeries[] = [
+  { filter: 'temperature', dataKey: 'temperature', refKey: 'temperature', color: SERIES_COLORS.temperature, labelKey: 'reports.chart.temperature' },
+  { filter: 'airHumidity', dataKey: 'airHumidity', refKey: 'air_humidity', color: SERIES_COLORS.humidity, labelKey: 'reports.chart.airHumidity' },
+];
+
+const SOIL_SERIES: readonly MetricSeries[] = [
+  { filter: 'soilHumidity', dataKey: 'soilHumidity', refKey: 'soil_humidity', color: SERIES_COLORS.soilMoisture, labelKey: 'reports.chart.soilHumidity' },
+];
+
+/** Order: the air first, then the soil, then what gets corrected with inputs. */
+const ALL_SERIES: readonly MetricSeries[] = [
+  ...ENVIRONMENTAL_SERIES,
+  ...SOIL_SERIES,
+  ...NUTRIENT_SERIES,
+];
+
+/** Row height by row count: six rows share the screen, one alone can be taller. */
+const rowHeight = (rows: number): number => {
+  if (rows <= 1) return 220;
+  if (rows === 2) return 175;
+  if (rows === 3) return 140;
+  return 105;
+};
+
+/**
+ * Metrics the engine reads together with rain: soil moisture (irrigation is suppressed after rain
+ * in 24 h), air humidity (leaf wetness = RH >= 90 % or rain) and nitrogen (it leaches). Rain
+ * explains nothing in P, K or temperature, so the switch starts off there.
+ */
+const RAIN_RELEVANT: Record<string, boolean> = {
+  all: true,
+  soil: true,
+  environmental: true,
+  nutrients: false,
+};
+
+/** Width taken by the Y axis and the margins; what is left is the canvas points fit into. */
+const CHART_CHROME_PX = 80;
+/** Floor, so a container that has not been measured yet cannot cut the series to four points. */
+const MIN_POINTS = 120;
+/** Pixels per reading above which the dot is drawn on top of the line. */
+const PX_PER_DOT = 8;
+
+/** Time-axis format by span: six hours on screen need the clock, three months need the date. */
+const tickFormatterFor = (spanMs: number) => {
+  const horas = spanMs / 3_600_000;
+  if (horas <= 48) return (v: number) => dayjs(v).format('HH:mm');
+  if (horas <= 24 * 120) return (v: number) => dayjs(v).format('DD MMM');
+  return (v: number) => dayjs(v).format('MMM YY');
+};
+
+export const ReportChart: React.FC<ReportChartProps> = ({ data, dataType, growthStage, style }) => {
   const { t } = useI18n();
-  const [chartType, setChartType] = useState<ChartType>('line');
+  const esMovil = useIsMobile();
   const [nutrientFilter, setNutrientFilter] = useState<NutrientFilter>('all');
   const [environmentalFilter, setEnvironmentalFilter] = useState<EnvironmentalFilter>('all');
-  
-  // Obtener los parámetros óptimos según la etapa de crecimiento
-  const optimalParams = STAGE_OPTIMAL_PARAMS[growthStage];
+  // Rain is a switch, not a chart type: the type says how to draw, rain says what to include.
+  // One selector for both would force choosing between them.
+  const [showRain, setShowRain] = useState<boolean>(RAIN_RELEVANT[dataType] ?? false);
+  // Which row the pointer is over: only that one shows its value box. It goes through
+  // `useCallback` because it travels into a memoised component.
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const onHover = useCallback((refKey: string | null) => setHoveredRow(refKey), []);
+
+  /**
+   * The pointed-at instant, shared by all six rows. Each row repaints only its cursor layer, not
+   * its series, so the vertical line across all of them costs microseconds.
+   */
+  const [cursor, setCursor] = useState<number | null>(null);
+  const onCursor = useCallback((at: number | null) => setCursor(at), []);
+
+  // Reference ranges come from the diagnosis engine; no copy is kept here. If it does not
+  // answer, `reference` stays null and no band is drawn rather than one that could contradict
+  // the diagnosis.
+  const [reference, setReference] = useState<ReferenceRanges | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    referenceService.getReferenceRanges(growthStage).then((ranges) => {
+      if (!cancelled) setReference(ranges);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [growthStage]);
+
+  useEffect(() => {
+    setShowRain(RAIN_RELEVANT[dataType] ?? false);
+  }, [dataType]);
+
+  // ── How many points fit ────────────────────────────────────────────────────────────────
+  // The sensor reads every 2 min, so two weeks are 10 000 readings for at most ~1000 px. The
+  // reduction is done here, against the measured container, instead of letting the browser
+  // stack readings onto the same pixel.
+  //
+  // CALLBACK ref, not `useRef` + `useEffect`. With no data this component returns the "no data"
+  // card, which never mounts the container, so an effect with empty deps runs once, finds the
+  // ref empty and never runs again: the width stays 0 and a 1100 px screen gets 120 points.
+  const [ancho, setAncho] = useState(0);
+  const observador = useRef<ResizeObserver | null>(null);
+
+  const contenedor = useCallback((nodo: HTMLDivElement | null) => {
+    observador.current?.disconnect();
+    if (!nodo) return;
+    // Measure on mount. `ResizeObserver` fires inside the browser's rendering steps, so in a
+    // tab that is not painting it may never arrive and the width would stay 0.
+    setAncho(Math.round(nodo.getBoundingClientRect().width));
+    observador.current = new ResizeObserver(([entrada]) =>
+      setAncho(Math.round(entrada.contentRect.width))
+    );
+    observador.current.observe(nodo);
+  }, []);
+
+  useEffect(() => () => observador.current?.disconnect(), []);
+
+  const objetivo = Math.max(MIN_POINTS, ancho - CHART_CHROME_PX);
+
+  /**
+   * How often the sensor reads. From the complete series, once: per window it would be eight
+   * sorts of thousands of intervals per drag frame, and the threshold for "this is a gap" would
+   * shift as you zoom.
+   */
+  const ritmo = useMemo(() => sensorRhythm(data), [data]);
+
+  /**
+   * Each metric's Y-axis domain, computed over the COMPLETE PERIOD and not over the visible
+   * window.
+   *
+   * A scale recomputed per window prevents comparison: the line rises and falls as you pan
+   * without the data changing, and the model band drifts even though it is a fixed reference.
+   * It is also six passes over thousands of readings per drag frame.
+   *
+   * The trade-off: zoomed into a quiet stretch, small variation is not magnified.
+   */
+  const dominiosY = useMemo(() => {
+    const salida: Record<string, [number, number] | undefined> = {};
+    ALL_SERIES.forEach((s) => {
+      salida[s.dataKey] = axisDomainFor(
+        reference?.metrics?.[s.refKey],
+        data,
+        s.dataKey as keyof ChartDataPoint
+      );
+    });
+    return salida;
+  }, [data, reference]);
+
+  // ── The visible window ─────────────────────────────────────────────────────────────────
+  // Chosen with the mini-map below. Dragging on the chart itself is an invisible gesture and
+  // re-renders all six rows on every `mousemove`.
+  const [zoom, setZoom] = useState<[number, number] | null>(null);
+
+  // A new query brings another period; the old window would point at nothing in it.
+  useEffect(() => setZoom(null), [data]);
+
+  // No `useDeferredValue`: it buys a responsive mini-map at the price of charts lagging behind
+  // it, and only pays off when a repaint costs hundreds of ms. On the canvas it costs tenths.
+  const ventana = useMemo(
+    () => (zoom ? sliceByTime(data, zoom[0], zoom[1]) : data),
+    [data, zoom]
+  );
+
+  /** X-axis extremes. Shared by every row, so the synchronised cursor lines up. */
+  const dominioX: [number, number] | undefined = useMemo(() => {
+    if (zoom) return zoom;
+    if (ventana.length === 0) return undefined;
+    const [desde, hasta] = [ventana[0].t, ventana[ventana.length - 1].t];
+    // A period of zero width (every reading at the same instant) leaves the axis with no scale.
+    // One minute of width keeps the scale valid; the readings stack into a vertical.
+    return desde === hasta ? [desde - 30_000, hasta + 30_000] : [desde, hasta];
+  }, [zoom, ventana]);
+
+  /**
+   * Axis ticks, spread evenly across the drawn period.
+   *
+   * The domain is divided, not the data. Dividing by datum yields one tick per point when
+   * readings crowd into a few instants: thirty-two identical labels on the same pixel.
+   */
+  const marcasX: number[] | undefined = useMemo(() => {
+    if (!dominioX) return undefined;
+    const [desde, hasta] = dominioX;
+    if (hasta <= desde) return [desde];
+    // Four dates fit a desktop chart; on the phone they would overlap.
+    const cuantas = ancho > 700 ? 4 : 3;
+    const marcas = Array.from({ length: cuantas }, (_, i) =>
+      Math.round(desde + ((hasta - desde) * i) / (cuantas - 1))
+    );
+    // No duplicates: in a window of a few ms the rounding merges them into the same pixel.
+    return [...new Set(marcas)];
+  }, [dominioX, ancho]);
+
+  const formatTick = useMemo(
+    () => tickFormatterFor(dominioX ? dominioX[1] - dominioX[0] : 0),
+    [dominioX]
+  );
+
+  /**
+   * Already-reduced series, per metric.
+   *
+   * All six at once rather than inside the rows' `map`, because a hook cannot live in a loop.
+   * Each series is reduced on its own: nitrogen's peak and temperature's fall in different
+   * minutes, and picking one series' points from another would drop them.
+   */
+  const seriesReducidas = useMemo(() => {
+    const salida: Record<string, { puntos: ChartDataPoint[]; lecturas: number }> = {};
+    ALL_SERIES.forEach((s) => {
+      const clave = s.dataKey as keyof ChartDataPoint;
+      // Empties are dropped before reducing; counting them as 0 invents drops the sensor never
+      // measured. `breakGaps` marks the gap again afterwards.
+      const medidos = ventana.filter((p) => typeof p[clave] === 'number');
+      const elegidos = downsampleLTTB(medidos, clave, objetivo);
+      // Counted before the gaps are marked: the breaks are drawing marks, not readings.
+      salida[s.dataKey] = {
+        puntos: breakGaps(elegidos, clave, ritmo),
+        lecturas: elegidos.length,
+      };
+    });
+    return salida;
+  }, [ventana, objetivo, ritmo]);
+
+  const lluvia = useMemo(
+    () => (showRain ? rainSpans(ventana, ritmo) : []),
+    [showRain, ventana, ritmo]
+  );
+
+  /**
+   * Minimum width of a rain span, in milliseconds of this period.
+   *
+   * A twenty-minute shower inside two weeks is 0.05 px. The minimum lives here and not in
+   * `rainSpans` because it depends on the pixel count, and that function must not exaggerate a
+   * duration.
+   */
+  const anchoMinimoLluvia = dominioX ? (dominioX[1] - dominioX[0]) / 360 : 0;
+
+  /** Fraction of the drawn period with no reading at all. */
+  const vacio = useMemo(() => gapRatio(ventana, ritmo), [ventana, ritmo]);
 
   if (data.length === 0) {
     return (
       <Card title={t('reports.chart.title')} style={style}>
-        <div style={{ textAlign: 'center', padding: '48px' }}>
-          {t('reports.chart.noData')}
-        </div>
+        <div className="metric-row__nodata">{t('reports.chart.noData')}</div>
       </Card>
     );
   }
 
-  // Función para renderizar las líneas de referencia de rangos óptimos
-  const renderOptimalRanges = () => {
-    const ranges = [];
+  const metrics = reference?.metrics;
 
-    // Mostrar rangos según el tipo de dato seleccionado
-    if (dataType === 'all' || dataType === 'environmental') {
-      // Mostrar rangos según el filtro ambiental seleccionado
-      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
-      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
-      
-      if (shouldShowTemperature) {
-        // Área sombreada para rango óptimo de temperatura
-        const tempRange = `${optimalParams.temp[0]}°C - ${optimalParams.temp[1]}°C`;
-        ranges.push(
-          <ReferenceArea
-            key="temp-area"
-            y1={optimalParams.temp[0]}
-            y2={optimalParams.temp[1]}
-            fill="#ff4d4f"
-            fillOpacity={0.1}
-            stroke="none"
-            label={{ 
-              value: `Temperatura: ${tempRange}`, 
-              position: 'insideTopRight',
-              fill: '#ff4d4f',
-              fontSize: 11,
-              fontWeight: 'bold'
-            }}
-          />,
-          <ReferenceLine
-            key="temp-min"
-            y={optimalParams.temp[0]}
-            stroke="#ff4d4f"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />,
-          <ReferenceLine
-            key="temp-max"
-            y={optimalParams.temp[1]}
-            stroke="#ff4d4f"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />
-        );
-      }
-      
-      if (shouldShowAirHumidity) {
-        // Área sombreada para rango óptimo de humedad del aire
-        const airHumRange = `${70}% - ${80}%`; // Rango óptimo para humedad del aire
-        ranges.push(
-          <ReferenceArea
-            key="air-hum-area"
-            y1={70}
-            y2={80}
-            fill="#1890ff"
-            fillOpacity={0.1}
-            stroke="none"
-            label={{ 
-              value: `Hum. Aire: ${airHumRange}`, 
-              position: 'insideTopRight',
-              fill: '#1890ff',
-              fontSize: 11,
-              fontWeight: 'bold'
-            }}
-          />,
-          <ReferenceLine
-            key="air-hum-min"
-            y={70}
-            stroke="#1890ff"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />,
-          <ReferenceLine
-            key="air-hum-max"
-            y={80}
-            stroke="#1890ff"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />
-        );
-      }
+  /**
+   * Which rows get drawn: one shape for all four data types. A shared axis across metrics puts
+   * temperature (19-25 °C) and air humidity (70-99 %) on one 0-100 scale, which flattens
+   * temperature against the floor and makes its band unreadable.
+   */
+  const visibleSeries = (): readonly MetricSeries[] => {
+    if (dataType === 'nutrients') {
+      return NUTRIENT_SERIES.filter((s) => nutrientFilter === 'all' || nutrientFilter === s.filter);
     }
-
-    if (dataType === 'all' || dataType === 'soil') {
-      // Área sombreada para rango óptimo de humedad del suelo
-      const soilRange = `${optimalParams.soil_hum[0]}% - ${optimalParams.soil_hum[1]}%`;
-      ranges.push(
-        <ReferenceArea
-          key="soil-area"
-          y1={optimalParams.soil_hum[0]}
-          y2={optimalParams.soil_hum[1]}
-          fill="#52c41a"
-          fillOpacity={0.1}
-          stroke="none"
-          label={{ 
-            value: `Hum. Suelo: ${soilRange}`, 
-            position: 'insideTopRight',
-            fill: '#52c41a',
-            fontSize: 11,
-            fontWeight: 'bold'
-          }}
-        />,
-        <ReferenceLine
-          key="soil-min"
-          y={optimalParams.soil_hum[0]}
-          stroke="#52c41a"
-          strokeDasharray="5 5"
-          strokeWidth={1.5}
-        />,
-        <ReferenceLine
-          key="soil-max"
-          y={optimalParams.soil_hum[1]}
-          stroke="#52c41a"
-          strokeDasharray="5 5"
-          strokeWidth={1.5}
-        />
+    if (dataType === 'environmental') {
+      return ENVIRONMENTAL_SERIES.filter(
+        (s) => environmentalFilter === 'all' || environmentalFilter === s.filter
       );
     }
-
-    if (dataType === 'all' || dataType === 'nutrients') {
-      // Mostrar líneas según el filtro de nutriente seleccionado
-      // Si es 'all' data type, mostrar todos los nutrientes
-      const shouldShowNitrogen = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'nitrogen';
-      const shouldShowPhosphorus = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'phosphorus';
-      const shouldShowPotassium = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'potassium';
-      
-      if (shouldShowNitrogen) {
-        const nRange = `${optimalParams.N[0]} - ${optimalParams.N[1]} mg/L`;
-        ranges.push(
-          <ReferenceArea
-            key="n-area"
-            y1={optimalParams.N[0]}
-            y2={optimalParams.N[1]}
-            fill="#faad14"
-            fillOpacity={0.1}
-            stroke="none"
-            label={{ 
-              value: `N: ${nRange}`, 
-              position: 'insideTopRight',
-              fill: '#faad14',
-              fontSize: 11,
-              fontWeight: 'bold'
-            }}
-          />,
-          <ReferenceLine
-            key="n-min"
-            y={optimalParams.N[0]}
-            stroke="#faad14"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />,
-          <ReferenceLine
-            key="n-max"
-            y={optimalParams.N[1]}
-            stroke="#faad14"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />
-        );
-      }
-      
-      if (shouldShowPhosphorus) {
-        const pRange = `${optimalParams.P[0]} - ${optimalParams.P[1]} mg/L`;
-        ranges.push(
-          <ReferenceArea
-            key="p-area"
-            y1={optimalParams.P[0]}
-            y2={optimalParams.P[1]}
-            fill="#722ed1"
-            fillOpacity={0.1}
-            stroke="none"
-            label={{ 
-              value: `P: ${pRange}`, 
-              position: 'insideTopRight',
-              fill: '#722ed1',
-              fontSize: 11,
-              fontWeight: 'bold'
-            }}
-          />,
-          <ReferenceLine
-            key="p-min"
-            y={optimalParams.P[0]}
-            stroke="#722ed1"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />,
-          <ReferenceLine
-            key="p-max"
-            y={optimalParams.P[1]}
-            stroke="#722ed1"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />
-        );
-      }
-      
-      if (shouldShowPotassium) {
-        const kRange = `${optimalParams.K[0]} - ${optimalParams.K[1]} mg/L`;
-        ranges.push(
-          <ReferenceArea
-            key="k-area"
-            y1={optimalParams.K[0]}
-            y2={optimalParams.K[1]}
-            fill="#eb2f96"
-            fillOpacity={0.1}
-            stroke="none"
-            label={{ 
-              value: `K: ${kRange}`, 
-              position: 'insideTopRight',
-              fill: '#eb2f96',
-              fontSize: 11,
-              fontWeight: 'bold'
-            }}
-          />,
-          <ReferenceLine
-            key="k-min"
-            y={optimalParams.K[0]}
-            stroke="#eb2f96"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />,
-          <ReferenceLine
-            key="k-max"
-            y={optimalParams.K[1]}
-            stroke="#eb2f96"
-            strokeDasharray="5 5"
-            strokeWidth={1.5}
-          />
-        );
-      }
-    }
-
-    return ranges;
+    if (dataType === 'soil') return SOIL_SERIES;
+    return ALL_SERIES;
   };
 
-  const renderChart = () => {
-    const commonProps = {
-      width: '100%',
-      height: 400,
-      data: data,
-      margin: { top: 5, right: 30, left: 20, bottom: 5 }
-    };
-
-    const commonAxisProps = {
-      xAxis: <XAxis dataKey="date" />,
-      yAxis: <YAxis />,
-      cartesianGrid: <CartesianGrid strokeDasharray="3 3" />,
-      tooltip: <Tooltip />,
-      legend: <Legend />
-    };
-
-    switch (chartType) {
-      case 'area':
-        return (
-          <ResponsiveContainer {...commonProps}>
-            <AreaChart data={data}>
-              {commonAxisProps.xAxis}
-              {commonAxisProps.yAxis}
-              {commonAxisProps.cartesianGrid}
-              {commonAxisProps.tooltip}
-              {commonAxisProps.legend}
-              {renderOptimalRanges()}
-              {renderDataLines('area')}
-            </AreaChart>
-          </ResponsiveContainer>
-        );
-
-      case 'bar':
-        return (
-          <ResponsiveContainer {...commonProps}>
-            <BarChart data={data}>
-              {commonAxisProps.xAxis}
-              {commonAxisProps.yAxis}
-              {commonAxisProps.cartesianGrid}
-              {commonAxisProps.tooltip}
-              {commonAxisProps.legend}
-              {renderOptimalRanges()}
-              {renderDataBars()}
-            </BarChart>
-          </ResponsiveContainer>
-        );
-
-      case 'composed':
-        return (
-          <ResponsiveContainer {...commonProps}>
-            <ComposedChart data={data}>
-              {commonAxisProps.xAxis}
-              {commonAxisProps.yAxis}
-              {commonAxisProps.cartesianGrid}
-              {commonAxisProps.tooltip}
-              {commonAxisProps.legend}
-              {renderOptimalRanges()}
-              {renderDataLines('line')}
-              <Bar dataKey="precipitation" fill="#1890ff" yAxisId="right" />
-            </ComposedChart>
-          </ResponsiveContainer>
-        );
-
-      default: // line
-        return (
-          <ResponsiveContainer {...commonProps}>
-            <LineChart data={data}>
-              {commonAxisProps.xAxis}
-              {commonAxisProps.yAxis}
-              {commonAxisProps.cartesianGrid}
-              {commonAxisProps.tooltip}
-              {commonAxisProps.legend}
-              {renderOptimalRanges()}
-              {renderDataLines('line')}
-            </LineChart>
-          </ResponsiveContainer>
-        );
-    }
-  };
-
-  const renderDataLines = (type: 'line' | 'area') => {
-    const components = [];
-
-    if (dataType === 'all' || dataType === 'environmental') {
-      // Mostrar datos según el filtro ambiental seleccionado
-      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
-      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
-      
-      if (type === 'area') {
-        if (shouldShowTemperature) {
-          components.push(
-            <Area 
-              key="temperature"
-              type="monotone" 
-              dataKey="temperature" 
-              stroke="#ff4d4f" 
-              fill="#ff4d4f"
-              fillOpacity={0.3}
-              name="Temperature (°C)" 
-            />
-          );
-        }
-        if (shouldShowAirHumidity) {
-          components.push(
-            <Area 
-              key="airHumidity"
-              type="monotone" 
-              dataKey="airHumidity" 
-              stroke="#1890ff" 
-              fill="#1890ff"
-              fillOpacity={0.3}
-              name="Air Humidity (%)" 
-            />
-          );
-        }
-      } else {
-        if (shouldShowTemperature) {
-          components.push(
-            <Line 
-              key="temperature"
-              type="monotone" 
-              dataKey="temperature" 
-              stroke="#ff4d4f" 
-              name="Temperature (°C)" 
-              strokeWidth={2}
-            />
-          );
-        }
-        if (shouldShowAirHumidity) {
-          components.push(
-            <Line 
-              key="airHumidity"
-              type="monotone" 
-              dataKey="airHumidity" 
-              stroke="#1890ff" 
-              name="Air Humidity (%)" 
-              strokeWidth={2}
-            />
-          );
-        }
-      }
-    }
-
-    if (dataType === 'all' || dataType === 'soil') {
-      if (type === 'area') {
-        components.push(
-          <Area 
-            key="soilHumidity"
-            type="monotone" 
-            dataKey="soilHumidity" 
-            stroke="#52c41a" 
-            fill="#52c41a"
-            fillOpacity={0.3}
-            name="Soil Humidity (%)" 
-          />
-        );
-      } else {
-        components.push(
-          <Line 
-            key="soilHumidity"
-            type="monotone" 
-            dataKey="soilHumidity" 
-            stroke="#52c41a" 
-            name="Soil Humidity (%)" 
-            strokeWidth={2}
-          />
-        );
-      }
-    }
-
-    if (dataType === 'all' || dataType === 'nutrients') {
-      // Si es 'all', mostrar todos los nutrientes sin filtro
-      // Si es 'nutrients', aplicar el filtro de nutrientes
-      const shouldShowNitrogen = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'nitrogen';
-      const shouldShowPhosphorus = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'phosphorus';
-      const shouldShowPotassium = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'potassium';
-      
-      if (type === 'area') {
-        // Nitrógeno
-        if (shouldShowNitrogen) {
-          components.push(
-            <Area 
-              key="nitrogen"
-              type="monotone" 
-              dataKey="nitrogen" 
-              stroke="#faad14" 
-              fill="#faad14"
-              fillOpacity={0.3}
-              name="Nitrogen (mg/L)" 
-            />
-          );
-        }
-        // Fósforo
-        if (shouldShowPhosphorus) {
-          components.push(
-            <Area 
-              key="phosphorus"
-              type="monotone" 
-              dataKey="phosphorus" 
-              stroke="#722ed1" 
-              fill="#722ed1"
-              fillOpacity={0.3}
-              name="Phosphorus (mg/L)" 
-            />
-          );
-        }
-        // Potasio
-        if (shouldShowPotassium) {
-          components.push(
-            <Area 
-              key="potassium"
-              type="monotone" 
-              dataKey="potassium" 
-              stroke="#eb2f96" 
-              fill="#eb2f96"
-              fillOpacity={0.3}
-              name="Potassium (mg/L)" 
-            />
-          );
-        }
-      } else {
-        // Nitrógeno
-        if (shouldShowNitrogen) {
-          components.push(
-            <Line 
-              key="nitrogen"
-              type="monotone" 
-              dataKey="nitrogen" 
-              stroke="#faad14" 
-              name="Nitrogen (mg/L)" 
-              strokeWidth={2}
-            />
-          );
-        }
-        // Fósforo
-        if (shouldShowPhosphorus) {
-          components.push(
-            <Line 
-              key="phosphorus"
-              type="monotone" 
-              dataKey="phosphorus" 
-              stroke="#722ed1" 
-              name="Phosphorus (mg/L)" 
-              strokeWidth={2}
-            />
-          );
-        }
-        // Potasio
-        if (shouldShowPotassium) {
-          components.push(
-            <Line 
-              key="potassium"
-              type="monotone" 
-              dataKey="potassium" 
-              stroke="#eb2f96" 
-              name="Potassium (mg/L)" 
-              strokeWidth={2}
-            />
-          );
-        }
-      }
-    }
-
-    return components;
-  };
-
-  const renderDataBars = () => {
-    const components = [];
-
-    if (dataType === 'all' || dataType === 'environmental') {
-      // Mostrar datos según el filtro ambiental seleccionado
-      const shouldShowTemperature = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'temperature';
-      const shouldShowAirHumidity = dataType === 'all' || environmentalFilter === 'all' || environmentalFilter === 'airHumidity';
-      
-      if (shouldShowTemperature) {
-        components.push(
-          <Bar key="temperature" dataKey="temperature" fill="#ff4d4f" name="Temperature (°C)" />
-        );
-      }
-      if (shouldShowAirHumidity) {
-        components.push(
-          <Bar key="airHumidity" dataKey="airHumidity" fill="#1890ff" name="Air Humidity (%)" />
-        );
-      }
-    }
-
-    if (dataType === 'all' || dataType === 'soil') {
-      components.push(
-        <Bar key="soilHumidity" dataKey="soilHumidity" fill="#52c41a" name="Soil Humidity (%)" />
-      );
-    }
-
-    if (dataType === 'all' || dataType === 'nutrients') {
-      // Si es 'all', mostrar todos los nutrientes sin filtro
-      // Si es 'nutrients', aplicar el filtro de nutrientes
-      const shouldShowNitrogen = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'nitrogen';
-      const shouldShowPhosphorus = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'phosphorus';
-      const shouldShowPotassium = dataType === 'all' || nutrientFilter === 'all' || nutrientFilter === 'potassium';
-      
-      // Nitrógeno
-      if (shouldShowNitrogen) {
-        components.push(
-          <Bar key="nitrogen" dataKey="nitrogen" fill="#faad14" name="Nitrogen (mg/L)" />
-        );
-      }
-      // Fósforo
-      if (shouldShowPhosphorus) {
-        components.push(
-          <Bar key="phosphorus" dataKey="phosphorus" fill="#722ed1" name="Phosphorus (mg/L)" />
-        );
-      }
-      // Potasio
-      if (shouldShowPotassium) {
-        components.push(
-          <Bar key="potassium" dataKey="potassium" fill="#eb2f96" name="Potassium (mg/L)" />
-        );
-      }
-    }
-
-    return components;
-  };
+  const series = visibleSeries();
+  const alto = rowHeight(series.length);
+  // How many readings are actually drawn: the maximum across the visible series.
+  const dibujadas = series.reduce(
+    (max, s) => Math.max(max, seriesReducidas[s.dataKey]?.lecturas ?? 0),
+    0
+  );
+  const reduciendo = ventana.length > dibujadas;
+  // With room to spare the dot is drawn: an isolated cluster forms no line and would not show.
+  // With thousands of readings it turns itself off.
+  const conPuntos = dibujadas > 0 && ancho / dibujadas >= PX_PER_DOT;
 
   return (
-    <Card 
+    <Card
       title={
-        <Row justify="space-between" align="middle">
+        <Row justify="space-between" align="middle" gutter={[8, 8]}>
           <Col>
             <Title level={4} style={{ margin: 0 }}>
               {t('reports.chart.title')}
             </Title>
           </Col>
           <Col>
-            <Space>
-              {/* Selector de variables ambientales cuando dataType es 'environmental' */}
+            <Space wrap>
               {dataType === 'environmental' && (
-                <Radio.Group 
-                  value={environmentalFilter} 
+                <Radio.Group
+                  value={environmentalFilter}
                   onChange={(e) => setEnvironmentalFilter(e.target.value)}
                   buttonStyle="solid"
                   size="small"
                 >
-                  <Radio.Button value="all">Todos</Radio.Button>
-                  <Radio.Button value="temperature">Temp</Radio.Button>
-                  <Radio.Button value="airHumidity">Hum. Aire</Radio.Button>
+                  <Radio.Button value="all">{t('reports.chart.filter.all')}</Radio.Button>
+                  {/* La palabra completa donde cabe. En el teléfono los tres botones con
+                      «Temperatura» y «Humedad del aire» no entran en una línea, y ahí sí
+                      compensa abreviar: es el único sitio donde el ancho manda. */}
+                  <Radio.Button value="temperature">
+                    {esMovil ? t('reports.table.tempShort') : t('reports.table.temperature')}
+                  </Radio.Button>
+                  <Radio.Button value="airHumidity">
+                    {esMovil ? t('reports.table.airHumidityShort') : t('reports.table.airHumidity')}
+                  </Radio.Button>
                 </Radio.Group>
               )}
-              
-              {/* Selector de nutriente cuando dataType es 'nutrients' */}
+
               {dataType === 'nutrients' && (
-                <Radio.Group 
-                  value={nutrientFilter} 
+                <Radio.Group
+                  value={nutrientFilter}
                   onChange={(e) => setNutrientFilter(e.target.value)}
                   buttonStyle="solid"
                   size="small"
                 >
-                  <Radio.Button value="all">Todos</Radio.Button>
+                  <Radio.Button value="all">{t('reports.chart.filter.all')}</Radio.Button>
                   <Radio.Button value="nitrogen">N</Radio.Button>
                   <Radio.Button value="phosphorus">P</Radio.Button>
                   <Radio.Button value="potassium">K</Radio.Button>
                 </Radio.Group>
               )}
-              
-              {/* Selector de tipo de gráfico */}
-              <Radio.Group 
-                value={chartType} 
-                onChange={(e) => setChartType(e.target.value)}
-                buttonStyle="solid"
-                size="small"
-              >
-                <Radio.Button value="line">{t('reports.chart.types.line')}</Radio.Button>
-                <Radio.Button value="area">{t('reports.chart.types.area')}</Radio.Button>
-                <Radio.Button value="bar">{t('reports.chart.types.bar')}</Radio.Button>
-                <Radio.Button value="composed">{t('reports.chart.types.mixed')}</Radio.Button>
-              </Radio.Group>
+
+              <AntTooltip title={t('reports.chart.rain.hint')}>
+                <Space size={6}>
+                  <Switch size="small" checked={showRain} onChange={setShowRain} />
+                  <span className="metric-row__last">{t('reports.chart.precipitation')}</span>
+                </Space>
+              </AntTooltip>
             </Space>
           </Col>
         </Row>
       }
       style={style}
     >
-      {renderChart()}
+      <div ref={contenedor}>
+        {series.map((item, index) => (
+          <MetricRow
+            key={item.refKey}
+            item={item}
+            metric={metrics?.[item.refKey]}
+            points={seriesReducidas[item.dataKey]?.puntos ?? []}
+            window={ventana}
+            domainY={dominiosY[item.dataKey]}
+            width={ancho}
+            height={alto}
+            last={index === series.length - 1}
+            domainX={dominioX}
+            ticksX={marcasX}
+            formatTick={formatTick}
+            rain={lluvia}
+            rainMinWidth={anchoMinimoLluvia}
+            dots={conPuntos}
+            cursor={cursor}
+            hovered={hoveredRow === item.refKey}
+            onCursor={onCursor}
+            onHover={onHover}
+          />
+        ))}
+
+        {/* Cuántas lecturas se ven, cuántas hay y cuánto del periodo está sin medir. La
+            reducción ocurría igual antes de todo esto —la hacía el navegador pisando píxeles—,
+            sólo que en silencio. Decirlo es la diferencia entre resumir y disimular. */}
+        <div className="metric-row__footer">
+          <span>
+            {reduciendo
+              ? t('reports.chart.showingSome', {
+                  drawn: String(dibujadas),
+                  total: String(ventana.length),
+                })
+              : ventana.length === 1
+              ? t('reports.chart.showingOne')
+              : t('reports.chart.showingAll', { total: String(ventana.length) })}
+          </span>
+          {vacio >= 0.15 && (
+            <span className="metric-row__hint">
+              {t('reports.chart.emptyPeriod', { pct: String(Math.round(vacio * 100)) })}
+            </span>
+          )}
+        </div>
+
+        <PeriodNavigator data={data} window={zoom} onChange={setZoom} />
+      </div>
     </Card>
   );
 };

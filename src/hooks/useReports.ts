@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { ReportData, ReportFilters, ReportSummary, ChartDataPoint } from '../types/report.types';
+import { ReportData, ReportFilters, ChartDataPoint } from '../types/report.types';
 import { Farm, Section, useFarms } from './useFarms';
 import { api } from '../services/api.service';
 import { API_ENDPOINTS } from '../services/api.endpoints';
@@ -71,114 +71,19 @@ export const useReports = () => {
     }
   }, []);
 
-  // Get report summary from backend
-  const getReportSummary = useCallback(async (filters: ReportFilters): Promise<ReportSummary> => {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters.farmId) {
-        params.append('farmId', filters.farmId.toString());
-      }
-      
-      if (filters.sectionId) {
-        params.append('sectionId', filters.sectionId.toString());
-      }
-      
-      if (filters.startDate) {
-        params.append('startDate', filters.startDate.format('YYYY-MM-DD'));
-      }
-      
-      if (filters.endDate) {
-        params.append('endDate', filters.endDate.format('YYYY-MM-DD'));
-      }
-
-      if (filters.dataType && filters.dataType !== 'all') {
-        params.append('dataType', filters.dataType);
-      }
-
-      const response = await api.get(`${API_ENDPOINTS.REPORTS_SUMMARY}?${params}`);
-      
-      // Transform backend response to frontend format
-      const backendSummary = response.data;
-      return {
-        totalDataPoints: backendSummary.recordCount,
-        averageTemperature: backendSummary.environmental?.averageTemperature,
-        averageAirHumidity: backendSummary.environmental?.averageAirHumidity,
-        averageSoilHumidity: backendSummary.environmental?.averageSoilHumidity,
-        precipitationDays: backendSummary.environmental?.precipitationDays || 0,
-        averageNitrogen: backendSummary.nutrients?.averageNitrogen,
-        averagePhosphorus: backendSummary.nutrients?.averagePhosphorus,
-        averagePotassium: backendSummary.nutrients?.averagePotassium,
-        healthScore: calculateHealthScore([]) // You can implement this or get it from backend
-      };
-    } catch (error) {
-      console.error('Error fetching report summary:', error);
-      throw error;
-    }
-  }, []);
-
-  // Generate report summary from data (fallback)
-  const generateReportSummary = useCallback((data: ReportData[]): ReportSummary => {
-    if (data.length === 0) {
-      return {
-        totalDataPoints: 0,
-        precipitationDays: 0
-      };
-    }
-
-    // Support both spelling variants of temperature field
-    const getTemperature = (d: ReportData) => (d as any).celsiusGradeTemperature ?? d.celciusGradeTemperature;
-    
-    const validTemperatures = data.filter(d => {
-      const temp = getTemperature(d);
-      return temp !== null && temp !== undefined;
-    });
-    const validAirHumidity = data.filter(d => d.airHumidityPercent !== null && d.airHumidityPercent !== undefined);
-    const validSoilHumidity = data.filter(d => d.soilHumidityPercent !== null && d.soilHumidityPercent !== undefined);
-    const validNitrogen = data.filter(d => d.nitrogen !== null && d.nitrogen !== undefined);
-    const validPhosphorus = data.filter(d => d.phosphorus !== null && d.phosphorus !== undefined);
-    const validPotassium = data.filter(d => d.potassium !== null && d.potassium !== undefined);
-
-    // precipitationDetected: 0 = Sí llovió, 1 = No llovió
-    const precipitationDays = data.filter(d => 
-      d.precipitationDetected === false || 
-      d.precipitationDetected === 0 || 
-      d.precipitationDetected === '0'
-    ).length;
-
-    return {
-      totalDataPoints: data.length,
-      averageTemperature: validTemperatures.length > 0
-        ? validTemperatures.reduce((sum, d) => sum + (getTemperature(d) || 0), 0) / validTemperatures.length
-        : undefined,
-      averageAirHumidity: validAirHumidity.length > 0
-        ? validAirHumidity.reduce((sum, d) => sum + (d.airHumidityPercent || 0), 0) / validAirHumidity.length
-        : undefined,
-      averageSoilHumidity: validSoilHumidity.length > 0
-        ? validSoilHumidity.reduce((sum, d) => sum + (d.soilHumidityPercent || 0), 0) / validSoilHumidity.length
-        : undefined,
-      precipitationDays,
-      averageNitrogen: validNitrogen.length > 0
-        ? validNitrogen.reduce((sum, d) => sum + (d.nitrogen || 0), 0) / validNitrogen.length
-        : undefined,
-      averagePhosphorus: validPhosphorus.length > 0
-        ? validPhosphorus.reduce((sum, d) => sum + (d.phosphorus || 0), 0) / validPhosphorus.length
-        : undefined,
-      averagePotassium: validPotassium.length > 0
-        ? validPotassium.reduce((sum, d) => sum + (d.potassium || 0), 0) / validPotassium.length
-        : undefined,
-      healthScore: calculateHealthScore(data)
-    };
-  }, []);
-
   // Transform data for charts
   const prepareChartData = useCallback((data: ReportData[]): ChartDataPoint[] => {
-    // Invertir el orden para que vaya de más antiguo a más reciente (cronológico)
-    const sortedData = [...data].reverse();
-    
+    // Chronological order by the instant, not by position in the response. A `.reverse()` is only
+    // correct if the backend always returns in exact reverse order, and the chart's point reduction
+    // requires a genuinely sorted series.
+    const sortedData = [...data].sort(
+      (a, b) => dayjs(a.timestamp).valueOf() - dayjs(b.timestamp).valueOf()
+    );
+
     return sortedData.map(item => ({
       timestamp: typeof item.timestamp === 'string' ? item.timestamp : item.timestamp.toISOString(),
-      // Usar formato de fecha + hora para tener puntos únicos en el eje X
+      t: dayjs(item.timestamp).valueOf(),
+      // Readable, for the tooltip. The X axis is positioned with `t`.
       date: dayjs(item.timestamp).format('DD/MM HH:mm'),
       temperature: (item as any).celsiusGradeTemperature ?? item.celciusGradeTemperature ?? undefined,
       airHumidity: item.airHumidityPercent ?? undefined,
@@ -186,11 +91,11 @@ export const useReports = () => {
       nitrogen: item.nitrogen ?? undefined,
       phosphorus: item.phosphorus ?? undefined,
       potassium: item.potassium ?? undefined,
-      // precipitationDetected: 0 = Sí llovió (mostrar 1 en gráfico), 1 = No llovió (mostrar 0 en gráfico)
+      // precipitationDetected: 1 = rained (draw 1), 0 = did not rain (draw 0)
       precipitation: (
-        item.precipitationDetected === false || 
-        item.precipitationDetected === 0 || 
-        item.precipitationDetected === '0'
+        item.precipitationDetected === true ||
+        item.precipitationDetected === 1 ||
+        item.precipitationDetected === '1'
       ) ? 1 : 0
     }));
   }, []);
@@ -201,52 +106,7 @@ export const useReports = () => {
     getFarms,
     getSectionsByFarm,
     generateReport,
-    getReportSummary,
-    generateReportSummary,
     prepareChartData
   };
 };
-
-// Helper function to calculate health score based on various metrics
-function calculateHealthScore(data: ReportData[]): number {
-  if (data.length === 0) return 0;
-
-  let score = 100;
-  
-  // Support both spelling variants of temperature field
-  const getTemperature = (d: ReportData) => (d as any).celsiusGradeTemperature ?? d.celciusGradeTemperature;
-  
-  const validData = data.filter(d => 
-    getTemperature(d) !== null || 
-    d.airHumidityPercent !== null || 
-    d.soilHumidityPercent !== null
-  );
-
-  if (validData.length === 0) return 50; // Default score
-
-  // Temperature score (optimal range: 18-25°C for coffee)
-  const temperatures = validData.filter(d => getTemperature(d) !== null);
-  if (temperatures.length > 0) {
-    const avgTemp = temperatures.reduce((sum, d) => sum + (getTemperature(d) || 0), 0) / temperatures.length;
-    if (avgTemp < 15 || avgTemp > 30) score -= 20;
-    else if (avgTemp < 18 || avgTemp > 25) score -= 10;
-  }
-
-  // Humidity scores
-  const airHumidity = validData.filter(d => d.airHumidityPercent !== null);
-  if (airHumidity.length > 0) {
-    const avgAirHum = airHumidity.reduce((sum, d) => sum + (d.airHumidityPercent || 0), 0) / airHumidity.length;
-    if (avgAirHum < 60 || avgAirHum > 90) score -= 15;
-    else if (avgAirHum < 70 || avgAirHum > 80) score -= 5;
-  }
-
-  const soilHumidity = validData.filter(d => d.soilHumidityPercent !== null);
-  if (soilHumidity.length > 0) {
-    const avgSoilHum = soilHumidity.reduce((sum, d) => sum + (d.soilHumidityPercent || 0), 0) / soilHumidity.length;
-    if (avgSoilHum < 40 || avgSoilHum > 80) score -= 15;
-    else if (avgSoilHum < 50 || avgSoilHum > 70) score -= 5;
-  }
-
-  return Math.max(0, Math.min(100, score));
-}
 

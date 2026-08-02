@@ -1,0 +1,78 @@
+@import '../../../styles/variables';
+
+// Readings table cells.
+//
+// The colour comes from the engine's verdict (`judgeValue`), not a ranges table of its own: one here
+// said 18-25 °C was optimal while the engine gave 15-23, so the same screen painted green a value the
+// chart marked out of band.
+.report-table {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    width: 250px;
+    max-width: 100%;
+  }
+
+  // Expand button, mobile only. Says how many rows there are before opening them: asking the user to
+  // decide without that number is asking them to guess.
+  &__disclose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px; // touch target
+    font-family: inherit;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $primary-color;
+    background: none;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+  }
+
+  &__cell {
+    display: inline-block;
+    padding: 2px 9px;
+    border: 1px solid transparent;
+    border-radius: $border-radius-pill;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  // No model reference: the number, without judgement.
+  &__plain {
+    font-size: $font-size-sm;
+    color: $text-body;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__empty {
+    color: $text-muted;
+  }
+
+  // Axis 4 (identity), not severity: rain is neither good nor bad.
+  &__rain {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: $border-radius-pill;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-secondary;
+    background: $background-canvas;
+
+    &.is-rain {
+      color: #fff;
+      background: $series-rain;
+    }
+  }
+}
