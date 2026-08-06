@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sensor, SensorFormData, SensorFilters, SensorStats } from '../types/sensor.types';
+import { Sensor, SensorFilters, SensorStats } from '../types/sensor.types';
 import { sensorService } from '../services/sensor.service';
 import { useAuth } from '../contexts/AuthContext';
+import { hubStateOf } from '../utils/hubState';
 
+/**
+ * The Hub inventory, read-only.
+ *
+ * No `addSensor`, `updateSensor` or `deleteSensor`: the backend never had `PUT`/`DELETE` routes for
+ * the inventory, so those were calls to endpoints that do not exist. Hubs enter the inventory on their
+ * own when they first report.
+ */
 export const useSensors = () => {
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,101 +29,41 @@ export const useSensors = () => {
       const data = await sensorService.getAllSensors();
       setSensors(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch sensors');
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los hubs');
     } finally {
       setLoading(false);
     }
   }, [isAuthenticated, token]);
 
-  const addSensor = useCallback(async (sensorData: SensorFormData): Promise<boolean> => {
-    if (!isAuthenticated || !token) {
-      setError('Authentication required');
-      return false;
-    }
-
-    try {
-      const newSensor = await sensorService.createSensor(sensorData);
-      setSensors(prev => [...prev, newSensor]);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create sensor');
-      return false;
-    }
-  }, [isAuthenticated, token]);
-
-  const updateSensor = useCallback(async (id: number, sensorData: Partial<SensorFormData>): Promise<boolean> => {
-    if (!isAuthenticated || !token) {
-      setError('Authentication required');
-      return false;
-    }
-
-    try {
-      const updatedSensor = await sensorService.updateSensor(id, sensorData);
-      setSensors(prev => prev.map(sensor => 
-        sensor.id === id ? updatedSensor : sensor
-      ));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update sensor');
-      return false;
-    }
-  }, [isAuthenticated, token]);
-
-  const deleteSensor = useCallback(async (id: number): Promise<boolean> => {
-    if (!isAuthenticated || !token) {
-      setError('Authentication required');
-      return false;
-    }
-
-    try {
-      await sensorService.deleteSensor(id);
-      setSensors(prev => prev.filter(sensor => sensor.id !== id));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete sensor');
-      return false;
-    }
-  }, []);
-
+  /**
+   * The summary is counted over the DERIVED state, not over `status`. Counting the stored field, a hub
+   * dead for months still added to "active" -- see `utils/hubState`.
+   */
   const getSensorStats = useCallback((): SensorStats => {
-    const stats = sensors.reduce((acc, sensor) => {
-      acc.total++;
-      switch (sensor.status) {
-        case 'ACTIVE':
-          acc.active++;
-          break;
-        case 'INACTIVE':
-          acc.inactive++;
-          break;
-        case 'MAINTENANCE':
-          acc.maintenance++;
-          break;
-        case 'ERROR':
-          acc.error++;
-          break;
-      }
-      return acc;
-    }, { total: 0, active: 0, inactive: 0, maintenance: 0, error: 0 });
-
-    return stats;
+    return sensors.reduce(
+      (acc, sensor) => {
+        acc.total++;
+        acc[hubStateOf(sensor)]++;
+        return acc;
+      },
+      { total: 0, reporting: 0, silent: 0, unassigned: 0, never: 0 }
+    );
   }, [sensors]);
 
-  const filterSensors = useCallback((filters: SensorFilters): Sensor[] => {
-    return sensors.filter(sensor => {
-      if (filters.status && sensor.status !== filters.status) return false;
-      if (filters.type && sensor.type !== filters.type) return false;
-      if (filters.location && !sensor.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        return (
-          sensor.sensorCode.toLowerCase().includes(searchLower) ||
-          sensor.location.toLowerCase().includes(searchLower) ||
-          sensor.type.toLowerCase().includes(searchLower)
-        );
-      }
-      return true;
-    });
-  }, [sensors]);
+  const filterSensors = useCallback(
+    (filters: SensorFilters): Sensor[] => {
+      return sensors.filter((sensor) => {
+        if (filters.states?.length && !filters.states.includes(hubStateOf(sensor))) return false;
+        if (filters.searchTerm) {
+          // Only the MAC is left as searchable text: `type` was COMBINED on every row and `location`
+          // does not exist (where a hub is comes from its assignment, which changes).
+          return sensor.deviceHubId.toLowerCase().includes(filters.searchTerm.toLowerCase());
+        }
+        return true;
+      });
+    },
+    [sensors]
+  );
 
   useEffect(() => {
     fetchSensors();
@@ -126,9 +74,6 @@ export const useSensors = () => {
     loading,
     error,
     refetch: fetchSensors,
-    addSensor,
-    updateSensor,
-    deleteSensor,
     getSensorStats,
     filterSensors,
   };

@@ -1,301 +1,223 @@
-.sensor-inventory {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+@import '../../styles/variables';
 
-  .inventory-header {
+// Hubs. Named `hubs__…`, like `reports__…`, on the scale and the colour tokens rather than flat
+// names, `white` and `darken()`.
+.hubs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  // -------- cabecera --------
+  &__head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 2rem;
-
-    .header-title {
-      h1 {
-        font-size: 24px;
-        font-weight: 600;
-        color: #262626;
-        margin: 0 0 0.5rem 0;
-      }
-
-      p {
-        font-size: 18px;
-        color: #6b7280;
-        margin: 0;
-      }
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-
-      .refresh-btn,
-      .add-sensor-btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-
-      .refresh-btn {
-        background: white;
-        border: 1px solid #d1d5db;
-        color: #6b7280;
-
-        &:hover:not(:disabled) {
-          border-color: #9ca3af;
-          color: #4b5563;
-        }
-      }
-
-      .add-sensor-btn {
-        background: #3b82f6;
-        border: 1px solid #3b82f6;
-        color: white;
-
-        &:hover {
-          background: #2563eb;
-          border-color: #2563eb;
-        }
-      }
-    }
+    gap: 16px;
+    flex-wrap: wrap;
   }
 
-  .stats-section {
-    margin-bottom: 2rem;
-  }
-
-  .filters-section {
-    margin-bottom: 2rem;
-  }
-
-  .view-controls {
+  &__intro {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: $font-family-display;
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  &__lede {
+    margin: 2px 0 0;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $text-secondary;
+  }
+
+  &__refresh {
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 1.5rem;
+    gap: 8px;
+    flex: none;
+    min-height: $touch-target;
+    padding: 9px 16px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-secondary;
+    background: $background-white;
+    border: 1px solid $border-subtle;
+    border-radius: $border-radius-md;
+    cursor: pointer;
 
-    .view-mode-toggle {
-      display: flex;
-      gap: 0;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      overflow: hidden;
+    &:hover {
+      color: $text-primary;
+      border-color: $border-color;
+    }
 
-      .view-btn {
-        background: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        &:not(:last-child) {
-          border-right: 1px solid #d1d5db;
-        }
-
-        &:hover {
-          background: #f9fafb;
-        }
-
-        &.active {
-          background: #3b82f6;
-          color: white;
-        }
-      }
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
     }
   }
 
-  .sensors-container {
-    &.grid {
-      .sensors-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-      }
-    }
+  // The view registers nothing: hubs enter on their own when they report. Said in brand green so
+  // it reads as an explanation and not a warning, or the user hunts for an "add" button that does
+  // not exist.
+  &__hint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 16px;
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+    color: $primary-color;
+    background: $primary-color-soft;
+    border-radius: $border-radius-md;
 
-    &.list {
-      .sensors-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-    }
-  }
-
-  .no-sensors {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed #d1d5db;
-
-    .no-sensors-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    h3 {
-      font-size: 1.5rem;
-      color: #1f2937;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      color: #6b7280;
-      margin-bottom: 2rem;
+    svg {
+      flex: none;
     }
   }
 
-  .loading-spinner {
+  // -------- list separator --------
+  // An eyebrow plus a rule across the rest of the width: separates the controls from the result
+  // without another card.
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 -2px;
+  }
+
+  &__divider-label {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: $tracking-overline;
+    color: $text-muted;
+  }
+
+  &__divider-rule {
+    flex: 1;
+    height: 1px;
+    background: $border-subtle;
+  }
+
+  // -------- list --------
+  // A simple stack. Two-line cards, not a `subgrid` aligning columns across rows: that fits a
+  // TABLE, and the approved design is not one. The right-hand block aligns on its own against the
+  // edge.
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  // -------- empty states --------
+  &__empty {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 200px;
-    padding: 2rem;
-
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid #f3f4f6;
-      border-top: 4px solid #3b82f6;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      color: #6b7280;
-      font-size: 1.125rem;
-    }
-  }
-
-  .error-message {
+    gap: 8px;
+    padding: 44px 24px;
     text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #fecaca;
-    background: #fef2f2;
-
-    h3 {
-      color: #dc2626;
-      margin-bottom: 0.5rem;
-      font-size: 1.25rem;
-    }
-
-    p {
-      color: #7f1d1d;
-      margin-bottom: 1.5rem;
-    }
-
-    .retry-btn {
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-
-      &:hover {
-        background: #b91c1c;
-      }
-    }
+    color: $text-muted;
+    background: $background-white;
+    border: 1px dashed $border-color;
+    border-radius: $border-radius-lg;
   }
-}
 
-// Responsive design
-@media (max-width: 1024px) {
-  .sensor-inventory {
-    padding: 1.5rem;
+  &__empty-title {
+    margin: 4px 0 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
 
-    .inventory-header {
-      flex-direction: column;
-      gap: 1rem;
-      align-items: flex-start;
+  &__empty-body {
+    margin: 0;
+    max-width: 46ch;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    color: $text-secondary;
+  }
 
-      .header-actions {
-        align-self: stretch;
-        justify-content: space-between;
-      }
+  &__error {
+    padding: 24px;
+    text-align: center;
+    background: $status-alert-bg;
+    border: 1px solid $status-alert-border;
+    border-radius: $border-radius-lg;
+  }
+
+  &__error-title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $status-alert;
+  }
+
+  &__error-body {
+    margin: 6px 0 14px;
+    font-size: $font-size-base;
+    color: $text-body;
+  }
+
+  &__retry {
+    min-height: $touch-target;
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $background-light;
+    background: $primary-color;
+    border: 0;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+
+    &:hover {
+      background: $primary-color-dark;
     }
 
-    .sensors-container.grid .sensors-grid {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
+    &:focus-visible {
+      outline: 2px solid $primary-color;
+      outline-offset: 2px;
     }
   }
 }
 
 @media (max-width: 768px) {
-  .sensor-inventory {
-    padding: 1rem;
-
-    .inventory-header {
-      .header-title {
-        h1 {
-          font-size: 20px;
-        }
-
-        p {
-          font-size: 16px;
-        }
-      }
-
-      .header-actions {
-        flex-direction: column;
-        gap: 0.75rem;
-
-        .refresh-btn,
-        .add-sensor-btn {
-          width: 100%;
-          justify-content: center;
-        }
-      }
+  .hubs {
+    &__title {
+      font-size: $font-size-section;
     }
 
-    .view-controls {
+    // The reload button goes full-width: against the right edge it sat under 44 px from the
+    // browser's back gesture.
+    &__refresh {
+      width: 100%;
       justify-content: center;
-
-      .view-mode-toggle {
-        // Hide list view button on mobile
-        .view-btn:last-child {
-          display: none;
-        }
-
-        // Remove border-right from grid button when list is hidden
-        .view-btn:first-child {
-          border-right: none;
-        }
-      }
-    }
-
-    .sensors-container.grid .sensors-grid {
-      grid-template-columns: 1fr;
     }
   }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }

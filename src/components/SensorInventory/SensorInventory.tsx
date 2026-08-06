@@ -1,166 +1,137 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
+import { Hexagon, RefreshCw } from 'lucide-react';
 import { useSensors } from '../../hooks/useSensors';
-import { SensorFilters } from '../../types/sensor.types';
-import { SensorCard } from './SensorCard/SensorCard';
+import { HubState } from '../../utils/hubState';
+import { HubRow } from './HubRow/HubRow';
 import { SensorStatsCard } from './SensorStatsCard/SensorStatsCard';
-import { SensorFiltersPanel } from './SensorFiltersPanel/SensorFiltersPanel';
+import { Skeleton } from '../ui/Skeleton';
 import { useI18n } from '../../contexts/I18nContext';
 import './SensorInventory.scss';
 
+/**
+ * What the list offers the detail panel drawn over it. `refresh` is `useSensors`' `refetch`, called
+ * by the panel on assign or remove; without it the card behind would still say the hub is in the
+ * section it just left.
+ */
+export interface HubsOutletContext {
+  refresh: () => Promise<void> | void;
+}
+
+export const useHubsOutlet = () => useOutletContext<HubsOutletContext>();
+
+/**
+ * The Hubs inventory. A hub is the per-section ESP32 that averages what its Nodes send; the
+ * instruments live in the Nodes and are not inventoried, so there are only hubs here.
+ *
+ * READ-ONLY as to registration: hubs appear on their own when they first report. The only decision
+ * made here is which plot each serves, and that lives in its detail -- mounted in the trailing
+ * `Outlet`, OVER this list without unmounting it.
+ */
 export const SensorInventory: React.FC = () => {
   const { t } = useI18n();
-  const { 
-    sensors, 
-    loading, 
-    error, 
-    refetch, 
-    addSensor, 
-    updateSensor, 
-    deleteSensor, 
-    getSensorStats, 
-    filterSensors 
-  } = useSensors();
+  const navigate = useNavigate();
+  const { sensors, loading, error, refetch, getSensorStats, filterSensors } = useSensors();
 
-  const [filters, setFilters] = useState<SensorFilters>({});
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  /** Active filter states. Empty = all. Set by the summary cards. */
+  const [states, setStates] = useState<HubState[]>([]);
 
-  // Force grid view on mobile screens
-  useEffect(() => {
-    const checkScreenSize = () => {
-      if (window.innerWidth <= 768 && viewMode === 'list') {
-        setViewMode('grid');
-      }
-    };
+  const visible = useMemo(() => filterSensors({ states }), [filterSensors, states]);
+  const stats = useMemo(() => getSensorStats(), [getSensorStats]);
+  const outlet = useMemo<HubsOutletContext>(() => ({ refresh: refetch }), [refetch]);
 
-    // Check initially
-    checkScreenSize();
+  const header = (
+    <header className="hubs__intro">
+      <p className="hubs__eyebrow">{t('hubs.eyebrow')}</p>
+      <h1 className="hubs__title">{t('hubs.title')}</h1>
+      <p className="hubs__lede">{t('hubs.lede')}</p>
+    </header>
+  );
 
-    // Add resize listener
-    window.addEventListener('resize', checkScreenSize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, [viewMode]);
-
-  const filteredSensors = useMemo(() => {
-    return filterSensors(filters);
-  }, [filterSensors, filters]);
-
-  const sensorStats = useMemo(() => {
-    return getSensorStats();
-  }, [getSensorStats]);
-
-  const handleFilterChange = (newFilters: SensorFilters) => {
-    setFilters(newFilters);
-  };
-
-  const handleRefresh = () => {
-    refetch();
-  };
-
+  // Skeleton in the shape of what is coming -- four cards and a stack of rows -- rather than a
+  // spinner that says neither how long nor what is loading.
   if (loading) {
     return (
-      <div className="sensor-inventory">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>{t('sensors.loading')}</p>
+      <div className="hubs">
+        {header}
+        <div className="hubs__loading">
+          <Skeleton variant="block" height={84} />
+          <Skeleton variant="block" height={56} />
+          <Skeleton variant="block" height={56} />
+          <Skeleton variant="block" height={56} />
         </div>
+        {/* El `Outlet` va también aquí: al entrar por un enlace directo a `/hubs/:id`, el panel
+            trae sus propios datos y no tiene por qué esperar a la lista. */}
+        <Outlet context={outlet} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="sensor-inventory">
-        <div className="error-message">
-          <h3>{t('sensors.error.loading')}</h3>
-          <p>{error}</p>
-          <button onClick={handleRefresh} className="retry-btn">
+      <div className="hubs">
+        {header}
+        <div className="hubs__error" role="alert">
+          <p className="hubs__error-title">{t('sensors.error.loading')}</p>
+          <p className="hubs__error-body">{error}</p>
+          <button type="button" className="hubs__retry" onClick={refetch}>
             {t('sensors.tryAgain')}
           </button>
         </div>
+        <Outlet context={outlet} />
       </div>
     );
   }
 
   return (
-    <div className="sensor-inventory">
-      <div className="inventory-header">
-        <div className="header-title">
-          <h1>{t('sensors.inventory.title')}</h1>
-          <p>{t('sensors.inventory.description')}</p>
+    <div className="hubs">
+      <div className="hubs__head">
+        {header}
+        <button type="button" className="hubs__refresh" onClick={refetch}>
+          <RefreshCw size={15} />
+          {t('common.refresh')}
+        </button>
+      </div>
+
+      {/* Aviso en verde y no párrafo suelto: es la explicación de por qué esta pantalla no tiene
+          un botón de «añadir», y en gris tenue nadie la leía. */}
+      <p className="hubs__hint">
+        <Hexagon size={15} aria-hidden="true" />
+        {t('hubs.readOnly')}
+      </p>
+
+      {/* El resumen ES el filtro: pulsar «1 sin señal» deja ese uno. Antes había un panel
+          plegable aparte que repetía estos mismos estados como botones y como `<select>`. */}
+      <SensorStatsCard stats={stats} selected={states} onSelect={setStates} />
+
+      <div className="hubs__divider">
+        <span className="hubs__divider-label">{t('hubs.allHubs')}</span>
+        <span className="hubs__divider-rule" aria-hidden="true" />
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="hubs__empty">
+          <Hexagon size={30} aria-hidden="true" />
+          <p className="hubs__empty-title">{t('hubs.empty.title')}</p>
+          <p className="hubs__empty-body">
+            {sensors.length === 0 ? t('hubs.empty.none') : t('hubs.empty.filtered')}
+          </p>
+          {sensors.length > 0 && (
+            <button type="button" className="hubs__retry" onClick={() => setStates([])}>
+              {t('hubs.empty.clear')}
+            </button>
+          )}
         </div>
-        <div className="header-actions">
-          <button 
-            onClick={handleRefresh}
-            className="refresh-btn"
-            disabled={loading}
-          >
-            🔄 {t('common.refresh')}
-          </button>
+      ) : (
+        <div className="hubs__list">
+          {visible.map((hub) => (
+            <HubRow key={hub.id} hub={hub} onOpen={(h) => navigate(`/hubs/${h.id}`)} />
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Stats Cards */}
-      <div className="stats-section">
-        <SensorStatsCard stats={sensorStats} />
-      </div>
-
-      {/* Filters Panel */}
-      <div className="filters-section">
-        <SensorFiltersPanel 
-          filters={filters}
-          onFiltersChange={handleFilterChange}
-          resultCount={filteredSensors.length}
-          totalCount={sensors.length}
-        />
-      </div>
-
-      {/* View Controls */}
-      <div className="view-controls">
-        <div className="view-mode-toggle">
-          <button 
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-          >
-            📱 {t('sensors.view.grid')}
-          </button>
-          <button 
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-          >
-            📋 {t('sensors.view.list')}
-          </button>
-        </div>
-      </div>
-
-      {/* Sensors List */}
-      <div className={`sensors-container ${viewMode}`}>
-        {filteredSensors.length === 0 ? (
-          <div className="no-sensors">
-            <div className="no-sensors-icon">📡</div>
-            <h3>{t('sensors.noSensorsFound')}</h3>
-            <p>
-              {sensors.length === 0 
-                ? t('sensors.getStarted') 
-                : t('sensors.adjustFilters')}
-            </p>
-          </div>
-        ) : (
-          <div className={`sensors-grid ${viewMode}`}>
-            {filteredSensors.map((sensor) => (
-              <SensorCard
-                key={sensor.id}
-                sensor={sensor}
-                onUpdate={updateSensor}
-                onDelete={deleteSensor}
-                viewMode={viewMode}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* El detalle, encima de todo esto. Esta lista no se desmonta al abrirlo. */}
+      <Outlet context={outlet} />
     </div>
   );
 };
