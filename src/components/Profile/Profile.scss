@@ -1,0 +1,155 @@
+@import '../../styles/variables';
+
+.profile-view {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: $spacing-lg $spacing-md $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__title {
+    font-size: $font-size-page-title;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__lede {
+    font-size: $font-size-base;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+.profile-card {
+  background: $background-white;
+  border: 1px solid $border-subtle;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  box-shadow: $shadow-light;
+
+  &__title {
+    font-size: $font-size-section;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin: 0 0 $spacing-xs;
+  }
+
+  &__hint {
+    font-size: $font-size-sm;
+    color: $text-muted;
+    margin: 0 0 $spacing-sm;
+    line-height: $line-height-base;
+  }
+}
+
+.profile-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: $spacing-md;
+  padding: $spacing-xs 0;
+  border-bottom: 1px solid $border-subtle;
+  font-size: $font-size-base;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span {
+    color: $text-muted;
+  }
+
+  strong {
+    color: $text-body;
+    font-weight: $font-weight-medium;
+    text-align: right;
+    word-break: break-word;
+  }
+}
+
+.profile-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $text-secondary;
+}
+
+.profile-error {
+  font-size: $font-size-sm;
+  color: $status-alert;
+}
+
+.profile-switch {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin: $spacing-xs 0;
+
+  label {
+    font-size: $font-size-base;
+    color: $text-body;
+    cursor: pointer;
+  }
+}
+
+.profile-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+  min-height: 24px;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: $border-radius-pill;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &.is-ok {
+    background: $status-ok-bg;
+    color: $status-ok;
+    border: 1px solid $status-ok-border;
+  }
+
+  &.is-warn {
+    background: $status-warning-bg;
+    color: $status-warning;
+    border: 1px solid $status-warning-border;
+  }
+}
+
+.profile-note {
+  font-size: $font-size-sm;
+  color: $text-muted;
+}
+
+.profile-verify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.profile-code {
+  max-width: 140px;
+  letter-spacing: 4px;
+  font-family: $font-family-mono;
+}
+
+.profile-view .ant-btn {
+  align-self: flex-start;
+}

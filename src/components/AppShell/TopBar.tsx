@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useI18n } from '../../contexts/I18nContext';
 import { LanguageSelector } from '../LanguageSelector';
@@ -95,6 +95,18 @@ export const TopBar: React.FC = () => {
                     <strong>{user?.username}</strong>
                     <span>{isManager ? t('role.manager') : t('role.farmer')}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="topbar__menu-item"
+                    role="menuitem"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      navigate('/perfil');
+                    }}
+                  >
+                    <User size={16} />
+                    {t('nav.profile')}
+                  </button>
                   <button
                     type="button"
                     className="topbar__menu-item"

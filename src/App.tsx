@@ -11,6 +11,7 @@ import { SectionDetailRoute } from './components/SectionData/SectionDetailRoute'
 import { Reports } from './components/Reports/Reports';
 import { SensorInventory } from './components/SensorInventory/SensorInventory';
 import { HubDetailRoute } from './components/SensorInventory/HubDetail/HubDetailRoute';
+import { ProfileView } from './components/Profile/ProfileView';
 import { AuthWrapper } from './components/AuthWrapper/AuthWrapper';
 import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute';
 import { Spin } from 'antd';
@@ -118,6 +119,7 @@ const AppContent: React.FC = () => {
         >
           <Route path=":hubId" element={<HubDetailRoute />} />
         </Route>
+        <Route path="/perfil" element={<ProfileView />} />
         <Route path="/fincas/:farmId" element={<FarmSectionsView />} />
         <Route
           path="/fincas/:farmId/secciones/:sectionId"
