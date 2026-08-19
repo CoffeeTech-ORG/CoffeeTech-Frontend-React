@@ -53,31 +53,6 @@
   }
 }
 
-.profile-field {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: $spacing-md;
-  padding: $spacing-xs 0;
-  border-bottom: 1px solid $border-subtle;
-  font-size: $font-size-base;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  span {
-    color: $text-muted;
-  }
-
-  strong {
-    color: $text-body;
-    font-weight: $font-weight-medium;
-    text-align: right;
-    word-break: break-word;
-  }
-}
-
 .profile-label {
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;

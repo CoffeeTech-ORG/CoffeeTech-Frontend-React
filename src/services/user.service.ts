@@ -8,7 +8,19 @@ export interface UserPhone {
   smsOptIn: boolean;
 }
 
+export interface UserAccount {
+  id: number;
+  username: string;
+  email: string;
+}
+
 export const userService = {
+  /** Updates the account name and email. Rejects with the HTTP status on conflict/validation errors. */
+  async updateProfile(userId: number, username: string, email: string): Promise<UserAccount> {
+    const res = await api.put(`/users/${userId}`, { username, email });
+    return res.data;
+  },
+
   async getPhone(userId: number): Promise<UserPhone> {
     const res = await api.get(`/users/${userId}/phone`);
     return res.data;

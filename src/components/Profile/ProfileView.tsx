@@ -8,13 +8,18 @@ import { userService } from '../../services/user.service';
 import './Profile.scss';
 
 const E164 = /^\+[1-9]\d{7,14}$/;
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export const ProfileView: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { t } = useI18n();
   const { message } = AntdApp.useApp();
   const userId = user?.id;
   const { phone, loading, reload } = useUserPhone(userId);
+
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [savingAccount, setSavingAccount] = useState(false);
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsOptIn, setSmsOptIn] = useState(false);
@@ -22,6 +27,12 @@ export const ProfileView: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
+
+  // Seed the account fields from the session.
+  useEffect(() => {
+    setUsername(user?.username ?? '');
+    setEmail(user?.email ?? '');
+  }, [user]);
 
   // Seed the editable fields from the loaded state.
   useEffect(() => {
@@ -33,6 +44,9 @@ export const ProfileView: React.FC = () => {
 
   if (!userId || !user) return null;
 
+  const emailValid = EMAIL.test(email.trim());
+  const accountDirty = username.trim() !== user.username || email.trim() !== user.email;
+
   const phoneValid = phoneNumber.trim() === '' || E164.test(phoneNumber.trim());
   const dirty = phone
     ? phoneNumber.trim() !== (phone.phoneNumber ?? '') || smsOptIn !== phone.smsOptIn
@@ -43,6 +57,24 @@ export const ProfileView: React.FC = () => {
   const alertsActive = verified && (phone?.smsOptIn ?? false);
   // The number is saved and still unverified, and the form is not mid-edit.
   const showVerify = hasNumber && !verified && !dirty;
+
+  const handleSaveAccount = async () => {
+    if (!emailValid || username.trim() === '') {
+      message.error(t('profile.email.invalid'));
+      return;
+    }
+    setSavingAccount(true);
+    try {
+      const updated = await userService.updateProfile(userId, username.trim(), email.trim());
+      updateUser({ username: updated.username, email: updated.email });
+      message.success(t('profile.saved'));
+    } catch (e) {
+      const status = (e as { response?: { status?: number } }).response?.status;
+      message.error(status === 409 ? t('profile.email.taken') : t('profile.account.saveError'));
+    } finally {
+      setSavingAccount(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!phoneValid) {
@@ -97,14 +129,36 @@ export const ProfileView: React.FC = () => {
 
       <section className="profile-card">
         <h2 className="profile-card__title">{t('profile.account')}</h2>
-        <div className="profile-field">
-          <span>{t('auth.username')}</span>
-          <strong>{user.username}</strong>
-        </div>
-        <div className="profile-field">
-          <span>{t('auth.email')}</span>
-          <strong>{user.email}</strong>
-        </div>
+
+        <label className="profile-label" htmlFor="profile-username">{t('auth.username')}</label>
+        <Input
+          id="profile-username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          maxLength={100}
+        />
+
+        <label className="profile-label" htmlFor="profile-email">{t('auth.email')}</label>
+        <Input
+          id="profile-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t('auth.email.placeholder')}
+          status={email.trim() === '' || emailValid ? '' : 'error'}
+        />
+        {email.trim() !== '' && !emailValid && (
+          <span className="profile-error">{t('profile.email.invalid')}</span>
+        )}
+
+        <Button
+          type="primary"
+          loading={savingAccount}
+          disabled={!accountDirty || !emailValid || username.trim() === ''}
+          onClick={handleSaveAccount}
+        >
+          {t('profile.save')}
+        </Button>
       </section>
 
       <section className="profile-card">

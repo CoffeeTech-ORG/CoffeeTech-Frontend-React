@@ -30,6 +30,7 @@ interface AuthContextType {
   login: (data: LoginResponse) => void;
   loginWithCredentials: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
+  updateUser: (changes: Partial<Pick<User, 'username' | 'email'>>) => void;
   logout: () => void;
 }
 
@@ -96,6 +97,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Merge account edits into the live session so the header reflects them without a re-login.
+  const updateUser = (changes: Partial<Pick<User, 'username' | 'email'>>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...changes };
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        try {
+          const parsed = JSON.parse(authData);
+          localStorage.setItem('auth', JSON.stringify({ ...parsed, user: next }));
+        } catch (error) {
+          console.error('Error updating stored user:', error);
+        }
+      }
+      return next;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem('auth');
     localStorage.removeItem('token'); // in case an old token key is still around
@@ -131,6 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     loginWithCredentials,
     register,
+    updateUser,
     logout,
   };
 
